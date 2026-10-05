@@ -27,6 +27,7 @@ Roadmap (one feature at a time):
 3. `003` Savings goal
 4. `004` Recurring expenses
 5. `005` Automatic expense detection from bank notifications (Android)
+6. `006` Backup and restore
 
 ## Setup and commands
 
