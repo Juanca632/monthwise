@@ -1,8 +1,12 @@
 name: CI
 
+# Every PR into develop or main is checked before it can be merged. Pushes are checked only on
+# those two branches: a push to a feature branch with an open PR would otherwise run twice.
 on:
-  push:
   pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
 
 permissions:
   contents: read

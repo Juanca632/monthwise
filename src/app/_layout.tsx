@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DatabaseProvider } from '@/data/DatabaseProvider';
 import { logTiming } from '@/lib/devLog';
+import { msSinceStartup } from '@/lib/sinceStartup';
 import { SelectedMonthProvider } from '@/state/SelectedMonthContext';
 import { SummaryNoticeProvider } from '@/state/SummaryNoticeContext';
 import { minTouch, radii, spacing, useTheme } from '@/ui/theme';
@@ -34,6 +35,12 @@ const FONTS = {
   // Loaded with the text fonts so icons do not pop in after the first frame.
   ...Feather.font,
 };
+
+/** SC-004 startup lines; skipped when the platform does not report the runtime start. */
+function logSinceStartup(name: string) {
+  const ms = msSinceStartup();
+  if (ms !== null) logTiming(name, ms);
+}
 
 /** Shown for render errors and fatal JS errors. Never shows error text: it could contain data. */
 function GenericErrorScreen({ onRetry }: { onRetry: () => void }) {
@@ -79,8 +86,7 @@ export default function RootLayout() {
   const { colors } = useTheme();
 
   useEffect(() => {
-    // performance.now() counts from the JS runtime start, so this is the bundle load time.
-    logTiming('bundle-ready', performance.now());
+    logSinceStartup('bundle-ready');
     setFatalListener(() => setFatal(true));
     return () => setFatalListener(null);
   }, []);
@@ -88,7 +94,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (!fontsSettled) return;
     // On a font error the app goes on with the system font (theme.ts falls back).
-    logTiming('fonts-ready', performance.now());
+    logSinceStartup('fonts-ready');
     SplashScreen.hideAsync().catch(() => {});
   }, [fontsSettled]);
 
