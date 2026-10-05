@@ -123,8 +123,8 @@ it('shows the error state with Try again and Add when the database fails to open
   await databaseWith([]);
   fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
   expect(screen.getByLabelText('Loading')).toBeTruthy();
-  await flush();
-  expect(screen.getByText('No transactions this month yet.')).toBeTruthy();
+  // findBy waits inside act() until the reopened database has loaded and the list has settled.
+  expect(await screen.findByText('No transactions this month yet.')).toBeTruthy();
 });
 
 it('shows the error state when the month query fails (FR-024)', async () => {

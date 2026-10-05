@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMonthSummary } from '@/hooks/useMonthSummary';
 import { useRegion } from '@/hooks/useRegion';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
+import { Breakdown } from '@/ui/Breakdown';
 import { MonthHeader } from '@/ui/MonthHeader';
 import { StateMessage } from '@/ui/StateMessage';
 import { iconSize, radii, spacing, useTheme } from '@/ui/theme';
@@ -47,6 +48,10 @@ export default function SummaryScreen() {
               content={content}
               header={(tone) => <MonthHeader month={selected} tone={tone} />}
             />
+            {/* Ready months only: an empty month shows its own line instead (FR-022). */}
+            {status === 'ready' && rows.length > 0 && (
+              <Breakdown items={summary.breakdown} tag={tag} />
+            )}
           </View>
         }
         // Loading and error show only the card; an empty month gets its own line (FR-022).

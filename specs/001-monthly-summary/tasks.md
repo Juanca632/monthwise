@@ -526,13 +526,13 @@ the SC-001 stopwatch check (scenario 12) in Expo Go.
 **Independent Test**: record expenses in three categories in one month. Each category shows the
 right amount and percentage, ordered from largest to smallest.
 
-- [ ] T042 [US2] (FR-016) Implement `src/ui/Breakdown.tsx`, styled as design.md (Summary screen item 2):
+- [X] T042 [US2] (FR-016) Implement `src/ui/Breakdown.tsx`, styled as design.md (Summary screen item 2):
   - Rows from `summary.breakdown`: label, `formatMoney` and `percentLabel`. The accessibility
     label is "Food, 150,00 €, 30 percent", or "…, less than 1 percent" for `<1%`.
   - With expenses at 0 and income > 0, it shows "No expenses this month.".
   - Render it in `src/app/index.tsx` between `Totals` and the list (list header) in the ready
     state only. It is hidden in the empty state. Tests: see T043.
-- [ ] T043 [US2] Component tests in `tests/component/breakdown.test.tsx`:
+- [X] T043 [US2] Component tests in `tests/component/breakdown.test.tsx`:
   - The spec example 300/150/50 → 60 %, 30 %, 10 % in order; ties alphabetical; `<1%`.
   - Income only → "No expenses this month."; categories with no expenses are not listed; the
     breakdown is hidden when the month is empty.
