@@ -444,7 +444,7 @@ states): on the phone, the summary shows the current month and its empty and loa
 **Add** is visible; its route (`/transaction/new`) is added in T039, so tapping it does nothing
 useful yet.
 
-- [ ] T038 [US1] (FR-001, FR-011) Implement `src/ui/TransactionForm.tsx` (shared by new and edit):
+- [X] T038 [US1] (FR-001, FR-011) Implement `src/ui/TransactionForm.tsx` (shared by new and edit):
   - **Fields**:
     - Type toggle; changing the type clears the category (FR-012).
     - Amount `TextInput` with `keyboardType="decimal-pad"`, autofocused on new.
@@ -478,7 +478,7 @@ useful yet.
     is kept.
   - **Accessibility**: every field labelled "label, value, error"; touch targets ≥ 48 dp.
   Tests: see T041 and T046. Depends on T016, T019, T020, T027 and T029.
-- [ ] T039 [US1] (FR-001) Implement `src/app/transaction/new.tsx`:
+- [X] T039 [US1] (FR-001) Implement `src/app/transaction/new.tsx`:
   - It renders `TransactionForm` with the defaults: type Expense, empty amount, no category, and
     `defaultFormDate(selected, getToday())`.
   - On Save: `const repo = await whenReady(); await repo.create(input, Date.now())`. Then it
@@ -493,7 +493,7 @@ useful yet.
     "minus" in its label, and list order (FR-015, FR-017).
   - Focusing again after a change updates the screen without the loading state (FR-019, FR-023).
   - The database still opening keeps **Add** visible (FR-002).
-- [ ] T041 [US1] Component tests for the new form in `tests/component/transactionFormNew.test.tsx`:
+- [X] T041 [US1] Component tests for the new form in `tests/component/transactionFormNew.test.tsx`:
   - Defaults (FR-003). Recording an expense takes 4 interactions: open, type, chip, Save. The
     scroll container has `keyboardShouldPersistTaps="handled"`; the real keyboard behavior is
     checked on the phone (quickstart scenario 12, SC-001).
