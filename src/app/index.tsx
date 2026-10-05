@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useMonthSummary } from '@/hooks/useMonthSummary';
 import { useRegion } from '@/hooks/useRegion';
-import { useSelectedMonth } from '@/state/SelectedMonthContext';
 import { useSummaryNotice } from '@/state/SummaryNoticeContext';
 import { Breakdown } from '@/ui/Breakdown';
 import { MonthHeader } from '@/ui/MonthHeader';
@@ -23,7 +22,6 @@ const OPEN_FAILED = "Couldn't open this transaction.";
 export default function SummaryScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { selected } = useSelectedMonth();
   const { tag } = useRegion();
   const { status, rows, summary, retry } = useMonthSummary();
   const router = useRouter();
@@ -64,7 +62,7 @@ export default function SummaryScreen() {
             <Totals
               tag={tag}
               content={content}
-              header={(tone) => <MonthHeader month={selected} tone={tone} />}
+              header={(tone) => <MonthHeader tone={tone} />}
             />
             {notice.notice === 'open_failed' && (
               <StateMessage

@@ -605,7 +605,7 @@ shows only its own data, and **Add** adds to the month on screen.
 **Independent Test**: record transactions in two different past months. Each month shows only its
 own transactions and totals. Add one from a past month and check that it lands in that month.
 
-- [ ] T047 [US4] Add the month navigation to `src/ui/MonthHeader.tsx` (round 48 dp buttons on the
+- [X] T047 [US4] Add the month navigation to `src/ui/MonthHeader.tsx` (round 48 dp buttons on the
   balance card, design.md):
   - Previous and next buttons; previous is hidden on January 2000, next on the current month
     (FR-021).
@@ -613,7 +613,7 @@ own transactions and totals. Add one from a past month and check that it lands i
     announced as "October 2026". Touch targets ≥ 48 dp.
   - It calls `goPrevious`/`goNext` from `SelectedMonthContext`, and works in every summary state.
   Tests: see T048.
-- [ ] T048 [US4] Component tests in `tests/component/monthNavigation.test.tsx`:
+- [X] T048 [US4] Component tests in `tests/component/monthNavigation.test.tsx`:
   - The limits at January 2000 and the current month. A past empty month shows zeros and the empty
     line. Moving back and forward reaches the current month again.
   - No balance carries over (FR-018). On September 2026, **Add** defaults to 2026-09-30, and after
