@@ -391,10 +391,10 @@ and balance update, and keep them after a restart.
 **Independent Test**: from no data, record two expenses and one income in the current month. The
 list shows all three, and income, expenses and balance match a hand calculation to the cent.
 
-- [ ] T032 [P] [US1] Implement `src/ui/StateMessage.tsx` (look: design.md, Summary screen items 5–6): a short line plus an optional action
+- [X] T032 [P] [US1] Implement `src/ui/StateMessage.tsx` (look: design.md, Summary screen items 5–6): a short line plus an optional action
   button, used for the empty, error and "No expenses" lines. It also has a `banner` variant with a
   **Dismiss** button. Touch targets are ≥ 48 × 48 dp. Tests: see T040 and T050.
-- [ ] T033 [P] [US1] Implement `src/ui/Totals.tsx`, the balance card from design.md (Summary
+- [X] T033 [P] [US1] Implement `src/ui/Totals.tsx`, the balance card from design.md (Summary
   screen item 1):
   - It has a `header` slot where `MonthHeader` renders.
   - It takes `content: { kind: 'loading' } | { kind: 'error', onRetry } | { kind: 'values',
@@ -408,16 +408,16 @@ list shows all three, and income, expenses and balance match a hand calculation 
   - The decorative circle and the icon circles are hidden from the screen reader. A negative balance shows the minus sign plus the negative tone (`cardAmount`), never color alone.
   The accessibility labels are "Income, …", "Expenses, …" and "Balance, minus …"
   (contracts/ui-screens.md). Amounts follow design.md, Large text; other text wraps. Tests: see T040.
-- [ ] T034 [P] [US1] Implement `src/ui/TransactionList.tsx`, a `FlatList` styled as design.md
+- [X] T034 [P] [US1] Implement `src/ui/TransactionList.tsx`, a `FlatList` styled as design.md
   (Summary screen item 3):
   - Each item shows the type, category label, amount, numeric date and note.
   - The accessibility label is "Expense, Food, 12,50 €, 30 September 2026, note: lunch".
   - `ListHeaderComponent` is a slot. Bottom padding is at least the Add button height plus its
     margin. `onPressItem(id)`. Tests: see T040.
-- [ ] T035 [P] [US1] Implement `src/ui/MonthHeader.tsx` with the month title only (`monthTitle`),
+- [X] T035 [P] [US1] Implement `src/ui/MonthHeader.tsx` with the month title only (`monthTitle`),
   rendered inside the balance card's header row (design.md).
   Navigation buttons come in T047. Tests: see T040.
-- [ ] T036 [US1] Implement `src/hooks/useMonthSummary.ts`:
+- [X] T036 [US1] Implement `src/hooks/useMonthSummary.ts`:
   - It loads `listByMonth(selected)` when the database is ready and on every screen focus
     (`useFocusEffect`).
   - The `loading` state appears only when there is no data yet for that month: first load, a
@@ -429,7 +429,7 @@ list shows all three, and income, expenses and balance match a hand calculation 
     `timing first-query <ms>` once.
   Tests in `tests/component/useMonthSummary.test.tsx`: no loading on a same-month reload,
   overlapping queries, and error and retry. Depends on T017, T025, T026 and T028.
-- [ ] T037 [US1] Implement `src/app/index.tsx`, the summary screen:
+- [X] T037 [US1] Implement `src/app/index.tsx`, the summary screen:
   - Layout: the balance card (`Totals` with `MonthHeader` in its header slot), then the states
     from contracts/ui-screens.md. In loading and error, the card shows its loading or error
     content (T033) and the list is not rendered. In error, "Couldn't load your data." with **Try again**.
@@ -485,7 +485,7 @@ useful yet.
     sets the selected month to `monthOf(input.date)` (FR-020) and closes.
   - If it fails, the form shows the save error and keeps its content.
   Tests: see T041. Depends on T037 and T038.
-- [ ] T040 [US1] Component tests for the summary in `tests/component/summaryScreen.test.tsx`,
+- [X] T040 [US1] Component tests for the summary in `tests/component/summaryScreen.test.tsx`,
   with the repository on the better-sqlite3 adapter:
   - It opens on the current month (FR-014). Loading shows the indicator and **Add** with no zeros
     (FR-023). Error shows the message, **Try again** and **Add** (FR-024).
