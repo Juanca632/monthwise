@@ -8,6 +8,17 @@
 
 **Input**: User description: "Record income and expenses and see the monthly summary."
 
+## Clarifications
+
+### Session 2026-10-05
+
+- Q: Should 001 include a remote crash/error reporting service, or does no technical data leave
+  the phone? → A: No remote reporting in 001; the developer inspects errors locally on a test
+  device, and users only see the messages defined in FR-024 and FR-025. Remote reporting can be
+  added later.
+- Q: What accessibility level must 001 meet? → A: System large text without cut-off information,
+  screen reader labels on every button and amount, and comfortable touch targets; no formal audit.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Record a transaction and see the month's totals (Priority: P1)
@@ -161,7 +172,10 @@ lands in that month.
 - A transaction cannot be saved or deleted (for example, the phone's storage is full): the user
   sees an error saying the action did not happen, and the form keeps what they typed.
 - A stored transaction dated after "today" (the phone's clock or time zone moved back): it keeps
-  its date and is shown normally; only saving an edit requires a valid date.
+  its date and is shown normally. Saving any edit to it requires a valid date; the form flags the
+  date field as the one to fix.
+- Largest system text size or screen reader on: every screen stays complete and readable, and
+  everything is announced as defined in FR-031.
 - The phone's region or light/dark setting changes: amounts, dates and colors follow the new
   setting without losing data.
 
@@ -176,7 +190,8 @@ lands in that month.
 - **FR-002**: The **Add** action MUST be visible on the summary at all times, including while data
   loads and when loading fails.
 - **FR-003**: A new transaction form MUST open with type Expense, the amount field ready for
-  input (focused, numeric keyboard shown) and no category selected. The date defaults to today when the current month is on screen,
+  input (focused, numeric keyboard shown) and no category selected. The date defaults to today
+  when the current month is on screen,
   and to the last day of the month on screen when a past month is shown.
 - **FR-004**: Amounts MUST be greater than 0, have at most 2 decimals and be at most 999,999.99.
 - **FR-005**: Amounts MUST accept either `,` or `.` as the decimal separator, regardless of
@@ -245,7 +260,9 @@ lands in that month.
 - **FR-026**: All data MUST be stored only on the phone and persist across app restarts and phone
   restarts; no account or login is required.
 - **FR-027**: No financial data (amounts, notes, categories) may leave the device or appear in
-  logs, analytics or error reports. App data MUST NOT be included in any cloud backup.
+  logs, analytics or error reports. App data MUST NOT be included in any cloud backup. The app
+  itself makes no network requests: no remote crash or error reporting and no analytics. (The
+  system's direct phone-to-phone transfer is not blocked; see Assumptions.)
 - **FR-028**: Money MUST be calculated exactly to the cent; totals MUST stay exact for any
   combination of valid transactions and never show rounding errors.
 - **FR-029**: Amounts and numeric dates MUST be displayed using the phone's region settings
@@ -253,6 +270,12 @@ lands in that month.
   are numeric in the region's order (for example `30/09/2026` in Spain). All interface text,
   including the month names in the month header, is in English. The currency is always EUR.
 - **FR-030**: The app MUST follow the phone's light or dark appearance setting.
+- **FR-031**: The app MUST stay usable with the phone's largest text size setting: no amount,
+  total or label is cut off or overlapping, even for the maximum amount 999,999.99. The screen
+  reader MUST announce every button, field, amount, breakdown row and the month header; a
+  transaction is announced with its type, category, amount, full date and note (if any), amounts
+  in the region's format, and a negative balance is announced in words ("minus"). Every tappable
+  element MUST be at least the platform's recommended minimum touch size.
 
 ### Key Entities
 
@@ -280,9 +303,15 @@ lands in that month.
 - **SC-004**: On a phone with Android 10 or later and 4 GB of RAM, opening the app from a cold
   start shows the current month's totals and first list items within 1 second, with 1,000
   transactions in that month.
-- **SC-005**: Zero financial data is sent off the device during normal use.
+- **SC-005**: During a full test session covering all user stories, the app makes zero network
+  requests, as checked with a network monitor.
 - **SC-006**: In a first-use test with at least 3 people, every participant records their first
   expense without help or instructions.
+- **SC-007**: On the SC-004 reference phone with a screen at least 360 dp wide, default display
+  size and its Android version's largest text size, every screen and dialog of this feature
+  (summary, breakdown, list, month navigation, add/edit form, delete and discard confirmations)
+  shows no cut-off information; with the screen reader on, a user can record an expense and hear
+  the month's totals, and every interactive element and amount is announced.
 
 ## Assumptions
 
@@ -298,7 +327,8 @@ lands in that month.
   automating them is feature 004.
 - Out of scope: login and sync, charts (002), savings goal (003), recurring expenses (004), bank
   notification detection (005), backup (006), more languages (007), other currencies, search and
-  filters, data export, editable categories, undo after delete.
+  filters, data export, editable categories, undo after delete, remote crash/error reporting and
+  analytics.
 - No onboarding or tutorial; the empty states guide the first use.
 - Amounts in this spec's examples use a neutral notation (`12.50`); on screen they follow the
   phone's region (for example `12,50 €` in Spain).
