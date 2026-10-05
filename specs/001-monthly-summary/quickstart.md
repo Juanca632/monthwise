@@ -65,7 +65,9 @@ All must pass, with lint and type check, before a PR is merged (CI).
 9. **Region and theme**: switch the phone region (Spain ↔ United Kingdom) and dark mode → amounts,
    dates and colors follow without losing data. Repeat the dark mode part on the preview APK.
 10. **Accessibility**: largest font size and TalkBack on → record an expense and hear the totals
-    (SC-007). Scroll to the end of a long list: the last row is not covered by **Add**.
+    (SC-007). Scroll to the end of a long list: the last row is not covered by **Add**. With
+    `999.999,99 €`, a month total above 10 million and a 100-character note, nothing is cut off;
+    the stat pills, rows and Date/Note switch to one column (design.md, Large text).
 11. **Intl on Hermes** (first task, then once per SDK upgrade): on the device, check the output of
     the money and date formatters for `es-ES`, `en-GB` and `en-ES` (English UI, Spanish region)
     against the unit test expectations, and check whether `Intl.Segmenter` exists.
@@ -100,7 +102,8 @@ npx eas-cli build --platform android --profile production   # free plan, APK (lo
 
   Repeat 10 times. Pass: every run ≤ 1 s (SC-004). Write the 10 times down in
   `specs/001-monthly-summary/perf-results.md`. If it fails, profile before changing the design.
-  The preview build logs bundle-ready, database-open and first-query durations as numbers only.
+  The preview build logs bundle-ready, fonts-ready, database-open and first-query durations as
+  numbers only.
 - **Logs (FR-027)**: run `adb logcat --pid=$(adb shell pidof io.github.juanca632.monthwise)`
   during the manual scenarios.
   - On the `preview` APK, turn on "Simulate storage error" and try to load, save and delete. Only

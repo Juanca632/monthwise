@@ -18,8 +18,9 @@ and alternatives are in [research.md](research.md).
 **Language/Version**: TypeScript 6 (`strict`), React 19.2 and React Native 0.86 through Expo SDK 57
 
 **Primary Dependencies**: `expo`, `expo-router`, `@react-navigation/native`, `expo-sqlite`,
-`expo-localization`, `expo-system-ui`, `expo-status-bar`, `@react-native-community/datetimepicker` (all runtime packages are listed
-and justified in Dependencies below)
+`expo-localization`, `expo-system-ui`, `expo-status-bar`, `@react-native-community/datetimepicker`,
+`expo-font`, `expo-splash-screen`, `@expo-google-fonts/manrope`, `@expo/vector-icons` (all runtime
+packages are listed and justified in Dependencies below; visual design in [design.md](design.md))
 
 **Storage**: SQLite on the phone (`expo-sqlite`), one table `transactions`; see
 [data-model.md](data-model.md)
@@ -73,6 +74,10 @@ below and no extra layers.
 | `expo-sqlite` | runtime | Durable, indexed local storage | React Native has no built-in database (R3). |
 | `expo-localization` | runtime | Phone's locale tag, and a re-render when system settings change | `Intl` alone does not report region changes while the app runs (R7). |
 | `@react-native-community/datetimepicker` | runtime | Native date dialog with min/max dates | React Native has no date picker (R8). |
+| `expo-font` (already a dependency of `expo`, imported directly) | runtime | Loads the Manrope font files (`useFonts`) | Android only ships Roboto. Manrope is a purely visual choice, part of the design the developer approved (design.md). |
+| `expo-splash-screen` | runtime | Keeps the splash screen up until the font is loaded, so text never flashes in the wrong font | Expo's documented way to wait for fonts at startup. |
+| `@expo-google-fonts/manrope` | runtime | The Manrope font files (400, 500, 600, 700) | Bundles the font with the app, so nothing is downloaded at runtime (FR-027). |
+| `@expo/vector-icons` | runtime | Feather icons used by the design (chevrons, plus, close, calendar, arrows, alert) | React Native has no icon set; drawing them by hand would need `react-native-svg` anyway. |
 | `expo-dev-client` *(only if needed)* | runtime | Development build when Expo Go no longer runs SDK 57 (research R1) | Expo Go cannot load an older SDK; added only in that case. |
 | `unicode-segmenter` *(only if needed)* | runtime | Counting a note's visible characters (FR-007) | Added only if Hermes lacks `Intl.Segmenter` (R13). |
 | `jest`, `jest-expo`, `@testing-library/react-native` | dev | Test runner and component tests | Required by principle II (R10). |
@@ -92,6 +97,8 @@ specs/001-monthly-summary/
 ├── plan.md              # This file
 ├── research.md          # Phase 0: decisions and alternatives
 ├── data-model.md        # Phase 1: table, categories, derived summary, form draft
+├── design.md            # Visual design: palette, type, spacing, components (approved 2026-10-05)
+├── design/mockups/      # HTML sources of the approved mockups
 ├── quickstart.md        # Phase 1: how to run and validate
 ├── contracts/
 │   ├── transaction-repository.md
@@ -116,7 +123,7 @@ jest.config.js
 
 src/
 ├── app/                          # Expo Router routes (screens only, little logic)
-│   ├── _layout.tsx               # providers: database, selected month, theme; error boundary
+│   ├── _layout.tsx               # providers: database, selected month, summary notice; fonts; error boundary
 │   ├── index.tsx                 # monthly summary
 │   └── transaction/
 │       ├── new.tsx               # add form (modal)
@@ -152,7 +159,7 @@ src/
 │   ├── TransactionList.tsx
 │   ├── TransactionForm.tsx
 │   ├── StateMessage.tsx          # empty / error lines with optional action
-│   └── theme.ts                  # light and dark palettes
+│   └── theme.ts                  # tokens from design.md: palettes, balance-card tones, type, spacing, large text
 ├── dev/
 │   ├── seed.ts                   # preview-only dev tools: seed for SC-004
 │   └── storageErrorFlag.ts       # preview-only flag for the simulated storage error
@@ -207,8 +214,8 @@ layer instead of next to the code, so the tests of each layer are easy to find.
   then renders the same "Something went wrong." screen as the error boundary. Non-fatal errors
   go to `reportError` as a code. A component test covers both paths. Only one allow-listed logger
   (`src/lib/devLog.ts`) keeps a reference to the original `console.log`. In `preview` it writes
-  error codes and the SC-004 timings (`bundle-ready`, `db-open`, `first-query`, durations in ms
-  only); in `production` it writes nothing. Development builds keep normal console output.
+  error codes and the SC-004 timings (`bundle-ready`, `fonts-ready`, `db-open`, `first-query`,
+  durations in ms only); in `production` it writes nothing. Development builds keep normal console output.
 - **Scope of FR-027**: the guarantees apply to `preview` and `production` builds. Development
   and Expo Go sessions stream console output to the dev server, and Expo Go has its own backup
   settings, so they use made-up data only.

@@ -124,6 +124,8 @@ Validation messages:
 | Where | Text |
 | --- | --- |
 | Summary buttons | **Add**, **Try again**, **Dismiss** |
+| Summary labels | "Balance", "Income", "Expenses", "Spending by category", "Transactions" |
+| Empty month helper line | "Tap Add to record an income or expense." (under "No transactions this month yet.") |
 | Form titles | "Add transaction", "Edit transaction" |
 | Form labels | "Type" (**Expense** / **Income**), "Amount", "Date", "Category", "Note (optional)" |
 | Form buttons | **Save**, **Delete** |
@@ -145,10 +147,13 @@ Validation messages:
   - List item: "Expense, Food, 12,50 €, 30 September 2026, note: lunch".
   - Form fields: label + current value + error message if any ("Amount, required, Enter an
     amount.").
-- Text scales with the system font size; layouts wrap instead of cutting text, including
-  999.999,99 € at the largest size.
+- Text scales with the system font size; layouts wrap instead of cutting text. The exceptions
+  are the balance and stat amounts, which stay on one line and shrink to fit (design.md, Large
+  text), so 999.999,99 € and larger totals are never cut at the largest size.
 - Colors come from one light and one dark palette chosen by `useColorScheme()` (FR-030).
   Negative amounts never rely on color alone.
+
+Visual design (colors, type, spacing, components) is in [design.md](../design.md).
 
 ## Unexpected errors
 

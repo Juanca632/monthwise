@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Summary, dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#8FA6FF}a:hover{color:#B7C6FF}
+button{font:inherit;border:0;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #0D0F13; color: #F2F4F7; font-family: {{fontFamily}}; position: relative; overflow: hidden; font-variant-numeric: tabular-nums">
+
+  <div style="margin: 12px 12px 0 12px; background: #2A1A19; color: #F2F4F7; border-radius: 28px; padding: 12px 12px 16px 12px; display: flex; flex-direction: column; position: relative; overflow: hidden">
+    <div style="position: absolute; width: 260px; height: 260px; border-radius: 130px; right: -90px; top: -110px; background: rgba(255,154,140,0.06)"></div>
+    <div style="display: flex; align-items: center; justify-content: space-between; position: relative">
+      <button aria-label="Previous month, August 2026" style="width: 48px; height: 48px; border-radius: 24px; background: #3A2523; color: #F2F4F7; display: flex; align-items: center; justify-content: center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <div style="font-size: 16px; font-weight: 600">September 2026</div>
+      <button aria-label="Next month, October 2026" style="width: 48px; height: 48px; border-radius: 24px; background: #3A2523; color: #F2F4F7; display: flex; align-items: center; justify-content: center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+    <div style="padding: 28px 12px 24px 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative">
+      <div style="font-size: 14px; font-weight: 500; color: #C9B3AF">Balance this month</div>
+      <div aria-label="Balance, minus 150,00 €" style="font-size: 54px; font-weight: 700; letter-spacing: -1.5px; line-height: 1.1; color: #FF9A8C">−150,00 €</div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; position: relative">
+      <div style="background: #35211F; border-radius: 18px; padding: 12px 14px; display: flex; align-items: center; gap: 10px">
+        <span style="width: 32px; height: 32px; border-radius: 16px; background: #12332C; color: #45D3A8; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        </span>
+        <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+          <div style="font-size: 12px; font-weight: 500; color: #C9B3AF">Income</div>
+          <div style="font-size: 16px; font-weight: 700">2000,00 €</div>
+        </div>
+      </div>
+      <div style="background: #35211F; border-radius: 18px; padding: 12px 14px; display: flex; align-items: center; gap: 10px">
+        <span style="width: 32px; height: 32px; border-radius: 16px; background: #4A2E2B; color: #F2F4F7; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+        </span>
+        <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+          <div style="font-size: 12px; font-weight: 500; color: #C9B3AF">Expenses</div>
+          <div style="font-size: 16px; font-weight: 700">2150,00 €</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 16px 24px 8px 24px; font-size: 15px; font-weight: 600">Spending by category</div>
+  <div style="margin: 0 16px; background: #171A21; border-radius: 20px; padding: 6px 16px; display: flex; flex-direction: column">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #232833">
+      <div style="font-size: 15px; font-weight: 500">Housing</div>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div style="font-size: 15px; font-weight: 600">1300,00 €</div>
+        <div style="font-size: 12px; font-weight: 600; color: {{accent}}; background: #1E2640; border-radius: 10px; padding: 3px 8px; min-width: 32px; text-align: center">60%</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #232833">
+      <div style="font-size: 15px; font-weight: 500">Shopping</div>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div style="font-size: 15px; font-weight: 600">645,00 €</div>
+        <div style="font-size: 12px; font-weight: 600; color: {{accent}}; background: #1E2640; border-radius: 10px; padding: 3px 8px; min-width: 32px; text-align: center">30%</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0">
+      <div style="font-size: 15px; font-weight: 500">Food</div>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div style="font-size: 15px; font-weight: 600">205,00 €</div>
+        <div style="font-size: 12px; font-weight: 600; color: {{accent}}; background: #1E2640; border-radius: 10px; padding: 3px 8px; min-width: 32px; text-align: center">10%</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 20px 24px 8px 24px; font-size: 15px; font-weight: 600">Transactions</div>
+  <div style="margin: 0 16px; background: #171A21; border-radius: 20px; padding: 4px 16px; display: flex; flex-direction: column">
+    <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #232833">
+      <div style="width: 40px; height: 40px; border-radius: 20px; background: #232833; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: #9AA3B2">S</div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0">
+        <div style="font-size: 15px; font-weight: 600">Shopping</div>
+        <div style="font-size: 13px; color: #9AA3B2">New laptop · 28/09/2026</div>
+      </div>
+      <div style="font-size: 15px; font-weight: 600">−645,00 €</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #232833">
+      <div style="width: 40px; height: 40px; border-radius: 20px; background: #12332C; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: #45D3A8">S</div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0">
+        <div style="font-size: 15px; font-weight: 600">Salary</div>
+        <div style="font-size: 13px; color: #9AA3B2">26/09/2026</div>
+      </div>
+      <div style="font-size: 15px; font-weight: 600; color: #45D3A8">+2000,00 €</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0">
+      <div style="width: 40px; height: 40px; border-radius: 20px; background: #232833; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: #9AA3B2">F</div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0">
+        <div style="font-size: 15px; font-weight: 600">Food</div>
+        <div style="font-size: 13px; color: #9AA3B2">Dinner with friends · 20/09/2026</div>
+      </div>
+      <div style="font-size: 15px; font-weight: 600">−48,00 €</div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 120px; background: linear-gradient(to bottom, rgba(13,15,19,0), #0D0F13 55%)"></div>
+  <button aria-label="Add transaction" style="position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); height: 56px; padding: 0 28px; border-radius: 28px; background: {{accent}}; color: #0D0F13; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    Add
+  </button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7D96FF","options":["#7D96FF","#45D3A8","#A58BFF","#F2F4F7"]},"typeface":{"editor":"enum","options":["System (Roboto)","Manrope"],"default":"Manrope"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const tf = this.props.typeface ?? 'Manrope';
+    return {
+      accent: this.props.accent ?? '#7D96FF',
+      fontFamily: tf === 'Manrope' ? "'Manrope', system-ui, sans-serif" : "system-ui, 'Roboto', sans-serif"
+    };
+  }
+}
+</script>
+</body>
+</html>

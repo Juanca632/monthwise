@@ -6,7 +6,7 @@ description: "Task list for 001 — Record Transactions and Monthly Summary"
 
 **Input**: Design documents from `/specs/001-monthly-summary/`
 
-**Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/, quickstart.md
+**Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/, quickstart.md, design.md
 
 **Tests**: Required. Constitution principle II says every behavior change ships with automated
 tests and all money calculations are unit-tested. Domain, format, storage and logging tasks
@@ -28,6 +28,8 @@ can test on the phone.
 - Money is integer cents; never divide cents to get a float (plan "Money flow").
 - No `console.*` with amounts, notes or categories; errors go through `reportError(code)`.
 - UI text exactly as in `contracts/ui-screens.md`.
+- Colors, type, spacing, radii and component looks come from `design.md`, through `src/ui/theme.ts`
+  tokens; no hard-coded values that have a token.
 - After each task: `npm test`, `npm run lint` and `npm run typecheck` pass (from T008 on).
 
 ---
@@ -51,7 +53,8 @@ CI and the privacy-related build config.
   placeholder `src/app/_layout.tsx` (a `Stack`) and `src/app/index.tsx` (text "Monthwise").
 - [ ] T003 Install the runtime dependencies from the plan's Dependencies table:
   `npx expo install expo-sqlite expo-localization expo-system-ui expo-status-bar
-  @react-native-community/datetimepicker @react-navigation/native`. Then
+  @react-native-community/datetimepicker @react-navigation/native expo-font expo-splash-screen
+  @expo-google-fonts/manrope @expo/vector-icons`. Then
   `npm ls @react-navigation/native` must show exactly one version. If it does not, align the
   version with the one `expo-router` uses. Do not install `unicode-segmenter` (conditional, see
   T011) or `expo-dev-client` (conditional, only if Expo Go stops running SDK 57; research R1).
@@ -208,8 +211,13 @@ type check pass; `device-checks.md` records the outputs and the `countGraphemes`
   - `formatAmountForInput(cents, tag)`: no grouping and no €. It uses the form separator rule:
     `,` if `Intl` gives `,`, otherwise `.`.
   - `formSeparator(tag)` and `spokenMoney(cents, tag)`, which says "minus" for negatives.
+  - `formatSignedMoney(cents, type, tag)` for list amounts: `+` for income and `−` for expense,
+    using the sign parts `Intl` gives with `signDisplay: 'always'`, never a hard-coded glyph.
+  - `currencyPosition(tag)`: `'before' | 'after'`, from where the `currency` part sits, used by
+    the form's `€` (design.md).
   Tests in `tests/unit/money.test.ts`: `0`, `-50`, `-15000`, `99999999`, totals above 999,999.99,
-  and the tags `es-ES`, `en-GB`, `en-US`, `ar-EG` (Latin digits, `.` separator). Expected strings
+  and the tags `es-ES`, `en-GB`, `en-US`, `en-IE`, `ar-EG` (Latin digits, `.` separator), plus
+  `formatSignedMoney` and `currencyPosition` for `es-ES` (after) and `en-IE` (before). Expected strings
   come from `device-checks.md`, the Hermes output. If Node's output (Jest) differs for a case, the
   device output wins. Stop, record the difference in `device-checks.md`, and tell the developer
   before changing a test or the code. Depends on T018.
@@ -307,9 +315,20 @@ see on the phone yet; the developer reviews the tests and the money logic.
 
 ### App shell and shared state
 
-- [ ] T027 [P] Implement `src/ui/theme.ts`: light and dark palettes (background, text, muted,
-  positive, negative, surface, accent) and `useTheme()` based on `useColorScheme()` (FR-030).
-  Tests in `tests/component/theme.test.tsx` with a mocked color scheme.
+- [ ] T027 [P] (FR-030) Implement `src/ui/theme.ts` with every token in design.md, exactly as
+  written there:
+  - the light and dark color tables;
+  - the four balance-card tones and `balanceTone(balanceCents)`: `'negative'` when < 0,
+    otherwise `'positive'`;
+  - the type scale, mapped to the Manrope font family names per weight, with
+    `fontVariant: ['tabular-nums']` on numeric tokens. It checks `Font.isLoaded('Manrope_400Regular')`
+    from `expo-font` when it renders, and if that is false it falls back to the system font with the
+    same numeric `fontWeight`;
+  - spacing, radii, `minTouch = 48`, the ripple colors, and `isLargeText`
+    (`useWindowDimensions().fontScale >= 1.3`).
+  `useTheme()` returns the palette for `useColorScheme()`. Tests in
+  `tests/component/theme.test.tsx`: light and dark with a mocked color scheme, and
+  `balanceTone` for −1, 0 and 1, the font fallback, and `isLargeText` at 1.0 and 1.3.
 - [ ] T028 Implement `src/hooks/useToday.ts` and `src/state/SelectedMonthContext.tsx`:
   - `useToday()` returns today's ISO date and recomputes on `AppState` → `active`. A `getToday()`
     function also exists for forms on open and on save.
@@ -332,15 +351,28 @@ see on the phone yet; the developer reviews the tests and the money logic.
 - [ ] T031 Implement `src/app/_layout.tsx`:
   - The first line is `import '@/lib/silenceLogs'`. It wraps `DatabaseProvider`,
     `SelectedMonthProvider` and `SummaryNoticeProvider`.
-  - A `Stack` with `index`, plus `transaction/new` and `transaction/[id]` with
-    `presentation: 'modal'`, and `<StatusBar style="auto" />`.
+  - Fonts: `SplashScreen.preventAutoHideAsync()` at module level. `useFonts` loads Manrope
+    400/500/600/700 from `@expo-google-fonts/manrope`, plus the Feather icon font
+    (`Feather.font` from `@expo/vector-icons`), so icons do not pop in late. The splash is hidden once the fonts are
+    loaded or have failed; on failure the app continues with the system font. The providers
+    (database included) mount right away, so the database opens while the fonts load. Only the
+    `Stack` waits for the fonts. It logs `timing fonts-ready <ms>`.
+  - A `Stack` with `headerShown: false` on all routes (the screens draw their own headers,
+    design.md), `index`, plus `transaction/new` and `transaction/[id]` with
+    `presentation: 'modal'`, and `<StatusBar style="auto" />`. Screens use
+    `useSafeAreaInsets()` from `react-native-safe-area-context` for the insets in design.md.
   - It exports `ErrorBoundary`, which renders "Something went wrong." and **Try again** and never
-    shows error text. The `onFatal` listener sets a `fatal` flag that renders the same screen.
+    shows error text. Its content is centered inside all safe-area insets (design.md, Insets). The `onFatal` listener sets a `fatal` flag that renders the same screen.
   - It logs `timing bundle-ready <ms>`, using `performance.now()` in the layout's first effect
     (milliseconds since the JS runtime started).
   Tests in `tests/component/errorHandling.test.tsx`, with `getVariant` mocked: a render error shows the generic screen
   without the error message; a fatal global error shows the same screen; a non-fatal one does not.
-  Depends on T021, T026, T028 and T030.
+  Tests in `tests/component/rootLayout.test.tsx`, with `useFonts` and `expo-splash-screen`
+  mocked:
+  - the app renders after a successful font load, and also after a failed one;
+  - `SplashScreen.hideAsync` is called in both cases;
+  - the database starts opening before the fonts finish.
+  Depends on T021, T026, T027, T028 and T030.
 
 **Checkpoint — Block 2b 🛑**: all storage and logging tests pass; the app opens in Expo Go with
 the new shell (placeholder summary).
@@ -355,19 +387,31 @@ and balance update, and keep them after a restart.
 **Independent Test**: from no data, record two expenses and one income in the current month. The
 list shows all three, and income, expenses and balance match a hand calculation to the cent.
 
-- [ ] T032 [P] [US1] Implement `src/ui/StateMessage.tsx`: a short line plus an optional action
+- [ ] T032 [P] [US1] Implement `src/ui/StateMessage.tsx` (look: design.md, Summary screen items 5–6): a short line plus an optional action
   button, used for the empty, error and "No expenses" lines. It also has a `banner` variant with a
   **Dismiss** button. Touch targets are ≥ 48 × 48 dp. Tests: see T040 and T050.
-- [ ] T033 [P] [US1] Implement `src/ui/Totals.tsx`: income, expenses and balance via
-  `formatMoney`. A negative balance shows the minus sign plus `theme.negative`, never color alone.
+- [ ] T033 [P] [US1] Implement `src/ui/Totals.tsx`, the balance card from design.md (Summary
+  screen item 1):
+  - It has a `header` slot where `MonthHeader` renders.
+  - It takes `content: { kind: 'loading' } | { kind: 'error', onRetry } | { kind: 'values',
+    incomeCents, expenseCents, balanceCents }`, and always renders the header row.
+  - Values use `formatMoney` in the tone from `balanceTone`; the negative color is the tone's
+    `cardAmount` (there is no separate `negative` token). Loading and error use the positive
+    tone, with the looks in design.md.
+  - The balance and stat amounts use `numberOfLines={1}`, `adjustsFontSizeToFit` and
+    `maxFontSizeMultiplier` 1.3. The stat pills stack when `isLargeText`. "Balance" plus the
+    amount form one accessible element.
+  - The decorative circle and the icon circles are hidden from the screen reader. A negative balance shows the minus sign plus the negative tone (`cardAmount`), never color alone.
   The accessibility labels are "Income, …", "Expenses, …" and "Balance, minus …"
-  (contracts/ui-screens.md). Text wraps instead of being cut. Tests: see T040.
-- [ ] T034 [P] [US1] Implement `src/ui/TransactionList.tsx`, a `FlatList`:
+  (contracts/ui-screens.md). Amounts follow design.md, Large text; other text wraps. Tests: see T040.
+- [ ] T034 [P] [US1] Implement `src/ui/TransactionList.tsx`, a `FlatList` styled as design.md
+  (Summary screen item 3):
   - Each item shows the type, category label, amount, numeric date and note.
   - The accessibility label is "Expense, Food, 12,50 €, 30 September 2026, note: lunch".
   - `ListHeaderComponent` is a slot. Bottom padding is at least the Add button height plus its
     margin. `onPressItem(id)`. Tests: see T040.
-- [ ] T035 [P] [US1] Implement `src/ui/MonthHeader.tsx` with the month title only (`monthTitle`).
+- [ ] T035 [P] [US1] Implement `src/ui/MonthHeader.tsx` with the month title only (`monthTitle`),
+  rendered inside the balance card's header row (design.md).
   Navigation buttons come in T047. Tests: see T040.
 - [ ] T036 [US1] Implement `src/hooks/useMonthSummary.ts`:
   - It loads `listByMonth(selected)` when the database is ready and on every screen focus
@@ -382,10 +426,13 @@ list shows all three, and income, expenses and balance match a hand calculation 
   Tests in `tests/component/useMonthSummary.test.tsx`: no loading on a same-month reload,
   overlapping queries, and error and retry. Depends on T017, T025, T026 and T028.
 - [ ] T037 [US1] Implement `src/app/index.tsx`, the summary screen:
-  - Layout: `MonthHeader`, then the states from contracts/ui-screens.md. In loading, a loading
-    indicator instead of totals and list. In error, "Couldn't load your data." with **Try again**.
+  - Layout: the balance card (`Totals` with `MonthHeader` in its header slot), then the states
+    from contracts/ui-screens.md. In loading and error, the card shows its loading or error
+    content (T033) and the list is not rendered. In error, "Couldn't load your data." with **Try again**.
     In empty, totals at 0 and "No transactions this month yet.". In ready, totals and the list.
-  - The floating **Add** button is always visible (FR-002) and navigates to `/transaction/new`.
+  - The floating **Add** button (design.md, Summary screen item 4) is always visible (FR-002) and
+    navigates to `/transaction/new`. The empty state also shows the helper line from the
+    contract.
   - Strings exactly as in the contract.
   Tests: see T040. Depends on T032–T036.
 **Checkpoint — Block 3a 🛑** (after T037 and T040, which can be written now for the summary
@@ -403,6 +450,15 @@ useful yet.
     - Category chips for the type.
     - Note input; `onChangeText` cuts the text to 100 graphemes with `cutToGraphemes`, without
       `maxLength`.
+  - **Insets**: header top padding `8 + insets.top`; keyboard-open layout and fallback as in
+    design.md.
+  - **Look**: design.md, Transaction form: segmented control with the selected border, centered
+    amount with its underline states, the `€` placed by `currencyPosition`, chips, date and note
+    (one column when `isLargeText`), per-field error styles, and the footer (failure message,
+    Delete, Save) pinned above the keyboard with `KeyboardAvoidingView`.
+  - **Screen reader**: as in design.md, a radiogroup labelled "Type" whose segments are radios
+    with `accessibilityState={{ checked }}`, and chips as buttons with
+    `accessibilityState={{ selected }}`.
   - **Layout**: a `ScrollView` with `keyboardShouldPersistTaps="handled"`. Amount, chips and
     **Save** stay visible above the keyboard at default text size.
   - **Save**: always enabled. It runs `validateDraft(draft, getToday())`; on errors it shows the
@@ -438,6 +494,10 @@ useful yet.
     scroll container has `keyboardShouldPersistTaps="handled"`; the real keyboard behavior is
     checked on the phone (quickstart scenario 12, SC-001).
   - The date picker gets `minimumDate` 2000-01-01 and `maximumDate` today (FR-006).
+  - The selected segment exposes `accessibilityState.checked` and the selected chip
+    `accessibilityState.selected`. With `useSafeAreaInsets` mocked, the header applies
+    `insets.top`. The `€` goes before the
+    number for an `en-IE` tag and after it for `es-ES`.
   - Every validation message, and focus on the first invalid field: `focus()` for amount,
     `setAccessibilityFocus` for category (FR-009). A type change clears
     the category (FR-012).
@@ -459,7 +519,7 @@ the SC-001 stopwatch check (scenario 12) in Expo Go.
 **Independent Test**: record expenses in three categories in one month. Each category shows the
 right amount and percentage, ordered from largest to smallest.
 
-- [ ] T042 [US2] (FR-016) Implement `src/ui/Breakdown.tsx`:
+- [ ] T042 [US2] (FR-016) Implement `src/ui/Breakdown.tsx`, styled as design.md (Summary screen item 2):
   - Rows from `summary.breakdown`: label, `formatMoney` and `percentLabel`. The accessibility
     label is "Food, 150,00 €, 30 percent", or "…, less than 1 percent" for `<1%`.
   - With expenses at 0 and income > 0, it shows "No expenses this month.".
@@ -535,7 +595,8 @@ shows only its own data, and **Add** adds to the month on screen.
 **Independent Test**: record transactions in two different past months. Each month shows only its
 own transactions and totals. Add one from a past month and check that it lands in that month.
 
-- [ ] T047 [US4] Add the month navigation to `src/ui/MonthHeader.tsx`:
+- [ ] T047 [US4] Add the month navigation to `src/ui/MonthHeader.tsx` (round 48 dp buttons on the
+  balance card, design.md):
   - Previous and next buttons; previous is hidden on January 2000, next on the current month
     (FR-021).
   - Accessibility labels "Previous month, September 2026" and "Next month, …". The header is
@@ -569,8 +630,15 @@ own transactions and totals. Add one from a past month and check that it lands i
     branch. The button text is "Seed 1,000 transactions".
   Tests in `tests/unit/seed.test.ts`: 1,000 rows, all dates within range, all valid.
 - [ ] T050 (FR-031) Accessibility pass across `src/ui/` and `src/app/`:
-  - Every tappable element has `accessibilityRole`, `accessibilityLabel` and ≥ 48 × 48 dp.
-  - Nothing sets `allowFontScaling={false}`. 999.999,99 € wraps at large font.
+  - Every tappable element has `accessibilityRole`, `accessibilityLabel`, ≥ 48 × 48 dp and
+    `android_ripple` (design.md).
+  - Decorative elements are hidden from the screen reader, and each row and pill is one accessible
+    element (design.md).
+  - Nothing sets `allowFontScaling={false}`. The balance and stat amounts have
+    `numberOfLines={1}`, `adjustsFontSizeToFit` and `maxFontSizeMultiplier` 1.3; all other text
+    wraps.
+  - With `fontScale` mocked at 1.3, the stat pills, the breakdown and list rows, and Date/Note
+    switch to their one-column layouts (design.md, Large text).
   Tests in `tests/component/accessibility.test.tsx` assert the example announcements from
   contracts/ui-screens.md: month header, previous button, the three totals including "minus", a
   breakdown row, a list item and a form field with an error.
