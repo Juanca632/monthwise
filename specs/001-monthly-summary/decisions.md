@@ -351,5 +351,8 @@ All rounds are closed (2026-10-05). This list is the input for `/speckit-specify
 - **D18 (Q18):** amounts are typed with the region's decimal separator; month names are in English
   like the rest of the UI. Long term, the app should detect the phone's language and support more
   languages (future feature); for now the UI is English and formats follow the region.
-- **D19 (Q19):** phone-to-phone transfer is not blocked, but not supported or tested in 001. It and
+- **D19 (Q19)** *(replaced by D20)*: phone-to-phone transfer is not blocked, but not supported or tested in 001. It and
   any other backup or transfer question belong to feature 006.
+- **D20 (planning, 2026-10-05):** replaces D19. Phone-to-phone transfer is blocked as well as
+  cloud backup, on every Android version. Moving data to a new phone is not needed in 001; backup
+  and transfer are decided in 006.

@@ -18,6 +18,10 @@
   added later.
 - Q: What accessibility level must 001 meet? → A: System large text without cut-off information,
   screen reader labels on every button and amount, and comfortable touch targets; no formal audit.
+- Q: (from planning) Turning off cloud backup on Android 10–11 also blocks the system's
+  phone-to-phone transfer. Should 001 allow that transfer at all? → A: No. In 001 app data stays
+  out of both cloud backup and phone-to-phone transfer on every Android version; how data moves
+  to a new phone is decided in 006.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -247,7 +251,9 @@ lands in that month.
   with no expenses), the app MUST show a short line saying what is missing plus the **Add**
   action; any total with no data behind it MUST show zero rather than being hidden.
 - **FR-023**: While a month's data is loading, the summary MUST show a loading state instead of
-  totals and list; it MUST NOT show zeros that look like an empty month.
+  totals and list; it MUST NOT show zeros that look like an empty month. When the month already
+  on screen is refreshed (for example after closing a form), its previous data MAY stay visible
+  until the new data arrives, instead of the loading state.
 - **FR-024**: If stored data cannot be read, the app MUST say the data could not be loaded and
   offer to try again; it MUST NOT show the month as empty.
 - **FR-025**: If adding, editing or deleting a transaction fails, the app MUST tell the user the
@@ -260,9 +266,9 @@ lands in that month.
 - **FR-026**: All data MUST be stored only on the phone and persist across app restarts and phone
   restarts; no account or login is required.
 - **FR-027**: No financial data (amounts, notes, categories) may leave the device or appear in
-  logs, analytics or error reports. App data MUST NOT be included in any cloud backup. The app
-  itself makes no network requests: no remote crash or error reporting and no analytics. (The
-  system's direct phone-to-phone transfer is not blocked; see Assumptions.)
+  logs, analytics or error reports. App data MUST NOT be included in any cloud backup or in the
+  system's direct phone-to-phone transfer, on every supported Android version. The app itself
+  makes no network requests: no remote crash or error reporting and no analytics.
 - **FR-028**: Money MUST be calculated exactly to the cent; totals MUST stay exact for any
   combination of valid transactions and never show rounding errors.
 - **FR-029**: Amounts and numeric dates MUST be displayed using the phone's region settings
@@ -281,8 +287,9 @@ lands in that month.
 
 - **Transaction**: one money movement recorded by the user. Attributes: type (income or expense),
   amount in EUR (exact to the cent), date (a calendar day between 1 January 2000 and today),
-  category, optional note (up to 100 visible characters), and the moment it was first recorded
-  (used to order same-day items; editing does not change it).
+  category, optional note (up to 100 visible characters), its recording order (used to order
+  same-day items, latest recorded first, even if the phone's clock moves back) and the moment it
+  was first recorded; editing changes neither.
 - **Category**: a fixed label that belongs to exactly one type; it is identified by its type plus
   its label, so expense "Other" and income "Other" are different categories. Not created, renamed
   or deleted by the user in this feature.
@@ -319,10 +326,10 @@ lands in that month.
 - Android is the only platform for this feature, per the constitution.
 - "Month" means the calendar month in the phone's local time; a transaction belongs to the month
   of its date, not the moment it was recorded.
-- Data is lost if the app is uninstalled or the phone is lost, because nothing leaves the phone
-  (FR-027). This is accepted until feature 006 (Backup and restore). This feature does not block
-  the system's direct phone-to-phone transfer, but does not support or test it either; moving
-  data to a new phone on purpose belongs to feature 006.
+- Data is lost if the app is uninstalled, the phone is lost or the user moves to a new phone,
+  because nothing leaves the phone (FR-027), not even through the system's phone-to-phone
+  transfer. This is accepted until feature 006 (Backup and restore), which decides how backup and
+  moving data to a new phone work.
 - Fixed monthly payments (rent, subscriptions) are recorded by hand each month in this feature;
   automating them is feature 004.
 - Out of scope: login and sync, charts (002), savings goal (003), recurring expenses (004), bank
