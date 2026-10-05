@@ -22,7 +22,7 @@ CREATE TABLE transactions (
   type         TEXT    NOT NULL CHECK (type IN ('income', 'expense')),
   amount_cents INTEGER NOT NULL CHECK (amount_cents BETWEEN 1 AND 99999999),
   date         TEXT    NOT NULL CHECK (date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'
-                                       AND date = date(date)
+                                       AND date IS date(date)
                                        AND date >= '2000-01-01'),
   category     TEXT    NOT NULL CHECK (
                  (type = 'expense' AND category IN ('food', 'transport', 'housing', 'bills',
@@ -37,8 +37,9 @@ CREATE INDEX idx_transactions_date ON transactions (date);
 Notes:
 
 - **Why cents as INTEGER**: constitution principle III; `0.1 + 0.2 ≠ 0.3` in floating point.
-- **Real dates only**: `date = date(date)` rejects days that do not exist (`2026-13-45`,
-  `2026-02-30`), because SQLite's `date()` returns NULL or a different day for them.
+- **Real dates only**: `date IS date(date)` rejects days that do not exist (`2026-13-45`,
+  `2026-02-30`), because SQLite's `date()` returns NULL or a different day for them. It is `IS`,
+  not `=`: `x = NULL` is NULL, and a CHECK that evaluates to NULL passes (found in T024).
 - **Why the date is TEXT**: a transaction belongs to a calendar day, not an instant. A text day
   does not shift when the time zone changes, and `YYYY-MM-DD` sorts correctly as text.
 - **What the database does not check**: "date ≤ today", because a stored date may be later than

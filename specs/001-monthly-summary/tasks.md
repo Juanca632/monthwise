@@ -238,7 +238,7 @@ see on the phone yet; the developer reviews the tests and the money logic.
 
 ### Logging and variant
 
-- [ ] T021 Implement the logging modules (plan, "Production builds log nothing"):
+- [X] T021 Implement the logging modules (plan, "Production builds log nothing"):
   - `src/lib/variant.ts`: `getVariant()` reads `Constants.expoConfig?.extra?.variant`, where a
     missing or unknown value means `'production'`.
   - `src/lib/silenceLogs.ts`, in `preview` and `production` only:
@@ -258,13 +258,13 @@ see on the phone yet; the developer reviews the tests and the money logic.
 
 ### Storage
 
-- [ ] T022 [P] Create `src/data/sqlDatabase.ts`, the `SqlDatabase` interface from
+- [X] T022 [P] Create `src/data/sqlDatabase.ts`, the `SqlDatabase` interface from
   contracts/transaction-repository.md, and `src/data/errors.ts` with `StorageError(code)` and
   `NotFoundError`. Neither error carries the original message.
-- [ ] T023 Create `tests/helpers/betterSqliteAdapter.ts`: it implements `SqlDatabase` over an
+- [X] T023 Create `tests/helpers/betterSqliteAdapter.ts`: it implements `SqlDatabase` over an
   in-memory or temp-file `better-sqlite3` database, returning promises, with `runAsync` returning
   `{ lastInsertRowId, changes }`. Depends on T022.
-- [ ] T024 Implement `src/data/migrations.ts` `openAndMigrate(db)`:
+- [X] T024 Implement `src/data/migrations.ts` `openAndMigrate(db)`:
   - It runs `PRAGMA journal_mode = WAL` outside any transaction.
   - Then, in one transaction, it applies the migrations above `PRAGMA user_version` and sets the
     new version.
@@ -274,7 +274,7 @@ see on the phone yet; the developer reviews the tests and the money logic.
   - `user_version = 1`; opening twice does not re-run; `journal_mode` returns `wal`.
   - Each CHECK rejects a bad row, including `2026-02-30` and `2026-13-45`.
   Depends on T022 and T023.
-- [ ] T025 (FR-026, FR-028, SC-003) Implement `src/data/transactionRepository.ts` from
+- [X] T025 (FR-026, FR-028, SC-003) Implement `src/data/transactionRepository.ts` from
   contracts/transaction-repository.md:
   - `listByMonth` (ordered `date DESC, id DESC`), `getById`, `create(input, now)`,
     `update(id, input)`, which keeps `created_at`, and `remove(id)`.
@@ -293,7 +293,7 @@ see on the phone yet; the developer reviews the tests and the money logic.
   - FR-026: create rows on a temp file, close the database, reopen it with `openAndMigrate`, and
     the rows are still there.
   Depends on T013, T017 and T024.
-- [ ] T026 Implement `src/data/DatabaseProvider.tsx`:
+- [X] T026 Implement `src/data/DatabaseProvider.tsx`:
   - It opens `openDatabaseAsync('monthwise.db')` and calls `openAndMigrate`.
   - It exposes `status: 'loading' | 'error' | 'ready'`, `retry()` (reopen), `repository` (when
     ready) and `whenReady(timeoutMs = 10000)`. `whenReady` resolves **with the repository**
@@ -319,7 +319,7 @@ see on the phone yet; the developer reviews the tests and the money logic.
 
 ### App shell and shared state
 
-- [ ] T027 [P] (FR-030) Implement `src/ui/theme.ts` with every token in design.md, exactly as
+- [X] T027 [P] (FR-030) Implement `src/ui/theme.ts` with every token in design.md, exactly as
   written there:
   - the light and dark color tables;
   - the four balance-card tones and `balanceTone(balanceCents)`: `'negative'` when < 0,
@@ -333,7 +333,7 @@ see on the phone yet; the developer reviews the tests and the money logic.
   `useTheme()` returns the palette for `useColorScheme()`. Tests in
   `tests/component/theme.test.tsx`: light and dark with a mocked color scheme, and
   `balanceTone` for −1, 0 and 1, the font fallback, and `isLargeText` at 1.0 and 1.3.
-- [ ] T028 Implement `src/hooks/useToday.ts` and `src/state/SelectedMonthContext.tsx`:
+- [X] T028 Implement `src/hooks/useToday.ts` and `src/state/SelectedMonthContext.tsx`:
   - `useToday()` returns today's ISO date and recomputes on `AppState` → `active`. A `getToday()`
     function also exists for forms on open and on save.
   - The context starts at the current month (FR-014). It exposes `selected`, `setSelected` and
@@ -341,18 +341,18 @@ see on the phone yet; the developer reviews the tests and the money logic.
     current month and the month changed, it moves to the new current month; a past month stays.
   Tests in `tests/unit/todayAndMonth.test.tsx` with fake timers and `AppState` events.
   Depends on T013.
-- [ ] T029 Implement `src/hooks/useRegion.ts`: it uses `useLocales()` from
+- [X] T029 Implement `src/hooks/useRegion.ts`: it uses `useLocales()` from
   `expo-localization`, then `pickFormattingTag`. It returns `{ tag, formSeparator }` and
   re-renders on settings changes. Tests in `tests/unit/useRegion.test.tsx` with mocked locales.
   Depends on T018 and T019.
-- [ ] T030 Implement `src/state/SummaryNoticeContext.tsx`: it holds one optional notice code,
+- [X] T030 Implement `src/state/SummaryNoticeContext.tsx`: it holds one optional notice code,
   `'open_failed'`, the only summary banner in the contract. It exposes `show(code)` and
   `dismiss()`. The provider sits inside `SelectedMonthProvider` and clears itself whenever
   `selected` changes to a different year or month (compared by value), whatever the reason: navigation, a save (FR-020) or the foreground
   rollover. This is the only place the month-change rule lives. Tests in
   `tests/component/summaryNotice.test.tsx`: show, dismiss, cleared on a month change from
   `setSelected`. Depends on T028.
-- [ ] T031 Implement `src/app/_layout.tsx`:
+- [X] T031 Implement `src/app/_layout.tsx`:
   - The first line is `import '@/lib/silenceLogs'`. It wraps `DatabaseProvider`,
     `SelectedMonthProvider` and `SummaryNoticeProvider`.
   - Fonts: `SplashScreen.preventAutoHideAsync()` at module level. `useFonts` loads Manrope
