@@ -89,18 +89,15 @@ in beta (`next` tag) and is not used.
   { style: 'currency', currency: 'EUR' })` and `Intl.DateTimeFormat(languageTag,
   { day: '2-digit', month: '2-digit', year: 'numeric' })`. Month names (header and spoken dates)
   come from an English constant list, since they are interface text (FR-029).
-- **Formatting locale (decided for both outcomes)**: a typical user has English as the language
-  and a European region, for example `en-ES`. Older Android ICU data may not include `en_ES` and
-  fall back to plain `en` (`€12.50`). `format/locale.ts` picks one formatting tag used by every
-  formatter (display, form and spoken text):
-  - If the device check in the first task shows that the phone's `languageTag` formats with the
-    region's conventions, the formatters use `languageTag` as is.
-  - If not, they use a tag built from the region: a small table maps euro-area region codes to
-    their main language (`ES→es-ES`, `DE→de-DE`, `FR→fr-FR`, `IT→it-IT`, `PT→pt-PT`,
-    `NL→nl-NL`, and so on). Regions not in the table use `languageTag`. This only changes number
-    and date formatting; the UI stays English.
-  Either way, one tag feeds every formatter, so the form and the display agree. Unit tests cover
-  the table and both paths.
+- **Formatting locale**: a typical user has English as the language and a European region,
+  for example `en-ES`. Android's ICU data differs between OS versions, and older ones may not
+  include `en_ES`, falling back to plain `en` (`€12.50`). So the result on one phone says nothing
+  about another. `format/locale.ts` therefore **always** builds the formatting tag from the
+  region: a table maps euro-area region codes to their main language (`ES→es-ES`, `DE→de-DE`, …).
+  Regions not in the table, or a `null` region, use the phone's `languageTag`. This only changes
+  number and date formatting; the UI stays English. One tag feeds every formatter (display, form
+  and spoken text), so they always agree. The on-device check in the first task is informational:
+  it records the Hermes output that the formatting tests must match.
 - **Money without floats**: `Intl.NumberFormat.format` takes a number, and `cents / 100` would
   put money in a float. So `format/money.ts` splits the cents with integer maths
   (`euros = (abs - abs % 100) / 100`, `rest = abs % 100`; both exact for integers). It calls

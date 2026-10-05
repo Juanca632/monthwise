@@ -109,7 +109,7 @@ app.config.ts                     # Expo config: name "Monthwise", Android packa
                                   # INTERNET blocked outside development builds
 plugins/
 └── withNoDataExtraction.js       # config plugin: data_extraction_rules.xml (Android 12+)
-eas.json                          # build profiles (development, preview, production); APK output
+eas.json                          # build profiles (preview, production); APK output
 package.json
 tsconfig.json
 jest.config.js
@@ -130,6 +130,7 @@ src/
 │   └── validation.ts             # TransactionDraft → errors or TransactionInput
 ├── data/
 │   ├── DatabaseProvider.tsx      # open + migrate; loading | error | ready, retry
+│   ├── errors.ts                 # StorageError, NotFoundError (codes only)
 │   ├── sqlDatabase.ts            # SqlDatabase interface
 │   ├── migrations.ts             # schema versions (PRAGMA user_version)
 │   └── transactionRepository.ts  # contracts/transaction-repository.md
@@ -142,7 +143,8 @@ src/
 │   ├── useToday.ts               # today, refreshed on foreground; forms also read it on open and on save
 │   └── useRegion.ts              # locale tag; decimal separator derived from the same Intl formatter
 ├── state/
-│   └── SelectedMonthContext.tsx
+│   ├── SelectedMonthContext.tsx
+│   └── SummaryNoticeContext.tsx  # one-off banner messages for the summary (FR-025)
 ├── ui/                           # presentational components
 │   ├── MonthHeader.tsx
 │   ├── Totals.tsx
@@ -152,8 +154,10 @@ src/
 │   ├── StateMessage.tsx          # empty / error lines with optional action
 │   └── theme.ts                  # light and dark palettes
 ├── dev/
-│   └── seed.ts                   # preview-only dev tools: seed for SC-004, simulated storage error
+│   ├── seed.ts                   # preview-only dev tools: seed for SC-004
+│   └── storageErrorFlag.ts       # preview-only flag for the simulated storage error
 └── lib/
+    ├── variant.ts                # getVariant(): extra.variant, missing = production
     ├── silenceLogs.ts            # preview/production: console no-op, silent global handler
     ├── devLog.ts                 # allow-listed: error codes and timings, preview only
     └── reportError.ts            # codes only, no financial data; dev and preview only
@@ -162,6 +166,7 @@ tests/
 ├── unit/                         # domain/, format/, lib/, app config, hooks and state with fake clock
 ├── integration/                  # repository + migrations on better-sqlite3
 ├── component/                    # summary states, form behaviour
+├── fixtures/                     # reference transaction set (SC-002)
 └── helpers/
     └── betterSqliteAdapter.ts    # SqlDatabase over better-sqlite3
 
@@ -194,8 +199,8 @@ layer instead of next to the code, so the tests of each layer are easy to find.
   and an unset or unknown value means `production`. It passes the result to the code as
   `extra.variant`, which the code reads through `expo-constants`, and a missing value there also
   means `production`. `development` is set explicitly by the `npm start` script
-  (`"start": "APP_VARIANT=development expo start"`) and the `development` profile in `eas.json`;
-  the `preview` profile sets `APP_VARIANT=preview` and `production` sets `APP_VARIANT=production`. So a forgotten setting can only make a build *more*
+  (`"start": "APP_VARIANT=development expo start"`). `eas.json` has no `development` profile
+  until `expo-dev-client` is needed (research R1). The `preview` profile sets `APP_VARIANT=preview` and `production` sets `APP_VARIANT=production`. So a forgotten setting can only make a build *more*
   locked down. Unit tests cover the unset case in both `app.config.ts` and `silenceLogs.ts`. The
   module also installs a global JS error handler (`ErrorUtils.setGlobalHandler`) that prints
   nothing. Only when `isFatal` is true does it set a root-level `fatal` flag, and `_layout.tsx`
@@ -220,11 +225,9 @@ layer instead of next to the code, so the tests of each layer are easy to find.
 
 ## Open Items Before Implementation
 
-None. The first implementation task runs two checks on the phone, and both outcomes of each
-are already decided:
-- `Intl.Segmenter` available or not (research R13).
-- The phone's locale tag formats with the region's conventions or not, for example `en-ES`
-  (research R7, formatting locale).
+None. The first implementation task checks on the phone whether `Intl.Segmenter` exists; both
+outcomes are already decided (research R13). It also records the Hermes `Intl` output that the
+formatting tests must match (research R7).
 
 ## Complexity Tracking
 

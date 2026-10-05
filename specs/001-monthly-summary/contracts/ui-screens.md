@@ -103,6 +103,10 @@ Actions:
   content and shows "This transaction no longer exists." (FR-025). If `remove` throws it, the
   goal is already met: the form closes and the summary reloads.
 
+Focus on the first invalid field (FR-009): amount and note call `TextInput.focus()`. Date and
+category scroll into view and move screen reader focus to the field's label with
+`AccessibilityInfo.setAccessibilityFocus`.
+
 Validation messages:
 
 | Case                          | Message                                               |
@@ -114,6 +118,18 @@ Validation messages:
 | Not a number / negative       | Enter a valid amount.                                 |
 | No category                   | Pick a category.                                      |
 | Date after today (stored date)| Pick a date up to today.                              |
+
+## Interface strings
+
+| Where | Text |
+| --- | --- |
+| Summary buttons | **Add**, **Try again**, **Dismiss** |
+| Form titles | "Add transaction", "Edit transaction" |
+| Form labels | "Type" (**Expense** / **Income**), "Amount", "Date", "Category", "Note (optional)" |
+| Form buttons | **Save**, **Delete** |
+| Delete dialog | "Delete this transaction?" with **Delete** and **Cancel** |
+| Discard dialog | "Discard changes?" with **Discard** and **Keep editing** |
+| Category labels | As in data-model.md |
 
 ## Accessibility (FR-031, SC-007)
 
