@@ -367,8 +367,11 @@ see on the phone yet; the developer reviews the tests and the money logic.
     `useSafeAreaInsets()` from `react-native-safe-area-context` for the insets in design.md.
   - It exports `ErrorBoundary`, which renders "Something went wrong." and **Try again** and never
     shows error text. Its content is centered inside all safe-area insets (design.md, Insets). The `onFatal` listener sets a `fatal` flag that renders the same screen.
-  - It logs `timing bundle-ready <ms>`, using `performance.now()` in the layout's first effect
-    (milliseconds since the JS runtime started).
+  - It logs `timing bundle-ready <ms>` in the layout's first effect, and `fonts-ready` when
+    the fonts settle, both as milliseconds since the React Native runtime started:
+    `performance.now() - performance.rnStartupTiming.startTime`. `performance.now()` alone is
+    not that: on the phone it counts from a system clock that runs for days (found in Block 3b,
+    2026-10-05). If the startup time is not available, the two lines are skipped.
   Tests in `tests/component/errorHandling.test.tsx`, with `getVariant` mocked: a render error shows the generic screen
   without the error message; a fatal global error shows the same screen; a non-fatal one does not.
   Tests in `tests/component/rootLayout.test.tsx`, with `useFonts` and `expo-splash-screen`

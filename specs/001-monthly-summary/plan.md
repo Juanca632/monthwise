@@ -216,7 +216,9 @@ layer instead of next to the code, so the tests of each layer are easy to find.
   go to `reportError` as a code. A component test covers both paths. Only one allow-listed logger
   (`src/lib/devLog.ts`) keeps a reference to the original `console.log`. In `preview` it writes
   error codes and the SC-004 timings (`bundle-ready`, `fonts-ready`, `db-open`, `first-query`,
-  durations in ms only); in `production` it writes nothing. Development builds keep normal console output.
+  durations in ms only; `bundle-ready` and `fonts-ready` count from the React Native runtime
+  start, `performance.rnStartupTiming.startTime`, because `performance.now()` on the phone
+  counts from a system clock, not from app start); in `production` it writes nothing. Development builds keep normal console output.
 - **Scope of FR-027**: the guarantees apply to `preview` and `production` builds. Development
   and Expo Go sessions stream console output to the dev server, and Expo Go has its own backup
   settings, so they use made-up data only.
