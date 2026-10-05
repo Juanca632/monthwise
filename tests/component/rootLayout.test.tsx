@@ -6,6 +6,7 @@ import { logTiming } from '@/lib/devLog';
 // Development leaves the console and the global error handler alone.
 jest.mock('@/lib/variant', () => ({ getVariant: () => 'development' }));
 jest.mock('@/lib/devLog', () => ({ devLog: jest.fn(), logTiming: jest.fn() }));
+jest.mock('@/lib/sinceStartup', () => ({ msSinceStartup: () => 416 }));
 
 let mockFonts: [boolean, Error | null] = [false, null];
 jest.mock('expo-font', () => ({
@@ -58,6 +59,8 @@ it('renders the app and hides the splash after the fonts load', async () => {
   await waitFor(() => {
     const timings = jest.mocked(logTiming).mock.calls.map(([name]) => name);
     expect(timings).toEqual(expect.arrayContaining(['bundle-ready', 'fonts-ready', 'db-open']));
+    // Startup lines count from the runtime start, not from the clock origin.
+    expect(logTiming).toHaveBeenCalledWith('bundle-ready', 416);
   });
 });
 

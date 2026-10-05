@@ -367,8 +367,11 @@ see on the phone yet; the developer reviews the tests and the money logic.
     `useSafeAreaInsets()` from `react-native-safe-area-context` for the insets in design.md.
   - It exports `ErrorBoundary`, which renders "Something went wrong." and **Try again** and never
     shows error text. Its content is centered inside all safe-area insets (design.md, Insets). The `onFatal` listener sets a `fatal` flag that renders the same screen.
-  - It logs `timing bundle-ready <ms>`, using `performance.now()` in the layout's first effect
-    (milliseconds since the JS runtime started).
+  - It logs `timing bundle-ready <ms>` in the layout's first effect, and `fonts-ready` when
+    the fonts settle, both as milliseconds since the React Native runtime started:
+    `performance.now() - performance.rnStartupTiming.startTime`. `performance.now()` alone is
+    not that: on the phone it counts from a system clock that runs for days (found in Block 3b,
+    2026-10-05). If the startup time is not available, the two lines are skipped.
   Tests in `tests/component/errorHandling.test.tsx`, with `getVariant` mocked: a render error shows the generic screen
   without the error message; a fatal global error shows the same screen; a non-fatal one does not.
   Tests in `tests/component/rootLayout.test.tsx`, with `useFonts` and `expo-splash-screen`
@@ -391,10 +394,10 @@ and balance update, and keep them after a restart.
 **Independent Test**: from no data, record two expenses and one income in the current month. The
 list shows all three, and income, expenses and balance match a hand calculation to the cent.
 
-- [ ] T032 [P] [US1] Implement `src/ui/StateMessage.tsx` (look: design.md, Summary screen items 5–6): a short line plus an optional action
+- [X] T032 [P] [US1] Implement `src/ui/StateMessage.tsx` (look: design.md, Summary screen items 5–6): a short line plus an optional action
   button, used for the empty, error and "No expenses" lines. It also has a `banner` variant with a
   **Dismiss** button. Touch targets are ≥ 48 × 48 dp. Tests: see T040 and T050.
-- [ ] T033 [P] [US1] Implement `src/ui/Totals.tsx`, the balance card from design.md (Summary
+- [X] T033 [P] [US1] Implement `src/ui/Totals.tsx`, the balance card from design.md (Summary
   screen item 1):
   - It has a `header` slot where `MonthHeader` renders.
   - It takes `content: { kind: 'loading' } | { kind: 'error', onRetry } | { kind: 'values',
@@ -408,16 +411,16 @@ list shows all three, and income, expenses and balance match a hand calculation 
   - The decorative circle and the icon circles are hidden from the screen reader. A negative balance shows the minus sign plus the negative tone (`cardAmount`), never color alone.
   The accessibility labels are "Income, …", "Expenses, …" and "Balance, minus …"
   (contracts/ui-screens.md). Amounts follow design.md, Large text; other text wraps. Tests: see T040.
-- [ ] T034 [P] [US1] Implement `src/ui/TransactionList.tsx`, a `FlatList` styled as design.md
+- [X] T034 [P] [US1] Implement `src/ui/TransactionList.tsx`, a `FlatList` styled as design.md
   (Summary screen item 3):
   - Each item shows the type, category label, amount, numeric date and note.
   - The accessibility label is "Expense, Food, 12,50 €, 30 September 2026, note: lunch".
   - `ListHeaderComponent` is a slot. Bottom padding is at least the Add button height plus its
     margin. `onPressItem(id)`. Tests: see T040.
-- [ ] T035 [P] [US1] Implement `src/ui/MonthHeader.tsx` with the month title only (`monthTitle`),
+- [X] T035 [P] [US1] Implement `src/ui/MonthHeader.tsx` with the month title only (`monthTitle`),
   rendered inside the balance card's header row (design.md).
   Navigation buttons come in T047. Tests: see T040.
-- [ ] T036 [US1] Implement `src/hooks/useMonthSummary.ts`:
+- [X] T036 [US1] Implement `src/hooks/useMonthSummary.ts`:
   - It loads `listByMonth(selected)` when the database is ready and on every screen focus
     (`useFocusEffect`).
   - The `loading` state appears only when there is no data yet for that month: first load, a
@@ -429,7 +432,7 @@ list shows all three, and income, expenses and balance match a hand calculation 
     `timing first-query <ms>` once.
   Tests in `tests/component/useMonthSummary.test.tsx`: no loading on a same-month reload,
   overlapping queries, and error and retry. Depends on T017, T025, T026 and T028.
-- [ ] T037 [US1] Implement `src/app/index.tsx`, the summary screen:
+- [X] T037 [US1] Implement `src/app/index.tsx`, the summary screen:
   - Layout: the balance card (`Totals` with `MonthHeader` in its header slot), then the states
     from contracts/ui-screens.md. In loading and error, the card shows its loading or error
     content (T033) and the list is not rendered. In error, "Couldn't load your data." with **Try again**.
@@ -444,7 +447,7 @@ states): on the phone, the summary shows the current month and its empty and loa
 **Add** is visible; its route (`/transaction/new`) is added in T039, so tapping it does nothing
 useful yet.
 
-- [ ] T038 [US1] (FR-001, FR-011) Implement `src/ui/TransactionForm.tsx` (shared by new and edit):
+- [X] T038 [US1] (FR-001, FR-011) Implement `src/ui/TransactionForm.tsx` (shared by new and edit):
   - **Fields**:
     - Type toggle; changing the type clears the category (FR-012).
     - Amount `TextInput` with `keyboardType="decimal-pad"`, autofocused on new.
@@ -478,14 +481,14 @@ useful yet.
     is kept.
   - **Accessibility**: every field labelled "label, value, error"; touch targets ≥ 48 dp.
   Tests: see T041 and T046. Depends on T016, T019, T020, T027 and T029.
-- [ ] T039 [US1] (FR-001) Implement `src/app/transaction/new.tsx`:
+- [X] T039 [US1] (FR-001) Implement `src/app/transaction/new.tsx`:
   - It renders `TransactionForm` with the defaults: type Expense, empty amount, no category, and
     `defaultFormDate(selected, getToday())`.
   - On Save: `const repo = await whenReady(); await repo.create(input, Date.now())`. Then it
     sets the selected month to `monthOf(input.date)` (FR-020) and closes.
   - If it fails, the form shows the save error and keeps its content.
   Tests: see T041. Depends on T037 and T038.
-- [ ] T040 [US1] Component tests for the summary in `tests/component/summaryScreen.test.tsx`,
+- [X] T040 [US1] Component tests for the summary in `tests/component/summaryScreen.test.tsx`,
   with the repository on the better-sqlite3 adapter:
   - It opens on the current month (FR-014). Loading shows the indicator and **Add** with no zeros
     (FR-023). Error shows the message, **Try again** and **Add** (FR-024).
@@ -493,7 +496,7 @@ useful yet.
     "minus" in its label, and list order (FR-015, FR-017).
   - Focusing again after a change updates the screen without the loading state (FR-019, FR-023).
   - The database still opening keeps **Add** visible (FR-002).
-- [ ] T041 [US1] Component tests for the new form in `tests/component/transactionFormNew.test.tsx`:
+- [X] T041 [US1] Component tests for the new form in `tests/component/transactionFormNew.test.tsx`:
   - Defaults (FR-003). Recording an expense takes 4 interactions: open, type, chip, Save. The
     scroll container has `keyboardShouldPersistTaps="handled"`; the real keyboard behavior is
     checked on the phone (quickstart scenario 12, SC-001).
@@ -523,13 +526,13 @@ the SC-001 stopwatch check (scenario 12) in Expo Go.
 **Independent Test**: record expenses in three categories in one month. Each category shows the
 right amount and percentage, ordered from largest to smallest.
 
-- [ ] T042 [US2] (FR-016) Implement `src/ui/Breakdown.tsx`, styled as design.md (Summary screen item 2):
+- [X] T042 [US2] (FR-016) Implement `src/ui/Breakdown.tsx`, styled as design.md (Summary screen item 2):
   - Rows from `summary.breakdown`: label, `formatMoney` and `percentLabel`. The accessibility
     label is "Food, 150,00 €, 30 percent", or "…, less than 1 percent" for `<1%`.
   - With expenses at 0 and income > 0, it shows "No expenses this month.".
   - Render it in `src/app/index.tsx` between `Totals` and the list (list header) in the ready
     state only. It is hidden in the empty state. Tests: see T043.
-- [ ] T043 [US2] Component tests in `tests/component/breakdown.test.tsx`:
+- [X] T043 [US2] Component tests in `tests/component/breakdown.test.tsx`:
   - The spec example 300/150/50 → 60 %, 30 %, 10 % in order; ties alphabetical; `<1%`.
   - Income only → "No expenses this month."; categories with no expenses are not listed; the
     breakdown is hidden when the month is empty.
@@ -546,7 +549,7 @@ right amount and percentage, ordered from largest to smallest.
 and the breakdown update. Then delete it and check that it disappears and the totals return to
 their previous values.
 
-- [ ] T044 [US3] (FR-011, FR-013) Implement `src/app/transaction/[id].tsx`:
+- [X] T044 [US3] (FR-011, FR-013) Implement `src/app/transaction/[id].tsx`:
   - **Loading** (`getById` in progress): title plus indicator, no fields; closing is allowed with
     no prompt.
   - **Load fails** (`getById` throws or returns null): `notice.show('open_failed')`, then close.
@@ -559,17 +562,20 @@ their previous values.
   - **Delete**: confirm "Delete this transaction?" with **Delete** and **Cancel**, then
     `(await whenReady()).remove(id)`. `NotFoundError` counts as done: close and the summary reloads. On any
     other error, "Couldn't delete.".
+  - Declare `<Stack.Screen name="transaction/[id]" options={{ presentation: 'modal' }} />` in
+    `src/app/_layout.tsx`. It was left out until this file exists, because Expo Router warns
+    about a declared screen with no route file (found in Block 3b, 2026-10-05).
   - Wire `onPressItem` in `src/app/index.tsx` to `/transaction/[id]`. Opening a transaction
     calls `notice.dismiss()`.
   Tests: see T046.
-- [ ] T045 [US3] Show the summary banner in `src/app/index.tsx`, using `SummaryNoticeContext` and
+- [X] T045 [US3] Show the summary banner in `src/app/index.tsx`, using `SummaryNoticeContext` and
   the `StateMessage` banner variant:
   - "Couldn't open this transaction." for `open_failed`.
   - **Dismiss** clears it. A month change clears it (T030), and so does opening another
     transaction (T044).
   - It is announced once with `AccessibilityInfo.announceForAccessibility`.
   Tests: see T046.
-- [ ] T046 [US3] (FR-011, FR-013) Component tests in `tests/component/transactionFormEdit.test.tsx`:
+- [X] T046 [US3] (FR-011, FR-013) Component tests in `tests/component/transactionFormEdit.test.tsx`:
   - Edit 12.50 → 21.50 updates the list, totals and breakdown. Changing to income clears the
     category and requires a new one.
   - Moving the date to the previous month makes the summary show that month (FR-020).
@@ -599,7 +605,7 @@ shows only its own data, and **Add** adds to the month on screen.
 **Independent Test**: record transactions in two different past months. Each month shows only its
 own transactions and totals. Add one from a past month and check that it lands in that month.
 
-- [ ] T047 [US4] Add the month navigation to `src/ui/MonthHeader.tsx` (round 48 dp buttons on the
+- [X] T047 [US4] Add the month navigation to `src/ui/MonthHeader.tsx` (round 48 dp buttons on the
   balance card, design.md):
   - Previous and next buttons; previous is hidden on January 2000, next on the current month
     (FR-021).
@@ -607,7 +613,7 @@ own transactions and totals. Add one from a past month and check that it lands i
     announced as "October 2026". Touch targets ≥ 48 dp.
   - It calls `goPrevious`/`goNext` from `SelectedMonthContext`, and works in every summary state.
   Tests: see T048.
-- [ ] T048 [US4] Component tests in `tests/component/monthNavigation.test.tsx`:
+- [X] T048 [US4] Component tests in `tests/component/monthNavigation.test.tsx`:
   - The limits at January 2000 and the current month. A past empty month shows zeros and the empty
     line. Moving back and forward reaches the current month again.
   - No balance carries over (FR-018). On September 2026, **Add** defaults to 2026-09-30, and after

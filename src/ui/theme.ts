@@ -215,6 +215,15 @@ export const radii = {
 /** FR-031: every tappable element is at least 48 × 48 dp. */
 export const minTouch = 48;
 
+/** Feather icon sizes (design.md, Icons). design.md gives no size for the empty-state icon, so it
+ * keeps the approved mockup's 26. */
+export const iconSize = {
+  button: 20,
+  circle: 16,
+  message: 14,
+  emptyState: 26,
+} as const;
+
 export const LARGE_TEXT_SCALE = 1.3;
 
 export function isLargeTextScale(fontScale: number): boolean {
