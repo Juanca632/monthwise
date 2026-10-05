@@ -7,6 +7,7 @@ import type { TransactionInput } from '@/domain/validation';
 import { SelectedMonthProvider } from '@/state/SelectedMonthContext';
 import { SummaryNoticeProvider } from '@/state/SummaryNoticeContext';
 
+import { ignoreListBatchingWarnings } from '../helpers/listWarnings';
 import { openTestDatabase } from '../helpers/betterSqliteAdapter';
 
 // Same setup as summaryScreen.test.tsx: October 2026, a Spanish region, a real SQLite database.
@@ -72,6 +73,8 @@ async function renderMonth(rows: TransactionInput[]) {
 /** Breakdown rows in screen order, by their spoken labels ("Food, 150,00 €, 30 percent"). */
 const breakdownRows = () =>
   screen.getAllByLabelText(/ percent$/).map((el) => el.props.accessibilityLabel as string);
+
+ignoreListBatchingWarnings();
 
 beforeEach(() => mockOpen.mockReset());
 

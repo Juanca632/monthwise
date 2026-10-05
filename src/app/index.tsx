@@ -1,11 +1,13 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useMonthSummary } from '@/hooks/useMonthSummary';
 import { useRegion } from '@/hooks/useRegion';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
+import { useSummaryNotice } from '@/state/SummaryNoticeContext';
 import { Breakdown } from '@/ui/Breakdown';
 import { MonthHeader } from '@/ui/MonthHeader';
 import { StateMessage } from '@/ui/StateMessage';
@@ -15,6 +17,7 @@ import { TransactionList } from '@/ui/TransactionList';
 
 const ADD_HEIGHT = 56;
 const ADD_GAP = spacing.xxl;
+const OPEN_FAILED = "Couldn't open this transaction.";
 
 /** The monthly summary (contracts/ui-screens.md, Summary screen). */
 export default function SummaryScreen() {
@@ -23,6 +26,21 @@ export default function SummaryScreen() {
   const { selected } = useSelectedMonth();
   const { tag } = useRegion();
   const { status, rows, summary, retry } = useMonthSummary();
+  const router = useRouter();
+  const notice = useSummaryNotice();
+
+  // Announced once when it appears; it stays on screen until dismissed (contract, FR-025).
+  useEffect(() => {
+    if (notice.notice === 'open_failed') {
+      AccessibilityInfo.announceForAccessibility(OPEN_FAILED);
+    }
+  }, [notice.notice]);
+
+  const openTransaction = (id: number) => {
+    // The banner is about an earlier attempt; opening another transaction clears it.
+    notice.dismiss();
+    router.push({ pathname: '/transaction/[id]', params: { id: String(id) } });
+  };
 
   const content: TotalsContent =
     status === 'loading'
@@ -48,6 +66,13 @@ export default function SummaryScreen() {
               content={content}
               header={(tone) => <MonthHeader month={selected} tone={tone} />}
             />
+            {notice.notice === 'open_failed' && (
+              <StateMessage
+                variant="banner"
+                message={OPEN_FAILED}
+                action={{ label: 'Dismiss', onPress: notice.dismiss }}
+              />
+            )}
             {/* Ready months only: an empty month shows its own line instead (FR-022). */}
             {status === 'ready' && rows.length > 0 && (
               <Breakdown items={summary.breakdown} tag={tag} />
@@ -65,6 +90,7 @@ export default function SummaryScreen() {
             />
           ) : null
         }
+        onPressItem={openTransaction}
         bottomPadding={ADD_HEIGHT + ADD_GAP + spacing.md + insets.bottom}
       />
       <AddButton bottom={ADD_GAP + insets.bottom} />

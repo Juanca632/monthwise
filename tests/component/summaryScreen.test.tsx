@@ -7,6 +7,7 @@ import type { TransactionInput } from '@/domain/validation';
 import { SelectedMonthProvider } from '@/state/SelectedMonthContext';
 import { SummaryNoticeProvider } from '@/state/SummaryNoticeContext';
 
+import { ignoreListBatchingWarnings } from '../helpers/listWarnings';
 import { openTestDatabase, type TestDatabase } from '../helpers/betterSqliteAdapter';
 
 // Today is fixed so "the current month" is October 2026.
@@ -79,6 +80,8 @@ function renderSummary() {
 const flush = () => act(async () => {});
 
 const addButton = () => screen.getByRole('button', { name: 'Add transaction' });
+
+ignoreListBatchingWarnings();
 
 beforeEach(() => {
   mockOpen.mockReset();

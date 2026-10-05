@@ -240,6 +240,15 @@ export function TransactionForm({
     onClose();
   };
 
+  // FR-013: deletion cannot be undone, so it is confirmed first; Cancel changes nothing.
+  const confirmDelete = (remove: () => Promise<FormResult>) => {
+    if (busy.current) return;
+    Alert.alert('Delete this transaction?', undefined, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => void run(remove) },
+    ]);
+  };
+
   const position = currencyPosition(tag);
   const currency = (
     <Text
@@ -270,21 +279,7 @@ export function TransactionForm({
       behavior="padding"
       style={[styles.screen, { backgroundColor: colors.formBackground }]}
     >
-      <View testID="form-header" style={[styles.header, { paddingTop: spacing.xs + insets.top }]}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Close"
-          onPress={close}
-          android_ripple={{ color: colors.ripple }}
-          style={[styles.roundButton, { backgroundColor: colors.surfaceMuted }]}
-        >
-          <Feather name="x" size={iconSize.button} color={colors.text} />
-        </Pressable>
-        <Text accessibilityRole="header" style={[type.title, styles.title, { color: colors.text }]}>
-          {title}
-        </Text>
-        <View style={styles.slot} />
-      </View>
+      <FormHeader title={title} onClose={close} />
 
       <ScrollView
         ref={scrollRef}
@@ -498,7 +493,7 @@ export function TransactionForm({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Delete"
-            onPress={() => void run(onDelete)}
+            onPress={() => confirmDelete(onDelete)}
             android_ripple={{ color: colors.ripple }}
             style={styles.textButton}
           >
@@ -516,6 +511,29 @@ export function TransactionForm({
         </Pressable>
       </View>
     </KeyboardAvoidingView>
+  );
+}
+
+/** The form's header: close button and centered title. Also used by the edit form while loading. */
+export function FormHeader({ title, onClose }: { title: string; onClose(): void }) {
+  const { colors, type } = useTheme();
+  const insets = useSafeAreaInsets();
+  return (
+    <View testID="form-header" style={[styles.header, { paddingTop: spacing.xs + insets.top }]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Close"
+        onPress={onClose}
+        android_ripple={{ color: colors.ripple }}
+        style={[styles.roundButton, { backgroundColor: colors.surfaceMuted }]}
+      >
+        <Feather name="x" size={iconSize.button} color={colors.text} />
+      </Pressable>
+      <Text accessibilityRole="header" style={[type.title, styles.title, { color: colors.text }]}>
+        {title}
+      </Text>
+      <View style={styles.slot} />
+    </View>
   );
 }
 

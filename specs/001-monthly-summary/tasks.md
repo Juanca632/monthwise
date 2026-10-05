@@ -549,7 +549,7 @@ right amount and percentage, ordered from largest to smallest.
 and the breakdown update. Then delete it and check that it disappears and the totals return to
 their previous values.
 
-- [ ] T044 [US3] (FR-011, FR-013) Implement `src/app/transaction/[id].tsx`:
+- [X] T044 [US3] (FR-011, FR-013) Implement `src/app/transaction/[id].tsx`:
   - **Loading** (`getById` in progress): title plus indicator, no fields; closing is allowed with
     no prompt.
   - **Load fails** (`getById` throws or returns null): `notice.show('open_failed')`, then close.
@@ -568,14 +568,14 @@ their previous values.
   - Wire `onPressItem` in `src/app/index.tsx` to `/transaction/[id]`. Opening a transaction
     calls `notice.dismiss()`.
   Tests: see T046.
-- [ ] T045 [US3] Show the summary banner in `src/app/index.tsx`, using `SummaryNoticeContext` and
+- [X] T045 [US3] Show the summary banner in `src/app/index.tsx`, using `SummaryNoticeContext` and
   the `StateMessage` banner variant:
   - "Couldn't open this transaction." for `open_failed`.
   - **Dismiss** clears it. A month change clears it (T030), and so does opening another
     transaction (T044).
   - It is announced once with `AccessibilityInfo.announceForAccessibility`.
   Tests: see T046.
-- [ ] T046 [US3] (FR-011, FR-013) Component tests in `tests/component/transactionFormEdit.test.tsx`:
+- [X] T046 [US3] (FR-011, FR-013) Component tests in `tests/component/transactionFormEdit.test.tsx`:
   - Edit 12.50 → 21.50 updates the list, totals and breakdown. Changing to income clears the
     category and requires a new one.
   - Moving the date to the previous month makes the summary show that month (FR-020).

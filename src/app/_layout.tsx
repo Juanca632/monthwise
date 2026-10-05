@@ -115,6 +115,7 @@ export default function RootLayout() {
             >
               <Stack.Screen name="index" />
               <Stack.Screen name="transaction/new" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="transaction/[id]" options={{ presentation: 'modal' }} />
             </Stack>
           )}
           <StatusBar style="auto" />
