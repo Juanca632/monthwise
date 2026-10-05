@@ -17,7 +17,7 @@ and alternatives are in [research.md](research.md).
 
 **Language/Version**: TypeScript 6 (`strict`), React 19.2 and React Native 0.86 through Expo SDK 57
 
-**Primary Dependencies**: `expo`, `expo-router`, `@react-navigation/native`, `expo-sqlite`,
+**Primary Dependencies**: `expo`, `expo-router`, `expo-sqlite`,
 `expo-localization`, `expo-system-ui`, `expo-status-bar`, `@react-native-community/datetimepicker`,
 `expo-font`, `expo-splash-screen`, `@expo-google-fonts/manrope`, `@expo/vector-icons` (all runtime
 packages are listed and justified in Dependencies below; visual design in [design.md](design.md))
@@ -68,9 +68,9 @@ below and no extra layers.
 | `expo` (+ `react`, `react-native`) | runtime | Framework, build tooling, Expo Go | Base of the chosen stack (research R1). |
 | `expo-system-ui` | runtime | Makes `userInterfaceStyle: "automatic"` work on Android builds (FR-030) | Expo's docs: without it Android ignores `userInterfaceStyle` and the app stays light. Expo Go bundles it, so the gap would only show on the APK. |
 | `expo-status-bar` | runtime (template) | Status bar icons readable in light and dark mode (`style="auto"`) | React Native's own `StatusBar` does not follow the system theme on its own (FR-030). |
-| `expo-router` (+ its required peers `react-native-screens`, `react-native-safe-area-context`, `expo-linking`, `expo-constants`, `@expo/metro-runtime`, `@expo/log-box`) | runtime | Screens, modal form, back handling | React Native has no built-in navigation (R6). Peers checked with `npm view expo-router peerDependencies` on 2026-10-05. |
+| `expo-router` (+ its required peers `react-native-screens`, `react-native-safe-area-context`, `expo-linking`, `expo-constants`, `@expo/metro-runtime`, `@expo/log-box`) | runtime | Screens, modal form, back handling; `usePreventRemove` for "Discard changes?" (FR-010) through `expo-router/react-navigation` | React Native has no built-in navigation (R6). Since SDK 56, `expo-router` bundles React Navigation, so `@react-navigation/native` is not installed: a second copy would have its own navigation context and the hook would not see the router (found in T003, 2026-10-05). Peers checked with `npm view expo-router peerDependencies` on 2026-10-05. |
 | `expo-constants` (router peer, also imported directly) | runtime | Reads `extra.variant` from the app config at runtime | The only way for code to read values computed in `app.config.ts`. |
-| `@react-navigation/native` | runtime | `usePreventRemove` for "Discard changes?" (FR-010) | In SDK 57 the hook is not exported by `expo-router` (it is from SDK 58). Installed with `npx expo install` so it matches the version `expo-router` uses; `npm ls @react-navigation/native` must show one copy, otherwise the hook loses the navigation context. |
+| `react-dom`, `react-native-reanimated`, `react-native-worklets` *(npm `overrides` pins, not dependencies)* | transitive | Keep the dependency tree valid and matching Expo Go | Packages inside `expo-router` (Radix, vaul, `@expo/ui`, the drawer) require these as peers, and npm auto-installs their latest versions. `react-dom` 19.3 needs `react` 19.3 and breaks every later install; `reanimated` 4.7 and `worklets` 0.13 are native modules newer than the ones compiled into Expo Go. `overrides` pins them to SDK 57's `bundledNativeModules.json` (19.2.3, 4.5.1, 0.10.1). Our code never imports them. Found in T003 and T007 (2026-10-05). |
 | `expo-sqlite` | runtime | Durable, indexed local storage | React Native has no built-in database (R3). |
 | `expo-localization` | runtime | Phone's locale tag, and a re-render when system settings change | `Intl` alone does not report region changes while the app runs (R7). |
 | `@react-native-community/datetimepicker` | runtime | Native date dialog with min/max dates | React Native has no date picker (R8). |
@@ -80,7 +80,8 @@ below and no extra layers.
 | `@expo/vector-icons` | runtime | Feather icons used by the design (chevrons, plus, close, calendar, arrows, alert) | React Native has no icon set; drawing them by hand would need `react-native-svg` anyway. |
 | `expo-dev-client` *(only if needed)* | runtime | Development build when Expo Go no longer runs SDK 57 (research R1) | Expo Go cannot load an older SDK; added only in that case. |
 | `unicode-segmenter` *(only if needed)* | runtime | Counting a note's visible characters (FR-007) | Added only if Hermes lacks `Intl.Segmenter` (R13). |
-| `jest`, `jest-expo`, `@testing-library/react-native` | dev | Test runner and component tests | Required by principle II (R10). |
+| `jest`, `jest-expo`, `@testing-library/react-native` (v13) | dev | Test runner and component tests | Required by principle II (R10). v13, not v14: v14 renders through `react-reconciler` 0.34, which needs `react` 19.3, while SDK 57 pins `react` 19.2.3. |
+| `react-test-renderer` (19.2.3) | dev | Renderer that `@testing-library/react-native` v13 requires as a peer | Must match `react` exactly; npm would otherwise pick 19.3. Found in T007 (2026-10-05). |
 | `better-sqlite3`, `@types/better-sqlite3` | dev | Real SQLite for repository tests on Node | `expo-sqlite` cannot run inside Jest (R10). |
 | `typescript`, `@types/react` | dev (template) | Type checking | Shipped by the `blank-typescript` template (R2). |
 | `@types/jest` | dev | Types for `describe`/`expect` in tests | Needed for `tsc` to type-check the tests. |

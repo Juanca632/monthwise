@@ -39,46 +39,50 @@ can test on the phone.
 **Purpose**: an Expo SDK 57 project at the repository root that runs in Expo Go, with tests, lint,
 CI and the privacy-related build config.
 
-- [ ] T001 Scaffold the Expo app at the repository root. Run `npx create-expo-app@latest` with
+- [X] T001 Scaffold the Expo app at the repository root. Run `npx create-expo-app@latest` with
   `--template blank-typescript@sdk-57` in a temporary directory outside the repo (for example `/tmp/monthwise-scaffold`), because
   the root is not empty.
   Copy `package.json`, `tsconfig.json`, `assets/` and the template's `.gitignore` entries into the
   repo root, merging with the existing `.gitignore`. Do not copy `App.tsx`, `index.ts` or
   `app.json`. Set `"name": "monthwise"` and `"private": true` in `package.json`. Keep all existing
   files (`specs/`, `.specify/`, `.claude/`, `AGENTS.md`, `CLAUDE.md`). Run `npm install`.
-- [ ] T002 Add Expo Router as in research R6. Run `npx expo install expo-router
+- [X] T002 Add Expo Router as in research R6. Run `npx expo install expo-router
   react-native-screens react-native-safe-area-context expo-linking expo-constants
   @expo/metro-runtime @expo/log-box`. Set `"main": "expo-router/entry"` in `package.json`. In
   `tsconfig.json`, set `"strict": true` and the path alias `"@/*": ["./src/*"]`. Create a
   placeholder `src/app/_layout.tsx` (a `Stack`) and `src/app/index.tsx` (text "Monthwise").
-- [ ] T003 Install the runtime dependencies from the plan's Dependencies table:
+- [X] T003 Install the runtime dependencies from the plan's Dependencies table:
   `npx expo install expo-sqlite expo-localization expo-system-ui expo-status-bar
-  @react-native-community/datetimepicker @react-navigation/native expo-font expo-splash-screen
-  @expo-google-fonts/manrope @expo/vector-icons`. Then
-  `npm ls @react-navigation/native` must show exactly one version. If it does not, align the
-  version with the one `expo-router` uses. Do not install `unicode-segmenter` (conditional, see
+  @react-native-community/datetimepicker expo-font expo-splash-screen
+  @expo-google-fonts/manrope @expo/vector-icons`. Do not install `@react-navigation/native`:
+  `usePreventRemove` comes from `expo-router/react-navigation` (research R6). First add
+  `"overrides": { "react-dom": "19.2.3" }` to `package.json` (plan, Dependencies), then
+  `npm ls react-dom` must show only 19.2.3. Do not install `unicode-segmenter` (conditional, see
   T011) or `expo-dev-client` (conditional, only if Expo Go stops running SDK 57; research R1).
-- [ ] T004 [P] Create the config plugin `plugins/withNoDataExtraction.js` (research R11), using
+- [X] T004 [P] Create the config plugin `plugins/withNoDataExtraction.js` (research R11), using
   only `expo/config-plugins`. It exports two pure helpers for tests: `buildRulesXml()` and
   `applyToManifest(manifest)`. It writes `android/app/src/main/res/xml/data_extraction_rules.xml`
   with `<cloud-backup>` and `<device-transfer>` sections. Each section excludes every domain:
   `root`, `file`, `database`, `sharedpref`, `external`. It also sets
   `android:dataExtractionRules="@xml/data_extraction_rules"` on `<application>`.
-- [ ] T005 Create `app.config.ts` (plan, Key Design Notes):
+- [X] T005 Create `app.config.ts` (plan, Key Design Notes):
   - `name: "Monthwise"`, `slug: "monthwise"`, `scheme: "monthwise"`,
     `android.package: "io.github.juanca632.monthwise"`, `userInterfaceStyle: "automatic"`,
     `android.allowBackup: false`.
-  - Plugins: `expo-router`, `./plugins/withNoDataExtraction`.
-  - `icon` and `splash` point to the template's files in `assets/`.
+  - Plugins: `expo-router`, `./plugins/withNoDataExtraction`, and the plugins `npx expo install`
+    registered in T002–T003 (it writes them to an `app.json`, which is then deleted).
+  - `icon` and the adaptive icon point to the template's files in `assets/`. The splash is
+    configured through the `expo-splash-screen` plugin (Expo's current way), with
+    `assets/splash-icon.png` on the design.md `background` colors.
   - Variant: read `process.env.APP_VARIANT`, where unset or unknown means `"production"`. Set
     `extra.variant` to the result. For `preview` and `production`, set
     `android.blockedPermissions: ["android.permission.INTERNET"]`.
   Depends on T004.
-- [ ] T006 [P] Create `eas.json` with two profiles. Each sets `android.buildType: "apk"` and an
+- [X] T006 [P] Create `eas.json` with two profiles. Each sets `android.buildType: "apk"` and an
   `env` block. There is no `development` profile until `expo-dev-client` is needed (research R1).
   - `preview`: `APP_VARIANT=preview` and `EXPO_PUBLIC_DEV_TOOLS=1`.
   - `production`: `APP_VARIANT=production` and `EXPO_PUBLIC_DEV_TOOLS=0`.
-- [ ] T007 Set up tests and scripts:
+- [X] T007 Set up tests and scripts:
   - `npx expo install jest-expo jest @testing-library/react-native -- --save-dev`.
   - `npm i -D @types/jest better-sqlite3 @types/better-sqlite3`.
   - `jest.config.js`: `preset: "jest-expo"`, `roots: ["<rootDir>/tests"]`, a moduleNameMapper
@@ -88,12 +92,12 @@ CI and the privacy-related build config.
   - Add a smoke test in `tests/unit/smoke.test.ts`.
   - If npm reports a missing peer (for example `react-test-renderer`), stop. Add it to the plan's
     Dependencies table with a justification, then install it.
-- [ ] T008 Run `npx expo lint` once to generate the ESLint config (`eslint.config.js` with
+- [X] T008 Run `npx expo lint` once to generate the ESLint config (`eslint.config.js` with
   `eslint-config-expo`). Fix any findings.
-- [ ] T009 Create `.github/workflows/ci.yml` (after T007 and T008). On push and pull requests it uses Node 22 and
+- [X] T009 Create `.github/workflows/ci.yml` (after T007 and T008). On push and pull requests it uses Node 22 and
   runs `npm ci`, `npm run lint`, `npm run typecheck` and `npm test`. No secrets and no network in
   tests.
-- [ ] T010 Config tests:
+- [X] T010 Config tests:
   - `tests/unit/appConfig.test.ts` calls the `app.config.ts` export with `APP_VARIANT` unset,
     `development`, `preview`, `production` and `bogus`. Checks: `allowBackup === false` in all
     cases. INTERNET is blocked for unset, `preview`, `production` and `bogus`, and not for
@@ -102,7 +106,7 @@ CI and the privacy-related build config.
     attribute on a fixture manifest object. `buildRulesXml()` excludes all five domains under
     both sections.
   Depends on T005 and T007.
-- [ ] T011 On-device checks (research R7 and R13, quickstart scenario 11):
+- [X] T011 On-device checks (research R7 and R13, quickstart scenario 11):
   1. In `src/app/index.tsx`, temporarily render `typeof Intl.Segmenter` and the phone's
      `getLocales()[0].languageTag` and `regionCode`. For the tags `es-ES`, `en-GB`, `en-US`,
      `en-ES`, `ar-EG` and the phone's own tag, also render:
@@ -466,7 +470,7 @@ useful yet.
     contracts/ui-screens.md: `focus()` for amount and note; scroll plus
     `AccessibilityInfo.setAccessibilityFocus` for date and category. While an operation is
     in progress, extra taps are ignored and back/close waits.
-  - **Discard guard**: `usePreventRemove` from `@react-navigation/native` while dirty. Dirty means
+  - **Discard guard**: `usePreventRemove` from `expo-router/react-navigation` while dirty. Dirty means
     amount and note differ as raw text, or type, date or category differ by value. It asks
     "Discard changes?" with **Discard** and **Keep editing**. The guard is turned off before
     navigating away after a successful save or delete.

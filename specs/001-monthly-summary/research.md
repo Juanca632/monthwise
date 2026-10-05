@@ -73,8 +73,9 @@ in beta (`next` tag) and is not used.
   modal (`transaction/new`, `transaction/[id]`). The month on screen lives in a small React
   context so the form can switch it after saving (FR-020).
 - **Rationale**: standard in current Expo; built on React Navigation. React Navigation's
-  `usePreventRemove` (imported from `@react-navigation/native`, because `expo-router` only
-  exports it from SDK 58) covers the "Discard changes?" prompt, including Android's back button
+  `usePreventRemove` (imported from `expo-router/react-navigation`, the React Navigation copy
+  bundled inside `expo-router` since SDK 56; installing `@react-navigation/native` separately
+  would create a second navigation context that the hook cannot see) covers the "Discard changes?" prompt, including Android's back button
   (FR-010).
 - **Alternatives**: React Navigation declared in code (more setup).
 
