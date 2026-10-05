@@ -1,0 +1,12 @@
+{
+  "build": {
+    "preview": {
+      "android": { "buildType": "apk" },
+      "env": { "APP_VARIANT": "preview", "EXPO_PUBLIC_DEV_TOOLS": "1" }
+    },
+    "production": {
+      "android": { "buildType": "apk" },
+      "env": { "APP_VARIANT": "production", "EXPO_PUBLIC_DEV_TOOLS": "0" }
+    }
+  }
+}

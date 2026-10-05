@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add transaction, light, with a validation error</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2F5BEA}a:hover{color:#1F3FB0}
+button{font:inherit;border:0;cursor:pointer}
+input{font:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; color: #0E1116; font-family: {{fontFamily}}; position: relative; overflow: hidden; font-variant-numeric: tabular-nums; display: flex; flex-direction: column">
+
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px 16px 8px 16px">
+    <button aria-label="Close" style="width: 48px; height: 48px; border-radius: 24px; background: #F1F3F6; color: #0E1116; display: flex; align-items: center; justify-content: center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+    <div style="font-size: 17px; font-weight: 600">Add transaction</div>
+    <div style="width: 48px; height: 48px"></div>
+  </div>
+
+  <div style="padding: 12px 16px 0 16px">
+    <div role="radiogroup" aria-label="Type" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: #F1F3F6; border-radius: 16px; padding: 4px">
+      <button role="radio" aria-checked="true" style="height: 48px; border-radius: 12px; background: #FFFFFF; color: #0E1116; font-size: 15px; font-weight: 600; box-shadow: inset 0 0 0 1.5px {{accent}}">Expense</button>
+      <button role="radio" aria-checked="false" style="height: 48px; border-radius: 12px; background: transparent; color: #5B6472; font-size: 15px; font-weight: 500">Income</button>
+    </div>
+  </div>
+
+  <div style="padding: 32px 24px 24px 24px; display: flex; flex-direction: column; align-items: center; gap: 6px">
+    <label for="amount-d" style="font-size: 14px; color: #5B6472; font-weight: 500">Amount</label>
+    <div style="display: flex; align-items: baseline; gap: 6px">
+      <input id="amount-d" value="45,00" inputmode="decimal" style="width: 150px; border: 0; outline: none; text-align: right; font-size: 48px; font-weight: 700; letter-spacing: -1px; color: #0E1116; background: transparent; padding: 0">
+      <span style="font-size: 32px; font-weight: 600; color: #5B6472">€</span>
+    </div>
+    <div style="width: 160px; height: 3px; border-radius: 2px; background: #8A93A3"></div>
+  </div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 14px; color: #5B6472; font-weight: 500; padding-left: 8px">Category</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; border-radius: 18px; padding: 8px; margin: -8px; outline: 2px solid #B3362A; outline-offset: -2px">
+        <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Food</button>
+        <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Transport</button>
+        <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Housing</button>
+        <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Bills</button>
+        <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Health</button>
+        <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Shopping</button>
+        <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Leisure</button>
+        <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Other</button>
+      </div>
+      <div role="alert" style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #B3362A; padding-left: 8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        Pick a category.
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="font-size: 14px; color: #5B6472; font-weight: 500; padding-left: 8px">Date</div>
+        <button aria-label="Date, 05/10/2026" style="height: 52px; border-radius: 16px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 10px; padding: 0 16px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6472" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          05/10/2026
+        </button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <label for="note-d" style="font-size: 14px; color: #5B6472; font-weight: 500; padding-left: 8px">Note (optional)</label>
+        <input id="note-d" value="" placeholder="Add a note" style="height: 52px; box-sizing: border-box; border-radius: 16px; border: 0; background: #F1F3F6; color: #0E1116; font-size: 15px; padding: 0 16px; outline: none">
+      </div>
+    </div>
+  </div>
+
+  <div style="flex: 1"></div>
+  <div style="padding: 16px 16px 28px 16px">
+    <button style="width: 100%; height: 56px; border-radius: 28px; background: {{accent}}; color: #FFFFFF; font-size: 16px; font-weight: 600">Save</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#2F5BEA","options":["#2F5BEA","#0F7B6C","#6D4AE0","#0E1116"]},"typeface":{"editor":"enum","options":["System (Roboto)","Manrope"],"default":"Manrope"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const tf = this.props.typeface ?? 'Manrope';
+    return {
+      accent: this.props.accent ?? '#2F5BEA',
+      fontFamily: tf === 'Manrope' ? "'Manrope', system-ui, sans-serif" : "system-ui, 'Roboto', sans-serif"
+    };
+  }
+}
+</script>
+</body>
+</html>
