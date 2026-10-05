@@ -562,6 +562,9 @@ their previous values.
   - **Delete**: confirm "Delete this transaction?" with **Delete** and **Cancel**, then
     `(await whenReady()).remove(id)`. `NotFoundError` counts as done: close and the summary reloads. On any
     other error, "Couldn't delete.".
+  - Declare `<Stack.Screen name="transaction/[id]" options={{ presentation: 'modal' }} />` in
+    `src/app/_layout.tsx`. It was left out until this file exists, because Expo Router warns
+    about a declared screen with no route file (found in Block 3b, 2026-10-05).
   - Wire `onPressItem` in `src/app/index.tsx` to `/transaction/[id]`. Opening a transaction
     calls `notice.dismiss()`.
   Tests: see T046.
