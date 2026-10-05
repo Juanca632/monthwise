@@ -4,7 +4,7 @@ Visual design for 001, approved by the developer on 2026-10-05. It sets *how the
 What they contain and how they behave stays in `spec.md` and `contracts/ui-screens.md`; if the two
 ever disagree, the contract wins and this file is updated.
 
-Mockups: the HTML sources of the 10 approved artboards (light and dark, every drawn screen) are in
+Mockups: the HTML sources of the 15 approved artboards (light and dark, keyboard open, edit, loading and error) are in
 [`design/mockups/`](design/mockups/). Each `.dc.html` file is plain HTML with inline styles and
 can be read as a reference. The live canvas is
 https://claude.ai/artifact/LnJb7boknHJq2bTT5JjwWN, which only the developer can open. Where this
@@ -197,8 +197,8 @@ There is no native header (`headerShown: false`); the balance card holds the mon
    - **Loading**: header row, then a centered `ActivityIndicator` in `accent` (120 dp tall area).
      No amount and no pills.
    - **Error**: header row, then "Couldn't load your data." (`label`, `cardLabel`) and a
-     **Try again** button (`surfaceMuted`, `bodyStrong`, `text`, fully rounded, minHeight 48),
-     centered.
+     **Try again** button (`monthButton` background, `bodyStrong`, `cardInk`, fully rounded,
+     minHeight 48), centered.
 2. **Spending by category** (ready state only): a section title (`section`, 24 dp side padding),
    then a card with padding 4 × 16 and its rows:
    - Each row is at least 48 dp tall: the label (`body`) on the left; the amount (`bodyStrong`)
@@ -286,7 +286,8 @@ There is no native header (`headerShown: false`).
 - "Delete this transaction?" and "Discard changes?" use React Native's `Alert`, the platform's
   native dialog, so they look like Android dialogs and are accessible by default.
 - **"Something went wrong."** (root error boundary): on `background`, centered, the message
-  (`body`, `text`) and **Try again** (same style as the balance card's Try again).
+  (`body`, `text`) and **Try again** (`surfaceMuted`, `bodyStrong`, `text`, fully rounded,
+  minHeight 48).
 
 ## Implementation notes
 

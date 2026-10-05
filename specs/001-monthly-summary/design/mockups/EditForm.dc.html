@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Add transaction, light, with a validation error</title>
+<title>Edit transaction, light</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -23,7 +23,7 @@ input{font:inherit}
     <button aria-label="Close" style="width: 48px; height: 48px; border-radius: 24px; background: #F1F3F6; color: #0E1116; display: flex; align-items: center; justify-content: center">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
     </button>
-    <div style="font-size: 17px; font-weight: 600">Add transaction</div>
+    <div style="font-size: 17px; font-weight: 600">Edit transaction</div>
     <div style="width: 48px; height: 48px"></div>
   </div>
 
@@ -35,9 +35,9 @@ input{font:inherit}
   </div>
 
   <div style="padding: 32px 24px 24px 24px; display: flex; flex-direction: column; align-items: center; gap: 6px">
-    <label for="amount-d" style="font-size: 14px; color: #5B6472; font-weight: 500">Amount</label>
+    <label for="amount" style="font-size: 14px; color: #5B6472; font-weight: 500">Amount</label>
     <div style="display: flex; align-items: baseline; gap: 6px">
-      <input id="amount-d" value="45,00" inputmode="decimal" style="width: 150px; border: 0; outline: none; text-align: right; font-size: 48px; font-weight: 700; letter-spacing: -1px; color: #0E1116; background: transparent; padding: 0">
+      <input id="amount" value="21,50" inputmode="decimal" style="width: 150px; border: 0; outline: none; text-align: right; font-size: 48px; font-weight: 700; letter-spacing: -1px; color: #0E1116; background: transparent; padding: 0">
       <span style="font-size: 32px; font-weight: 600; color: #5B6472">€</span>
     </div>
     <div style="width: 160px; height: 3px; border-radius: 2px; background: #8A93A3"></div>
@@ -46,8 +46,8 @@ input{font:inherit}
   <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 20px">
     <div style="display: flex; flex-direction: column; gap: 8px">
       <div style="font-size: 14px; color: #5B6472; font-weight: 500; padding-left: 8px">Category</div>
-      <div style="display: flex; flex-wrap: wrap; gap: 8px; border-radius: 18px; padding: 8px; margin: -8px; outline: 2px solid #B3362A; outline-offset: -2px">
-        <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Food</button>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <button aria-pressed="true" style="height: 48px; padding: 0 16px; border-radius: 24px; background: {{accent}}; color: #FFFFFF; font-size: 15px; font-weight: 600">Food</button>
         <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Transport</button>
         <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Housing</button>
         <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Bills</button>
@@ -55,10 +55,6 @@ input{font:inherit}
         <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Shopping</button>
         <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Leisure</button>
         <button aria-pressed="false" style="height: 48px; padding: 0 16px; border-radius: 24px; background: #F1F3F6; color: #0E1116; font-size: 15px; font-weight: 500">Other</button>
-      </div>
-      <div role="alert" style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #B3362A; padding-left: 8px">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        Pick a category.
       </div>
     </div>
 
@@ -71,14 +67,19 @@ input{font:inherit}
         </button>
       </div>
       <div style="display: flex; flex-direction: column; gap: 8px">
-        <label for="note-d" style="font-size: 14px; color: #5B6472; font-weight: 500; padding-left: 8px">Note (optional)</label>
-        <input id="note-d" value="" placeholder="Add a note" style="height: 52px; box-sizing: border-box; border-radius: 16px; border: 0; background: #F1F3F6; color: #0E1116; font-size: 15px; padding: 0 16px; outline: none">
+        <label for="note" style="font-size: 14px; color: #5B6472; font-weight: 500; padding-left: 8px">Note (optional)</label>
+        <input id="note" value="Lunch" style="height: 52px; box-sizing: border-box; border-radius: 16px; border: 0; background: #F1F3F6; color: #0E1116; font-size: 15px; padding: 0 16px; outline: none">
       </div>
     </div>
   </div>
 
   <div style="flex: 1"></div>
-  <div style="padding: 16px 16px 28px 16px">
+  <div style="padding: 8px 16px 28px 16px; display: flex; flex-direction: column; align-items: stretch; gap: 4px">
+    <div role="alert" style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 600; color: #B3362A; padding-bottom: 4px">
+      <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      Couldn't save. Your changes are still here.
+    </div>
+    <button style="min-height: 48px; padding: 0 16px; align-self: center; background: transparent; color: #B3362A; font-size: 14px; font-weight: 600; border-radius: 24px">Delete</button>
     <button style="width: 100%; height: 56px; border-radius: 28px; background: {{accent}}; color: #FFFFFF; font-size: 16px; font-weight: 600">Save</button>
   </div>
 </div>
