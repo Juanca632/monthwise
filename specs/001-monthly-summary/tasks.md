@@ -136,7 +136,7 @@ type check pass; `device-checks.md` records the outputs and the `countGraphemes`
 
 ### Domain (pure TypeScript, no React or SQLite)
 
-- [ ] T012 [P] Implement `src/domain/categories.ts`, following data-model.md "Fixed data:
+- [X] T012 [P] Implement `src/domain/categories.ts`, following data-model.md "Fixed data:
   Category":
   - `TransactionType = 'income' | 'expense'`.
   - Expense keys `food, transport, housing, bills, health, shopping, leisure, other`.
@@ -145,7 +145,7 @@ type check pass; `device-checks.md` records the outputs and the `countGraphemes`
     `isValidCategory(type, key)`.
   - "A category is identified by `type + key`".
   Tests in `tests/unit/categories.test.ts`.
-- [ ] T013 [P] Implement `src/domain/month.ts`:
+- [X] T013 [P] Implement `src/domain/month.ts`:
   - `YearMonth = { year, month }` (month 1..12) and `IsoDate` (`YYYY-MM-DD`).
   - `monthOf(iso)`, `monthRange(ym)`, which returns `[start, endExclusive)` as ISO days, for
     example `2026-09-01` and `2026-10-01`.
@@ -156,7 +156,7 @@ type check pass; `device-checks.md` records the outputs and the `countGraphemes`
   - `toIsoDate(localDate)` uses local time.
   Tests in `tests/unit/month.test.ts`: leap and non-leap February, December → January, the
   January 2000 limit, and FR-003 defaults.
-- [ ] T014 [P] (FR-004, FR-005) Implement `src/domain/amount.ts` `parseAmount(text): { ok: true, cents } | { ok:
+- [X] T014 [P] (FR-004, FR-005) Implement `src/domain/amount.ts` `parseAmount(text): { ok: true, cents } | { ok:
   false, error }`:
   - The error codes map to the messages in contracts/ui-screens.md.
   - It works on digit strings only ("integer part × 100 + decimal part padded to 2 digits"), with
@@ -166,7 +166,7 @@ type check pass; `device-checks.md` records the outputs and the `countGraphemes`
     than 0, `-5`→invalid, empty→required, `1000000`→over maximum. Valid range "1 to 99,999,999".
   Tests in `tests/unit/amount.test.ts` cover every row of the table, plus whitespace and non-digit
   input.
-- [ ] T015 [P] Implement `src/domain/note.ts`:
+- [X] T015 [P] Implement `src/domain/note.ts`:
   - `countGraphemes(text)`, using the implementation chosen in T011 (no runtime feature
     detection). If T011 chose `unicode-segmenter`, install it with `npm i unicode-segmenter`.
   - `cutToGraphemes(text, 100)`.
@@ -174,7 +174,7 @@ type check pass; `device-checks.md` records the outputs and the `countGraphemes`
     note is stored as `NULL`".
   Tests in `tests/unit/note.test.ts`: plain text, accented letters, a flag, a skin-tone emoji, a
   family emoji, cutting 150 emoji to 100, and whitespace-only → `null`.
-- [ ] T016 Implement `src/domain/validation.ts` `validateDraft(draft, today)`:
+- [X] T016 Implement `src/domain/validation.ts` `validateDraft(draft, today)`:
   - `draft = { type, amountText, date, category, note }`.
   - It returns `{ ok: true, input: TransactionInput }` or `{ ok: false, errors: Partial<Record<
     'amount'|'date'|'category'|'note', code>>, firstInvalid }`, with the field order amount, date,
@@ -184,7 +184,7 @@ type check pass; `device-checks.md` records the outputs and the `countGraphemes`
     `normalizeNote`.
   Tests in `tests/unit/validation.test.ts`, including a stored date after today (error on date).
   Depends on T012–T015.
-- [ ] T017 (FR-016, FR-028) Implement `src/domain/summary.ts` `computeSummary(rows)`:
+- [X] T017 (FR-016, FR-028) Implement `src/domain/summary.ts` `computeSummary(rows)`:
   - Returns `incomeCents`, `expenseCents`, `balanceCents`, and `breakdown` with
     `{ category, amountCents, percent, percentLabel }`.
   - "With `n = 200 × amountCents + expenseCents` and `d = 2 × expenseCents`, `percent = (n - n %
@@ -198,7 +198,7 @@ type check pass; `device-checks.md` records the outputs and the `countGraphemes`
 
 ### Formatting (UI edge)
 
-- [ ] T018 [P] Implement `src/format/locale.ts` `pickFormattingTag(languageTag, regionCode)`,
+- [X] T018 [P] Implement `src/format/locale.ts` `pickFormattingTag(languageTag, regionCode)`,
   following research R7, "Formatting locale". It returns the table entry for `regionCode`, or
   `languageTag` if the region is `null` or not in the table. The complete table, the euro area in
   2026:
@@ -207,7 +207,7 @@ type check pass; `device-checks.md` records the outputs and the `countGraphemes`
     `LU→fr-LU`, `LV→lv-LV`, `MT→en-MT`, `NL→nl-NL`, `PT→pt-PT`, `SI→sl-SI`, `SK→sk-SK`.
   Tests in `tests/unit/locale.test.ts`: `en`+`ES` → `es-ES`, `en`+`GB` → the phone tag, and a
   `null` region → the phone tag.
-- [ ] T019 (FR-028, FR-029) Implement `src/format/money.ts` (research R7, "Money without floats"):
+- [X] T019 (FR-028, FR-029) Implement `src/format/money.ts` (research R7, "Money without floats"):
   - `formatMoney(cents, tag)`: split with `euros = (abs - abs % 100) / 100` and
     `rest = abs % 100`. Take `formatToParts` of the integer euros (currency EUR,
     `numberingSystem: 'latn'`). Replace the `fraction` part with `rest` padded to 2 digits. The
@@ -225,7 +225,7 @@ type check pass; `device-checks.md` records the outputs and the `countGraphemes`
   come from `device-checks.md`, the Hermes output. If Node's output (Jest) differs for a case, the
   device output wins. Stop, record the difference in `device-checks.md`, and tell the developer
   before changing a test or the code. Depends on T018.
-- [ ] T020 [P] Implement `src/format/date.ts`:
+- [X] T020 [P] Implement `src/format/date.ts`:
   - `formatNumericDate(iso, tag)`: `Intl.DateTimeFormat` with 2-digit day and month, a numeric
     year and `numberingSystem: 'latn'`.
   - `formatSpokenDate(iso)`: English month names, for example "30 September 2026".

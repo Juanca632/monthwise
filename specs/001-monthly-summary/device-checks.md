@@ -56,7 +56,7 @@ Parts worth knowing for `format/money.ts`:
 
 | Case | Device | Node | Note |
 | --- | --- | --- | --- |
-| `es-ES`, 4-digit euro amounts (1000–9999) | `1.234,00 €` | `1234,00 €` | Node follows CLDR's Spanish rule (group from 5 digits); Android's ICU groups from 4. The developer chose to keep the device behavior (2026-10-05). T019 must handle this case explicitly and tell the developer before changing a test or the code. |
+| `es-ES`, 4-digit euro amounts (1000–9999) | `1.234,00 €` | `1234,00 €` | Node follows CLDR's Spanish rule (group from 5 digits); Android's ICU groups from 4. The developer chose to keep the device behavior (2026-10-05). Resolved in T019 (developer's choice, 2026-10-05): the currency formatter uses `useGrouping: 'always'`, so Node gives `1.234,00 €` too. Hermes accepts the string value without error (see `min2` below) and already groups from 4 digits, so the phone output does not change. Re-check on the phone in Block 3b. |
 
 Everything else above matches Node character for character, including the `ar-EG` marks.
 
