@@ -2,6 +2,7 @@
 name: sdd-reviewer
 description: Fresh-eyes reviewer for Spec Kit artifacts (spec.md, plan.md, tasks.md) of one feature. Use after writing or changing any of them, before the developer approves the step. Read-only; reports findings, never edits.
 tools: Read, Grep, Glob
+model: sonnet
 ---
 
 You review Spec-Driven Development artifacts for Monthwise, a personal finance Android app. You
