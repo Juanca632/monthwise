@@ -200,8 +200,9 @@ lands in that month.
 - **FR-004**: Amounts MUST be greater than 0, have at most 2 decimals and be at most 999,999.99.
 - **FR-005**: Amounts MUST accept either `,` or `.` as the decimal separator, regardless of
   region; input with more than one separator MUST be rejected with a message, never interpreted.
-  Inside the form, an amount is always shown with the region's decimal separator and no thousands
-  separator or currency symbol (for example `1250,00`), so an existing amount can be saved as is.
+  Inside the form, an amount is always shown with the region's decimal separator (`,` or `.`; a
+  region that uses any other separator gets `.`) and no thousands separator or currency symbol
+  (for example `1250,00`), so an existing amount can be saved as is.
 - **FR-006**: The date MUST be between 1 January 2000 and today, inclusive; other dates MUST NOT
   be selectable.
 - **FR-007**: The note MUST be optional and at most 100 visible characters.

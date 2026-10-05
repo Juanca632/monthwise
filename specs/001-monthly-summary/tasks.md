@@ -149,7 +149,7 @@ type check pass; `device-checks.md` records the outputs and the `countGraphemes`
   - `toIsoDate(localDate)` uses local time.
   Tests in `tests/unit/month.test.ts`: leap and non-leap February, December → January, the
   January 2000 limit, and FR-003 defaults.
-- [ ] T014 [P] Implement `src/domain/amount.ts` `parseAmount(text): { ok: true, cents } | { ok:
+- [ ] T014 [P] (FR-004, FR-005) Implement `src/domain/amount.ts` `parseAmount(text): { ok: true, cents } | { ok:
   false, error }`:
   - The error codes map to the messages in contracts/ui-screens.md.
   - It works on digit strings only ("integer part × 100 + decimal part padded to 2 digits"), with
@@ -177,7 +177,7 @@ type check pass; `device-checks.md` records the outputs and the `countGraphemes`
     `normalizeNote`.
   Tests in `tests/unit/validation.test.ts`, including a stored date after today (error on date).
   Depends on T012–T015.
-- [ ] T017 Implement `src/domain/summary.ts` `computeSummary(rows)`:
+- [ ] T017 (FR-016, FR-028) Implement `src/domain/summary.ts` `computeSummary(rows)`:
   - Returns `incomeCents`, `expenseCents`, `balanceCents`, and `breakdown` with
     `{ category, amountCents, percent, percentLabel }`.
   - "With `n = 200 × amountCents + expenseCents` and `d = 2 × expenseCents`, `percent = (n - n %
@@ -200,7 +200,7 @@ type check pass; `device-checks.md` records the outputs and the `countGraphemes`
     `LU→fr-LU`, `LV→lv-LV`, `MT→en-MT`, `NL→nl-NL`, `PT→pt-PT`, `SI→sl-SI`, `SK→sk-SK`.
   Tests in `tests/unit/locale.test.ts`: `en`+`ES` → `es-ES`, `en`+`GB` → the phone tag, and a
   `null` region → the phone tag.
-- [ ] T019 Implement `src/format/money.ts` (research R7, "Money without floats"):
+- [ ] T019 (FR-028, FR-029) Implement `src/format/money.ts` (research R7, "Money without floats"):
   - `formatMoney(cents, tag)`: split with `euros = (abs - abs % 100) / 100` and
     `rest = abs % 100`. Take `formatToParts` of the integer euros (currency EUR,
     `numberingSystem: 'latn'`). Replace the `fraction` part with `rest` padded to 2 digits. The
@@ -262,7 +262,7 @@ see on the phone yet; the developer reviews the tests and the money logic.
   - `user_version = 1`; opening twice does not re-run; `journal_mode` returns `wal`.
   - Each CHECK rejects a bad row, including `2026-02-30` and `2026-13-45`.
   Depends on T022 and T023.
-- [ ] T025 Implement `src/data/transactionRepository.ts` from
+- [ ] T025 (FR-026, FR-028, SC-003) Implement `src/data/transactionRepository.ts` from
   contracts/transaction-repository.md:
   - `listByMonth` (ordered `date DESC, id DESC`), `getById`, `create(input, now)`,
     `update(id, input)`, which keeps `created_at`, and `remove(id)`.
@@ -393,7 +393,7 @@ states): on the phone, the summary shows the current month and its empty and loa
 **Add** is visible; its route (`/transaction/new`) is added in T039, so tapping it does nothing
 useful yet.
 
-- [ ] T038 [US1] Implement `src/ui/TransactionForm.tsx` (shared by new and edit):
+- [ ] T038 [US1] (FR-001, FR-011) Implement `src/ui/TransactionForm.tsx` (shared by new and edit):
   - **Fields**:
     - Type toggle; changing the type clears the category (FR-012).
     - Amount `TextInput` with `keyboardType="decimal-pad"`, autofocused on new.
@@ -418,7 +418,7 @@ useful yet.
     is kept.
   - **Accessibility**: every field labelled "label, value, error"; touch targets ≥ 48 dp.
   Tests: see T041 and T046. Depends on T016, T019, T020, T027 and T029.
-- [ ] T039 [US1] Implement `src/app/transaction/new.tsx`:
+- [ ] T039 [US1] (FR-001) Implement `src/app/transaction/new.tsx`:
   - It renders `TransactionForm` with the defaults: type Expense, empty amount, no category, and
     `defaultFormDate(selected, getToday())`.
   - On Save: `const repo = await whenReady(); await repo.create(input, Date.now())`. Then it
@@ -459,7 +459,7 @@ the SC-001 stopwatch check (scenario 12) in Expo Go.
 **Independent Test**: record expenses in three categories in one month. Each category shows the
 right amount and percentage, ordered from largest to smallest.
 
-- [ ] T042 [US2] Implement `src/ui/Breakdown.tsx`:
+- [ ] T042 [US2] (FR-016) Implement `src/ui/Breakdown.tsx`:
   - Rows from `summary.breakdown`: label, `formatMoney` and `percentLabel`. The accessibility
     label is "Food, 150,00 €, 30 percent", or "…, less than 1 percent" for `<1%`.
   - With expenses at 0 and income > 0, it shows "No expenses this month.".
@@ -482,7 +482,7 @@ right amount and percentage, ordered from largest to smallest.
 and the breakdown update. Then delete it and check that it disappears and the totals return to
 their previous values.
 
-- [ ] T044 [US3] Implement `src/app/transaction/[id].tsx`:
+- [ ] T044 [US3] (FR-011, FR-013) Implement `src/app/transaction/[id].tsx`:
   - **Loading** (`getById` in progress): title plus indicator, no fields; closing is allowed with
     no prompt.
   - **Load fails** (`getById` throws or returns null): `notice.show('open_failed')`, then close.
@@ -505,7 +505,7 @@ their previous values.
     transaction (T044).
   - It is announced once with `AccessibilityInfo.announceForAccessibility`.
   Tests: see T046.
-- [ ] T046 [US3] Component tests in `tests/component/transactionFormEdit.test.tsx`:
+- [ ] T046 [US3] (FR-011, FR-013) Component tests in `tests/component/transactionFormEdit.test.tsx`:
   - Edit 12.50 → 21.50 updates the list, totals and breakdown. Changing to income clears the
     category and requires a new one.
   - Moving the date to the previous month makes the summary show that month (FR-020).
@@ -568,7 +568,7 @@ own transactions and totals. Add one from a past month and check that it lands i
     `if (process.env.EXPO_PUBLIC_DEV_TOOLS === '1')`, loading `seed.ts` with `require` inside that
     branch. The button text is "Seed 1,000 transactions".
   Tests in `tests/unit/seed.test.ts`: 1,000 rows, all dates within range, all valid.
-- [ ] T050 Accessibility pass across `src/ui/` and `src/app/`:
+- [ ] T050 (FR-031) Accessibility pass across `src/ui/` and `src/app/`:
   - Every tappable element has `accessibilityRole`, `accessibilityLabel` and ≥ 48 × 48 dp.
   - Nothing sets `allowFontScaling={false}`. 999.999,99 € wraps at large font.
   Tests in `tests/component/accessibility.test.tsx` assert the example announcements from
