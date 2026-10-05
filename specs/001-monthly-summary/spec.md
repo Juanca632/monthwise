@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Input**: User description: "Feature 001: record income and expenses and see the monthly summary. The full, already-agreed product decisions are in specs/001-monthly-summary/decisions.md (section "Decisions", D1–D15); the spec must follow them exactly and not reopen them."
+**Input**: User description: "Record income and expenses and see the monthly summary."
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -29,8 +29,9 @@ calculation to the cent.
 1. **Given** the app has no transactions, **When** the user opens it, **Then** they see the
    current month with total income, total expenses and balance all at zero, a short line saying
    there are no transactions yet, and the **Add** button.
-2. **Given** the user is on the main screen, **When** they tap **Add**, **Then** a form opens with
-   type set to Expense, the amount field ready for typing, date set to today and no category
+2. **Given** the user is on the current month, **When** they tap **Add**, **Then** a form opens
+   with type set to Expense, the amount field focused with a numeric keyboard shown, date set to
+   today and no category
    selected.
 3. **Given** the form is open, **When** the user enters 12.50, picks Food and saves, **Then** the
    form closes, the transaction appears at the top of the month's list and total expenses grow by
@@ -38,9 +39,14 @@ calculation to the cent.
 4. **Given** the form is open, **When** the user switches the type to Income, **Then** only income
    categories are offered.
 5. **Given** the month has 2,000.00 of income and 2,150.00 of expenses, **When** the user views the
-   summary, **Then** the balance shows -150.00, clearly marked as negative.
+   summary, **Then** the balance shows -150.00 with a minus sign and the negative color.
 6. **Given** the user saved transactions and closed the app, **When** they reopen it (also after a
    phone restart), **Then** all transactions and totals are still there.
+7. **Given** the month's data is still loading, **When** the user looks at the summary, **Then**
+   they see a loading state (not zeros), and **Add** is available.
+8. **Given** stored data cannot be read, **When** the summary is shown, **Then** the user sees a
+   message that the data could not be loaded and a way to try again, and the month is not shown
+   as empty.
 
 ---
 
@@ -89,37 +95,43 @@ values.
 3. **Given** the user is editing an expense, **When** they switch the type to Income, **Then** the
    category is cleared and they must pick an income category before saving.
 4. **Given** the user changes the date of a transaction to a day in the previous month, **When**
-   they save, **Then** it leaves the current month's list and totals and appears in the previous
-   month.
+   they save, **Then** the current month's list, totals and breakdown no longer include it (the app
+   then shows the previous month, as described in User Story 4).
 5. **Given** the user taps delete, **When** the confirmation "Delete this transaction?" appears and
    they confirm, **Then** the transaction is removed and totals update; **When** they cancel
    instead, **Then** nothing changes.
 
 ---
 
-### User Story 4 - Look back at previous months (Priority: P3)
+### User Story 4 - Work with previous months (Priority: P3)
 
-From the current month the user moves back to earlier months and sees each month's own summary
-and transactions, then returns to the current month.
+From the current month the user moves back to earlier months, sees each month's own summary and
+transactions, adds a transaction they forgot in a past month, and returns to the current month.
 
-**Why this priority**: Useful for comparing and reviewing, but the app delivers value with the
-current month alone.
+**Why this priority**: Useful for reviewing and catching up on forgotten entries, but the app
+delivers value with the current month alone.
 
 **Independent Test**: Record transactions dated in two different past months and check that each
-month shows only its own transactions and totals.
+month shows only its own transactions and totals; then add one from a past month and check it
+lands in that month.
 
 **Acceptance Scenarios**:
 
 1. **Given** the user is on the current month, **When** they move to the previous month, **Then**
    they see that month's name and year, its totals, breakdown and transactions only.
 2. **Given** the user is on the current month, **When** they look for a way to move forward,
-   **Then** none is offered.
+   **Then** none is offered; likewise, on January 2000 no way to move back is offered.
 3. **Given** the user is on a past month with no transactions, **When** they view it, **Then**
    totals show zero and a short line says there are no transactions for that month.
 4. **Given** the user is on a past month, **When** they return forward, **Then** they can reach the
    current month again.
 5. **Given** a past month ended with a positive balance, **When** the user views the following
    month, **Then** that month's balance does not include it.
+6. **Given** the user is viewing September 2026, **When** they tap **Add**, **Then** the form's
+   date defaults to 30 September 2026, and after saving the app shows September 2026 with the new
+   transaction in it.
+7. **Given** the user edits a transaction and moves its date to another month, **When** they save,
+   **Then** the app shows the month of the new date, with the transaction in it.
 
 ---
 
@@ -127,18 +139,29 @@ month shows only its own transactions and totals.
 
 - Amount of 0, negative, empty, with more than 2 decimals or above 999,999.99: saving is blocked
   and the form explains what to fix; nothing typed is lost.
+- Amount typed with either separator: in any region, `12,50` and `12.50` both mean twelve euros
+  fifty. An amount with more than one separator (for example `1.250,00`) is blocked with a message
+  asking for the amount without thousands separators; it is never guessed. An amount with three
+  digits after the separator (for example `1.250`) is blocked with the same hint. `.5` is accepted
+  as 0.50 and `12.` as 12.00.
 - No category picked: saving is blocked and the form points to the category field.
-- Date in the future: it cannot be chosen.
-- Note longer than 100 characters: input stops at 100 characters.
-- Leaving the form without saving: nothing is saved and existing transactions stay unchanged.
+- Date in the future or before 1 January 2000: it cannot be chosen.
+- Note longer than 100 visible characters: input stops at 100 (an emoji counts as one); pasted
+  text is cut at 100.
+- Leaving a form that has unsaved changes: the app asks "Discard changes?"; confirming discards
+  them, cancelling returns to the form. Leaving a form with no changes closes it without asking.
 - Several transactions on the same day: the most recently recorded one is listed first.
 - Two categories with the same expense total: they are ordered alphabetically.
-- Percentages that do not add up to exactly 100% because of rounding: accepted; each is rounded
-  to the nearest whole percent.
-- The app stays open past midnight on the last day of a month: the "current month" moves to the
-  new month the next time the summary is shown.
-- A transaction cannot be saved (for example, the phone's storage is full): the user sees an error
-  saying it was not saved, and the form keeps what they typed.
+- Percentages that do not add up to exactly 100%: accepted, because each one is rounded on its
+  own as defined in FR-016.
+- Midnight passes while the app is in use: "today" (the form's default and latest allowed date)
+  is worked out again each time a form or the date picker opens and each time the app returns to
+  the foreground. If the summary on screen was the current month, it moves to the new month when
+  the app returns to the foreground; a past month on screen stays.
+- A transaction cannot be saved or deleted (for example, the phone's storage is full): the user
+  sees an error saying the action did not happen, and the form keeps what they typed.
+- A stored transaction dated after "today" (the phone's clock or time zone moved back): it keeps
+  its date and is shown normally; only saving an edit requires a valid date.
 - The phone's region or light/dark setting changes: amounts, dates and colors follow the new
   setting without losing data.
 
@@ -150,72 +173,96 @@ month shows only its own transactions and totals.
 
 - **FR-001**: Users MUST be able to record a transaction with: type (income or expense), amount in
   EUR, date, category and an optional note.
-- **FR-002**: The **Add** action MUST be visible on the main screen at all times.
+- **FR-002**: The **Add** action MUST be visible on the summary at all times, including while data
+  loads and when loading fails.
 - **FR-003**: A new transaction form MUST open with type Expense, the amount field ready for
-  input, date set to today and no category selected.
+  input (focused, numeric keyboard shown) and no category selected. The date defaults to today when the current month is on screen,
+  and to the last day of the month on screen when a past month is shown.
 - **FR-004**: Amounts MUST be greater than 0, have at most 2 decimals and be at most 999,999.99.
-- **FR-005**: The date MUST be today or any past day; future dates MUST NOT be selectable.
-- **FR-006**: The note MUST be optional and at most 100 characters.
-- **FR-007**: The category MUST be required and chosen from the fixed list for the selected type:
+- **FR-005**: Amounts MUST accept either `,` or `.` as the decimal separator, regardless of
+  region; input with more than one separator MUST be rejected with a message, never interpreted.
+  Inside the form, an amount is always shown with the region's decimal separator and no thousands
+  separator or currency symbol (for example `1250,00`), so an existing amount can be saved as is.
+- **FR-006**: The date MUST be between 1 January 2000 and today, inclusive; other dates MUST NOT
+  be selectable.
+- **FR-007**: The note MUST be optional and at most 100 visible characters.
+- **FR-008**: The category MUST be required and chosen from the fixed list for the selected type:
   - Expense: Food, Transport, Housing, Bills, Health, Shopping, Leisure, Other.
   - Income: Salary, Freelance, Gifts, Other.
-- **FR-008**: Invalid input MUST block saving and show what to fix next to the field, keeping
-  everything the user typed.
+- **FR-009**: Save is always enabled. Tapping it with invalid input MUST show what to fix next to
+  each invalid field and move focus to the first one, keeping everything the user typed.
+- **FR-010**: Leaving a form with unsaved changes (any field differs from the values the form
+  opened with) MUST ask "Discard changes?" first; otherwise it MUST NOT ask.
 
 **Editing and deleting**
 
-- **FR-009**: Users MUST be able to open any transaction from the list to edit any of its fields.
-- **FR-010**: Changing the type while editing MUST clear the category and require a new one from
-  the new type's list.
-- **FR-011**: Users MUST be able to delete a transaction after confirming "Delete this
+- **FR-011**: Users MUST be able to open any transaction from the list to edit any of its fields.
+- **FR-012**: Changing the type in a form (new or edit) MUST clear the category and require a new
+  one from the new type's list.
+- **FR-013**: Users MUST be able to delete a transaction after confirming "Delete this
   transaction?"; deletion cannot be undone.
 
 **Monthly summary**
 
-- **FR-012**: The app MUST open on the current calendar month's summary.
-- **FR-013**: For the selected month, the summary MUST show total income, total expenses and
-  balance (income minus expenses), each to the cent; a negative balance MUST be clearly marked.
-- **FR-014**: The summary MUST show expenses per category for the selected month, with the amount
-  and the share of total expenses (whole percent), largest first, ties ordered alphabetically;
-  categories with no expenses are omitted.
-- **FR-015**: The summary MUST list the selected month's transactions, newest date first; on the
+- **FR-014**: The app MUST open on the current calendar month's summary.
+- **FR-015**: For the selected month, the summary MUST show total income, total expenses and
+  balance (income minus expenses), each to the cent; a negative balance MUST show a minus sign and
+  a distinct color (never color alone).
+- **FR-016**: The summary MUST show expenses per category for the selected month, with the amount
+  and the share of total expenses as a whole percent (rounded half up, so 12.5% shows 13%; a
+  non-zero share below 0.5% shows "<1%"), largest first, ties ordered alphabetically; categories
+  with no expenses are omitted.
+- **FR-017**: The summary MUST list the selected month's transactions, newest date first; on the
   same date, the most recently recorded first. Each item shows at least amount, type, category,
   date and note (if any).
-- **FR-016**: Each month MUST be calculated on its own; no balance carries over between months.
-- **FR-017**: Every change (add, edit, delete) MUST be reflected in the list, totals and breakdown
+- **FR-018**: Each month MUST be calculated on its own; no balance carries over between months.
+- **FR-019**: Every change (add, edit, delete) MUST be reflected in the list, totals and breakdown
   as soon as the user returns to the summary.
+- **FR-020**: After saving a new or edited transaction, the summary MUST show the month of that
+  transaction's date.
 
 **Navigation**
 
-- **FR-018**: Users MUST be able to move to any previous month without limit and back to the
-  current month; moving past the current month MUST NOT be possible.
+- **FR-021**: Users MUST be able to move back month by month to any month from January 2000 and
+  forward again up to the current month; moving past the current month MUST NOT be possible.
 
-**Empty and error states**
+**Empty, loading and error states**
 
-- **FR-019**: When there is nothing to show (no transactions at all, a month with none, or a month
+- **FR-022**: When there is nothing to show (no transactions at all, a month with none, or a month
   with no expenses), the app MUST show a short line saying what is missing plus the **Add**
-  action; totals MUST show zero rather than being hidden.
-- **FR-020**: If a transaction cannot be saved, the app MUST tell the user it was not saved and
-  keep the form's content.
+  action; any total with no data behind it MUST show zero rather than being hidden.
+- **FR-023**: While a month's data is loading, the summary MUST show a loading state instead of
+  totals and list; it MUST NOT show zeros that look like an empty month.
+- **FR-024**: If stored data cannot be read, the app MUST say the data could not be loaded and
+  offer to try again; it MUST NOT show the month as empty.
+- **FR-025**: If adding, editing or deleting a transaction fails, the app MUST tell the user the
+  action did not happen, leave the stored transaction exactly as it was, and keep the form's
+  content. If a transaction cannot be opened for editing, the app MUST say so and stay on the
+  summary.
 
 **Data and display**
 
-- **FR-021**: All data MUST be stored only on the phone and persist across app restarts and phone
+- **FR-026**: All data MUST be stored only on the phone and persist across app restarts and phone
   restarts; no account or login is required.
-- **FR-022**: No financial data (amounts, notes, categories) may leave the device or appear in
-  logs, analytics or error reports.
-- **FR-023**: Money MUST be calculated exactly to the cent; totals MUST never show rounding errors.
-- **FR-024**: Amounts and dates MUST be displayed using the phone's region settings, while all
-  interface text is in English; the currency is always EUR.
-- **FR-025**: The app MUST follow the phone's light or dark appearance setting.
+- **FR-027**: No financial data (amounts, notes, categories) may leave the device or appear in
+  logs, analytics or error reports. App data MUST NOT be included in any cloud backup.
+- **FR-028**: Money MUST be calculated exactly to the cent; totals MUST stay exact for any
+  combination of valid transactions and never show rounding errors.
+- **FR-029**: Amounts and numeric dates MUST be displayed using the phone's region settings
+  (decimal and thousands separators, € position, day/month order). Dates in the list and the form
+  are numeric in the region's order (for example `30/09/2026` in Spain). All interface text,
+  including the month names in the month header, is in English. The currency is always EUR.
+- **FR-030**: The app MUST follow the phone's light or dark appearance setting.
 
 ### Key Entities
 
 - **Transaction**: one money movement recorded by the user. Attributes: type (income or expense),
-  amount in EUR (exact to the cent), date (a calendar day, not in the future), category, optional
-  note (up to 100 characters), and the moment it was recorded (used to order same-day items).
-- **Category**: a fixed label that belongs to exactly one type (income or expense). Not created,
-  renamed or deleted by the user in this feature.
+  amount in EUR (exact to the cent), date (a calendar day between 1 January 2000 and today),
+  category, optional note (up to 100 visible characters), and the moment it was first recorded
+  (used to order same-day items; editing does not change it).
+- **Category**: a fixed label that belongs to exactly one type; it is identified by its type plus
+  its label, so expense "Other" and income "Other" are different categories. Not created, renamed
+  or deleted by the user in this feature.
 - **Monthly summary**: not stored; derived for one calendar month from that month's transactions:
   total income, total expenses, balance, expenses per category with share, and the transaction
   list.
@@ -224,29 +271,36 @@ month shows only its own transactions and totals.
 
 ### Measurable Outcomes
 
-- **SC-001**: From the main screen, a user can record an expense in under 10 seconds and with no
-  more than 5 interactions (open form, type amount, pick category, save).
+- **SC-001**: From the main screen, a user can record an expense in under 10 seconds and with 4
+  interactions: open the form, type the amount (counts as one), pick a category, save.
 - **SC-002**: Totals, balance and per-category amounts match a hand calculation to the cent for
   100% of a reference set of at least 50 transactions, including edits and deletions.
 - **SC-003**: 100% of saved transactions are still present after closing the app and after
   restarting the phone.
-- **SC-004**: The current month's summary is visible within 1 second of opening the app with
-  1,000 transactions in that month.
+- **SC-004**: On a phone with Android 10 or later and 4 GB of RAM, opening the app from a cold
+  start shows the current month's totals and first list items within 1 second, with 1,000
+  transactions in that month.
 - **SC-005**: Zero financial data is sent off the device during normal use.
-- **SC-006**: In a first-use test, at least 9 out of 10 people record their first expense without
-  help or instructions.
+- **SC-006**: In a first-use test with at least 3 people, every participant records their first
+  expense without help or instructions.
 
 ## Assumptions
 
-- Single user per phone; the app is personal and has no sharing or multiple profiles (D1).
+- Single user per phone; the app is personal and has no sharing or multiple profiles.
 - Android is the only platform for this feature, per the constitution.
 - "Month" means the calendar month in the phone's local time; a transaction belongs to the month
   of its date, not the moment it was recorded.
-- Data lives until the app is uninstalled or the phone is lost; protecting against that is
-  feature 006 (Backup and restore) and is accepted as a known risk until then.
+- Data is lost if the app is uninstalled or the phone is lost, because nothing leaves the phone
+  (FR-027). This is accepted until feature 006 (Backup and restore). This feature does not block
+  the system's direct phone-to-phone transfer, but does not support or test it either; moving
+  data to a new phone on purpose belongs to feature 006.
 - Fixed monthly payments (rent, subscriptions) are recorded by hand each month in this feature;
   automating them is feature 004.
 - Out of scope: login and sync, charts (002), savings goal (003), recurring expenses (004), bank
-  notification detection (005), backup (006), other currencies, search and filters, data export,
-  editable categories, undo after delete.
-- No onboarding or tutorial; the empty states guide the first use (D11).
+  notification detection (005), backup (006), more languages (007), other currencies, search and
+  filters, data export, editable categories, undo after delete.
+- No onboarding or tutorial; the empty states guide the first use.
+- Amounts in this spec's examples use a neutral notation (`12.50`); on screen they follow the
+  phone's region (for example `12,50 €` in Spain).
+- The interface is English only; supporting more languages is feature 007. The region-based
+  number and date format already applies in this feature.

@@ -233,6 +233,80 @@ revisiting every screen; doing it from day one is cheap.
 
 **Answer:** i agree
 
+## Round 4 — from the spec review
+
+The `sdd-reviewer` agent read `spec.md` with no context and found gaps. Most are fixed in the spec
+with defaults you can review there; these three need your decision.
+
+### Q16. Adding while viewing a past month
+
+The **Add** button is on every month, but the form's date defaults to today. If you are looking
+at September and tap **Add**, the expense lands in October, a month you are not looking at.
+
+- **(a)** Date defaults to today; after saving, the app jumps to the current month.
+- **(b)** Date defaults to the **last day of the month you are viewing** (today, if it is the
+  current month), so **Add** adds to the month on screen.
+- **(c)** **Add** only exists on the current month.
+
+In all cases, after any save (new or edited), the app shows the month of the transaction's date,
+so you always see where it went.
+
+**Recommendation:** (b). If you go back to September and tap **Add**, you are almost certainly
+adding something you forgot from September.
+
+**Answer:** i agree with u
+
+### Q17. Android's automatic backup
+
+By default, Android copies app data to the user's Google account (encrypted, about once a day)
+and restores it on a reinstall or a new phone. That is free protection against losing data, but
+it also means financial data leaves the phone, which the spec says must not happen.
+
+- **(a)** Turn it off in 001. Strict "nothing leaves the phone"; uninstalling still loses
+  everything until 006.
+- **(b)** Leave it on. Data survives a reinstall or a new phone, stored encrypted in your own
+  Google account; the spec's privacy rule gets an exception for it.
+
+**Recommendation:** (a). It keeps 001's privacy promise simple, and 006 (Backup and restore) is
+the place to choose how backup works on purpose, which may well end up being this same Google
+backup.
+
+**Answer:** i agree
+
+### Q18. Typing amounts and month names
+
+D13 says amounts and dates follow the phone's region. Two details follow from it:
+
+- **Typing an amount:** on a Spanish phone, the decimal separator is a comma (`12,50`). Does the
+  amount field use the region's separator, or always a dot?
+- **Month names** in the month header: English ("October 2026", like the rest of the UI) or the
+  region's language ("octubre 2026")?
+
+**Recommendation:** the region's separator when typing (it is the key the phone's number keypad
+shows), and month names in English, because they are interface text. Numeric dates keep the
+region's order (`5/10/2026`).
+
+**Answer:** la idea es q la app detecte la region e idioma del telefono y ps haya soporte a varios idiomas ps, pero por ahora será en ingles y el formato dependerá de la region ps
+
+## Round 5 — from the second spec review
+
+### Q19. Moving to a new phone
+
+D17 turned off Android's automatic backup to Google. Android has a second, separate path: when you
+set up a new phone, it can copy apps and their data **directly from the old phone** (by cable or
+nearby connection). The data goes phone to phone, not to the cloud, but it still leaves the old
+device.
+
+- **(a)** Block it too. Fully consistent with "nothing leaves the phone"; changing phones means
+  starting from zero until 006.
+- **(b)** Allow it. Your data moves with you to your new phone; it never touches a server.
+
+**Recommendation:** (b). The rule exists to keep financial data away from third parties, and a
+direct transfer between two phones you own does not reach anyone else. Losing a whole history
+when changing phones would be a big price for no privacy gain.
+
+**Answer:** i agree but i insist, there decisions are for after, not now pls
+
 ## Decisions
 
 All rounds are closed (2026-10-05). This list is the input for `/speckit-specify`.
@@ -269,3 +343,13 @@ All rounds are closed (2026-10-05). This list is the input for `/speckit-specify
 - **D14 (Q14):** editing can switch the type (expense ↔ income); doing so clears the category and
   asks for a new one.
 - **D15 (Q15):** the app follows the phone's light/dark setting from the start.
+- **D16 (Q16):** **Add** adds to the month on screen: the date defaults to today on the current
+  month and to the last day of the month on a past month. After any save, the app shows the month
+  of the transaction's date.
+- **D17 (Q17):** Android's automatic cloud backup is off in 001; nothing leaves the phone. Backup
+  is designed on purpose in 006.
+- **D18 (Q18):** amounts are typed with the region's decimal separator; month names are in English
+  like the rest of the UI. Long term, the app should detect the phone's language and support more
+  languages (future feature); for now the UI is English and formats follow the region.
+- **D19 (Q19):** phone-to-phone transfer is not blocked, but not supported or tested in 001. It and
+  any other backup or transfer question belong to feature 006.

@@ -18,6 +18,10 @@ code exists, add setup, commands and project structure to this file.
 - Each feature lives in `specs/NNN-feature-name/` (`spec.md`, `plan.md`, `tasks.md`).
 - No app code without an approved spec, plan and tasks. If the code must deviate, update the spec
   or plan first.
+- After `/speckit-specify`, `/speckit-clarify`, `/speckit-plan` and `/speckit-tasks`, run the
+  `sdd-reviewer` agent (`.claude/agents/sdd-reviewer.md`) on the artifact that step produced, and
+  show its findings to the developer before they approve the step. Fix or explicitly accept every
+  CRITICAL and MAJOR finding, then re-run the reviewer.
 - The developer reviews the output of each step before moving to the next.
 
 Roadmap (one feature at a time):
@@ -28,6 +32,7 @@ Roadmap (one feature at a time):
 4. `004` Recurring expenses
 5. `005` Automatic expense detection from bank notifications (Android)
 6. `006` Backup and restore
+7. `007` Multi-language support (needs a constitution amendment: the UI is English-only today)
 
 ## Setup and commands
 

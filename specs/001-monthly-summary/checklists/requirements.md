@@ -31,8 +31,13 @@
 
 ## Notes
 
-- Validated in 1 iteration. Every decision D1–D15 from `decisions.md` maps to at least one FR or
-  assumption; no decision was reopened.
-- Details not covered by the decisions were filled with defaults and are visible in the spec for
-  review: same-day ordering (FR-015), tie order and whole-percent rounding in the breakdown
-  (FR-014), behavior when saving fails (FR-020), success-criteria targets (SC-001, SC-004, SC-006).
+- Validated in 1 iteration, then reviewed three times by the `sdd-reviewer` agent:
+  1. 1 critical, 5 major: loading/error states, adding from a past month, cloud backup, amount
+     format, percentage rounding, negative balance marker. Fixed; product questions answered as
+     Q16–Q18 in `decisions.md`.
+  2. 0 critical, 4 major: separator ambiguity, story independence, SC-004 device, phone-to-phone
+     transfer (Q19). Fixed; requirements renumbered FR-001..FR-030.
+  3. 0 critical, 2 major: amount shown in the edit form, transfer wording. Both fixed, plus all
+     minors (validation trigger, discard rule, date format, navigation lower bound, input forms
+     like `.5`, clock moving back).
+- Backup and phone-to-phone transfer are deferred to feature 006 by the developer.
