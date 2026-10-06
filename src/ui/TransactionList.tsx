@@ -131,9 +131,7 @@ function DayHeader({ date, netCents, first, tag }: { date: IsoDate; netCents: nu
       {/* `text` for both: headers scroll over the ambient glow, where muted text and the income
           color drop below 4.5:1 in light; the net's sign carries its meaning (design.md). */}
       <Text style={[type.label, { color: colors.text }]}>{dayName(date, today)}</Text>
-      <Text style={[type.labelStrong, { color: colors.text }]}>
-        {net}
-      </Text>
+      <Text style={[type.labelStrong, { color: colors.text }]}>{net}</Text>
     </View>
   );
 }

@@ -42,7 +42,8 @@ export function Totals({ header, content, tag }: Props) {
   const tone = cardTones[toneName];
   const values = content.kind === 'values' ? content : null;
   // 520 ms ease-out, or a jump under reduce motion. The counters live here, not in the values
-  // block: it unmounts while a month loads, and the next month counts from the last amounts shown.
+  // block, which unmounts while a month loads; they reset while it loads, so a new month shows
+  // its amounts at once and only a change in the month on screen counts.
   const counting = { animate: !useReduceMotion(), duration: durations.count, easing: easeOutFn };
   const balance = useCountUp(values?.balanceCents ?? null, counting);
   const income = useCountUp(values?.incomeCents ?? null, counting);

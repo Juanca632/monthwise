@@ -41,7 +41,7 @@ export type Palette = {
   fieldFill: string;
   fieldBorder: string;
   scrim: string;
-  /** The Add and Save fill, an `experimental_backgroundImage` value. */
+  /** The Add fill, an `experimental_backgroundImage` value (Save is flat). */
   accentGradient: string;
   accentBorder: string;
   /** The banner's tint: `accentSoft`, at 60 % in dark (Components table). */

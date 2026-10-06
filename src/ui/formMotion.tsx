@@ -17,7 +17,8 @@ import { durations, easeOut, spring, useReduceMotion } from './motion';
 import { radii, useTheme } from './theme';
 
 const never = { reduceMotion: ReduceMotion.Never };
-const SEGMENT_BORDER = 1.5;
+/** The selected segment's accent border (design.md); the segments reserve the same width. */
+export const SEGMENT_BORDER = 1.5;
 
 /**
  * The selected Type segment: one indicator that slides between the two options with the spring.

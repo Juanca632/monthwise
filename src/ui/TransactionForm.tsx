@@ -38,7 +38,7 @@ import { getToday } from '@/hooks/useToday';
 import { useRegion } from '@/hooks/useRegion';
 import { haptics } from '@/lib/haptics';
 
-import { ChipFace, TypeIndicator, useShake } from './formMotion';
+import { ChipFace, SEGMENT_BORDER, TypeIndicator, useShake } from './formMotion';
 import { ShapePressable } from './glass';
 import { useSheet } from './Sheet';
 import { PressableScale } from './motion';
@@ -657,7 +657,7 @@ const styles = StyleSheet.create({
     minHeight: minTouch,
     borderRadius: radii.segment,
     // Reserved so selecting a segment never shifts the layout.
-    borderWidth: 1.5,
+    borderWidth: SEGMENT_BORDER,
     borderColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
