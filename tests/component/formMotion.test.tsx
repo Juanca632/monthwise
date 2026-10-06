@@ -1,7 +1,9 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 import { getAnimatedStyle } from 'react-native-reanimated';
 
 import { Sheet } from '@/ui/Sheet';
+import { palettes } from '@/ui/theme';
 import { FormHeader, TransactionForm } from '@/ui/TransactionForm';
 
 // T072 (design.md, Motion: "Type switch", "Pick a category", "Invalid Save").
@@ -91,6 +93,21 @@ describe('category chips', () => {
     expect(opacity('chip-fill-selected')).toBe(1);
   });
 
+  it('crossfade the label with the fill, so it stays readable', () => {
+    renderForm();
+    fireEvent.press(screen.getByRole('button', { name: 'Food' }));
+    wait(100);
+    const label = screen.getByText('Food');
+    const color = (getAnimatedStyle(label) as { color: string }).color;
+    expect(color).not.toBe(palettes.light.text);
+    expect(color).not.toBe(palettes.light.onAccent);
+    wait(200);
+    // onAccent (#FFFFFF in light), as interpolateColor writes it.
+    expect((getAnimatedStyle(screen.getByText('Food')) as { color: string }).color).toBe(
+      'rgba(255, 255, 255, 1)',
+    );
+  });
+
   it('swap under reduce motion', () => {
     mockReduceMotion.mockReturnValue(true);
     renderForm();
@@ -118,5 +135,24 @@ describe('invalid Save', () => {
     wait(40);
     expect(translateX('field-amount')).toBe(0);
     expect(screen.getByText('Enter an amount.')).toBeTruthy();
+  });
+});
+
+describe('flat form look (design.md, Components; T076)', () => {
+  it('draws the sheet solid and Save as a solid accent button without border', () => {
+    renderForm();
+    expect(StyleSheet.flatten(screen.getByTestId('sheet').props.style)).toMatchObject({
+      backgroundColor: palettes.light.formBackground,
+    });
+    const save = StyleSheet.flatten(screen.getByRole('button', { name: 'Save' }).props.style);
+    expect(save.backgroundColor).toBe(palettes.light.accent);
+    expect(save.borderWidth ?? 0).toBe(0);
+    expect(save.experimental_backgroundImage).toBeUndefined();
+  });
+
+  it('gives unselected chips a solid fill with no visible border', () => {
+    renderForm();
+    const chip = StyleSheet.flatten(screen.getByRole('button', { name: 'Food' }).props.style);
+    expect(chip).toMatchObject({ backgroundColor: palettes.light.surfaceMuted, borderColor: 'transparent' });
   });
 });

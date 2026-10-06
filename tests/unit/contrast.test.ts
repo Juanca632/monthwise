@@ -81,6 +81,12 @@ describe.each(schemes)('%s summary at the glow peak', (scheme) => {
     }
   });
 
+  it.each(tones)('day headers stay readable on the background at the glow peak (%s month)', (tone) => {
+    const peak = blend(c.background, cardTones[scheme][tone].ambientTop);
+    // textMuted (4.1:1) and income (4.4:1) fall short in light here, so the headers use text.
+    expect(ratio(parse(c.text), peak)).toBeGreaterThanOrEqual(TEXT);
+  });
+
   it('the banner keeps its message and Dismiss readable', () => {
     const banner = blend(c.background, cardTones[scheme].positive.ambientTop, c.bannerFill);
     expect(ratio(parse(c.text), banner)).toBeGreaterThanOrEqual(TEXT);
@@ -88,32 +94,32 @@ describe.each(schemes)('%s summary at the glow peak', (scheme) => {
   });
 });
 
-describe.each(schemes)('%s form sheet', (scheme) => {
+describe.each(schemes)('%s form (flat look on formBackground)', (scheme) => {
   const c = palettes[scheme];
-  const sheetStops = stops(c.sheetFill);
 
-  it('field borders stand out from the sheet (≥ 3:1)', () => {
-    for (const sheet of sheetStops) {
-      expect(ratio(blend(sheet, c.fieldBorder), parse(sheet))).toBeGreaterThanOrEqual(INDICATOR);
+  it('focus and error borders stand out from a field (≥ 3:1)', () => {
+    for (const border of [c.accent, c.error]) {
+      expect(ratio(parse(border), parse(c.surfaceMuted))).toBeGreaterThanOrEqual(INDICATOR);
+      expect(ratio(parse(border), parse(c.formBackground))).toBeGreaterThanOrEqual(INDICATOR);
     }
   });
 
-  it('text and muted text stay readable on a field', () => {
-    for (const sheet of sheetStops) {
-      const field = blend(sheet, c.fieldFill);
-      expect(ratio(parse(c.text), field)).toBeGreaterThanOrEqual(TEXT);
-      expect(ratio(parse(c.textMuted), field)).toBeGreaterThanOrEqual(TEXT);
+  it('text and muted text stay readable on a field and on the sheet', () => {
+    for (const fill of [c.surfaceMuted, c.formBackground]) {
+      expect(ratio(parse(c.text), parse(fill))).toBeGreaterThanOrEqual(TEXT);
+      expect(ratio(parse(c.textMuted), parse(fill))).toBeGreaterThanOrEqual(TEXT);
     }
   });
 
   it('the selected segment border stands out from its fill and the track (≥ 3:1)', () => {
-    for (const sheet of sheetStops) {
-      const track = blend(sheet, c.fieldFill);
-      const indicator = blend(sheet, c.fieldFill, c.segmentIndicator);
-      expect(ratio(parse(c.accent), indicator)).toBeGreaterThanOrEqual(INDICATOR);
-      expect(ratio(parse(c.accent), track)).toBeGreaterThanOrEqual(INDICATOR);
-      expect(ratio(parse(c.text), indicator)).toBeGreaterThanOrEqual(TEXT);
-    }
+    expect(ratio(parse(c.accent), parse(c.segmentSelected))).toBeGreaterThanOrEqual(INDICATOR);
+    expect(ratio(parse(c.accent), parse(c.segmentTrack))).toBeGreaterThanOrEqual(INDICATOR);
+    expect(ratio(parse(c.text), parse(c.segmentSelected))).toBeGreaterThanOrEqual(TEXT);
+    expect(ratio(parse(c.textMuted), parse(c.segmentTrack))).toBeGreaterThanOrEqual(TEXT);
+  });
+
+  it('the error screen\'s Try again border stands out from the background (≥ 3:1)', () => {
+    expect(ratio(blend(c.background, c.fieldBorder), parse(c.background))).toBeGreaterThanOrEqual(INDICATOR);
   });
 
   it('accent buttons keep onAccent text readable at every gradient stop', () => {

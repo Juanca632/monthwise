@@ -9,6 +9,8 @@ export type Palette = {
   surface: string;
   formBackground: string;
   surfaceMuted: string;
+  segmentTrack: string;
+  segmentSelected: string;
   avatar: string;
   divider: string;
   text: string;
@@ -42,8 +44,6 @@ export type Palette = {
   /** The Add and Save fill, an `experimental_backgroundImage` value. */
   accentGradient: string;
   accentBorder: string;
-  /** The selected Type segment's fill (Glass surfaces, "Selected segment"). */
-  segmentIndicator: string;
   /** The banner's tint: `accentSoft`, at 60 % in dark (Components table). */
   bannerFill: string;
   /** The 96 dp fade behind Add, an `experimental_backgroundImage` value. */
@@ -70,6 +70,8 @@ export const palettes: Record<Scheme, Palette> = {
     surface: '#FFFFFF',
     formBackground: '#FFFFFF',
     surfaceMuted: '#F1F3F6',
+    segmentTrack: '#F1F3F6',
+    segmentSelected: '#FFFFFF',
     avatar: '#F1F3F6',
     divider: '#EEF0F3',
     text: '#0E1116',
@@ -98,7 +100,6 @@ export const palettes: Record<Scheme, Palette> = {
     scrim: withAlpha('#000000', 0.45),
     accentGradient: verticalGradient('#3D66EF', '#2F5BEA'),
     accentBorder: withAlpha('#FFFFFF', 0.35),
-    segmentIndicator: '#FFFFFF',
     bannerFill: '#EAF0FF',
     bottomFade: verticalGradient(withAlpha('#F6F7F9', 0), withAlpha('#F6F7F9', 0.45)),
     rowFlash: withAlpha('#2F5BEA', 0.22),
@@ -108,6 +109,8 @@ export const palettes: Record<Scheme, Palette> = {
     surface: '#171A21',
     formBackground: '#0D0F13',
     surfaceMuted: '#1A1E26',
+    segmentTrack: '#171A21',
+    segmentSelected: '#262B35',
     avatar: '#232833',
     divider: '#232833',
     text: '#F2F4F7',
@@ -136,7 +139,6 @@ export const palettes: Record<Scheme, Palette> = {
     scrim: withAlpha('#000000', 0.45),
     accentGradient: verticalGradient('#A0B2FF', '#7089FA'),
     accentBorder: withAlpha('#FFFFFF', 0.4),
-    segmentIndicator: withAlpha('#FFFFFF', 0.14),
     bannerFill: withAlpha('#1E2640', 0.6),
     bottomFade: verticalGradient(withAlpha('#0D0F13', 0), withAlpha('#0D0F13', 0.45)),
     rowFlash: withAlpha('#7D96FF', 0.22),

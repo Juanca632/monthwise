@@ -152,7 +152,8 @@ export function Sheet({ header, children }: Props) {
           styles.sheet,
           {
             top,
-            experimental_backgroundImage: colors.sheetFill,
+            // Flat look, solid (design.md, Components).
+            backgroundColor: colors.formBackground,
             borderColor: colors.glassBorderStrong,
           },
           sheetStyle,

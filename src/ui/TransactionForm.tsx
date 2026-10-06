@@ -38,8 +38,8 @@ import { getToday } from '@/hooks/useToday';
 import { useRegion } from '@/hooks/useRegion';
 import { haptics } from '@/lib/haptics';
 
-import { ChipFill, TypeIndicator, useShake } from './formMotion';
-import { AccentButton, ShapePressable } from './glass';
+import { ChipFace, TypeIndicator, useShake } from './formMotion';
+import { ShapePressable } from './glass';
 import { useSheet } from './Sheet';
 import { PressableScale } from './motion';
 import { iconSize, minTouch, radii, spacing, useTheme, type Palette } from './theme';
@@ -298,7 +298,8 @@ export function TransactionForm({
           accessibilityLabel="Type"
           style={[
             styles.segmentTrack,
-            { backgroundColor: colors.fieldFill, borderColor: colors.fieldBorder },
+            // The 1 dp border only keeps the track's size; flat look (design.md).
+            { backgroundColor: colors.segmentTrack, borderColor: 'transparent' },
           ]}
         >
           <TypeIndicator
@@ -412,23 +413,20 @@ export function TransactionForm({
                     overlay={selected ? colors.rippleOnAccent : colors.ripple}
                     style={[
                       styles.chip,
-                      // Selecting keeps the 1 dp border, in accent, so the chip never changes
-                      // size (design.md); the accent fill and its highlight fade in on top.
+                      // Flat look: no visible border at rest; selecting keeps the 1 dp border,
+                      // in accent, so the chip never changes size (design.md). The accent fill
+                      // fades in on top.
                       {
-                        backgroundColor: colors.fieldFill,
-                        borderColor: selected ? colors.accent : colors.fieldBorder,
+                        backgroundColor: colors.surfaceMuted,
+                        borderColor: selected ? colors.accent : 'transparent',
                       },
                     ]}
                   >
-                    <ChipFill selected={selected} />
-                    <Text
-                      style={[
-                        selected ? type.bodyStrong : type.body,
-                        { color: selected ? colors.onAccent : colors.text },
-                      ]}
-                    >
-                      {c.label}
-                    </Text>
+                    <ChipFace
+                      selected={selected}
+                      label={c.label}
+                      textStyle={selected ? type.bodyStrong : type.body}
+                    />
                   </ShapePressable>
                 );
               })}
@@ -460,7 +458,7 @@ export function TransactionForm({
                 style={[
                   styles.box,
                   styles.dateBox,
-                  { backgroundColor: colors.fieldFill },
+                  { backgroundColor: colors.surfaceMuted },
                   fieldBorderStyle(colors, { invalid: !!dateError }),
                 ]}
               >
@@ -490,7 +488,7 @@ export function TransactionForm({
                 style={[
                   type.body,
                   styles.box,
-                  { color: colors.text, backgroundColor: colors.fieldFill },
+                  { color: colors.text, backgroundColor: colors.surfaceMuted },
                   fieldBorderStyle(colors, { invalid: !!noteError, focused: noteFocused }),
                 ]}
               />
@@ -519,14 +517,16 @@ export function TransactionForm({
             <Text style={[type.labelStrong, { color: colors.error }]}>Delete</Text>
           </PressableScale>
         )}
-        <AccentButton
+        {/* Flat look: a solid accent fill, no gradient, border or highlight (design.md). */}
+        <ShapePressable
           accessibilityRole="button"
           accessibilityLabel="Save"
           onPress={save}
-          style={styles.saveButton}
+          overlay={colors.rippleOnAccent}
+          style={[styles.saveButton, { backgroundColor: colors.accent }]}
         >
           <Text style={[type.button, { color: colors.onAccent }]}>Save</Text>
-        </AccentButton>
+        </ShapePressable>
       </Animated.View>
     </View>
   );
@@ -547,7 +547,7 @@ export function FormHeader({ title, onClose }: { title: string; onClose(): void 
         android_ripple={{ color: colors.ripple, borderless: true, radius: minTouch / 2 }}
         style={[
           styles.roundButton,
-          { backgroundColor: colors.fieldFill, borderColor: colors.fieldBorder },
+          { backgroundColor: colors.surfaceMuted, borderColor: 'transparent' },
         ]}
       >
         <Feather name="x" size={iconSize.button} color={colors.text} />
@@ -607,7 +607,7 @@ const REST_BORDER = 1;
 const TRACK_PADDING = spacing.xxs + BORDER - REST_BORDER;
 
 /**
- * design.md, "Borders never shift the layout": at rest a 1 dp `fieldBorder` plus 1 dp of extra
+ * design.md, "Borders never shift the layout": at rest a transparent 1 dp border plus 1 dp of extra
  * padding; focused or invalid, a 2 dp border without it, so the field keeps its size. When a field
  * is both, the error wins.
  */
@@ -616,7 +616,8 @@ function fieldBorderStyle(colors: Palette, { invalid = false, focused = false })
   const extra = active ? 0 : BORDER - REST_BORDER;
   return {
     borderWidth: active ? BORDER : REST_BORDER,
-    borderColor: invalid ? colors.error : focused ? colors.accent : colors.fieldBorder,
+    // Flat look: the resting border is there only to keep the size (design.md).
+    borderColor: invalid ? colors.error : focused ? colors.accent : 'transparent',
     paddingHorizontal: spacing.md + extra,
     paddingVertical: extra,
   };
@@ -709,5 +710,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  saveButton: { minHeight: 56 },
+  saveButton: {
+    minHeight: 56,
+    borderRadius: radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

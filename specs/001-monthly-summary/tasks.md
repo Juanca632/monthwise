@@ -903,7 +903,7 @@ Spec clarifications (Session 2026-10-06), FR-017, FR-029, contracts/ui-screens.m
   month view); component tests for the headers' text, heading role and spoken label, the net
   moving under the day at large text, and the cards per day; the 1,000-row test still renders
   only the first window; existing summary, accessibility and row-change suites stay green.
-- [ ] T076 Flat form look (design.md, Components and Transaction form): the sheet on
+- [x] T076 Flat form look (design.md, Components and Transaction form): the sheet on
   `formBackground`; close button, unselected chips, Date and Note on `surfaceMuted` with a
   transparent 1 dp border at rest (the size rule stays); the track on `segmentTrack` and the
   indicator on `segmentSelected`; the selected chip solid `accent` without highlight; Save solid

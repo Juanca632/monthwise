@@ -1,9 +1,10 @@
 // The form's own motion (design.md, Motion: "Type switch", "Pick a category" and "Invalid Save").
 // Under reduce motion the indicator and chips swap and nothing shakes.
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type TextStyle } from 'react-native';
 import Animated, {
   Easing,
+  interpolateColor,
   ReduceMotion,
   useAnimatedStyle,
   useSharedValue,
@@ -13,7 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { durations, easeOut, spring, useReduceMotion } from './motion';
-import { insetHighlight, radii, useTheme } from './theme';
+import { radii, useTheme } from './theme';
 
 const never = { reduceMotion: ReduceMotion.Never };
 const SEGMENT_BORDER = 1.5;
@@ -52,7 +53,7 @@ export function TypeIndicator({ index, inset, gap }: { index: 0 | 1; inset: numb
             styles.indicator,
             {
               width: segmentWidth,
-              backgroundColor: colors.segmentIndicator,
+              backgroundColor: colors.segmentSelected,
               borderColor: colors.accent,
             },
             slide,
@@ -63,8 +64,11 @@ export function TypeIndicator({ index, inset, gap }: { index: 0 | 1; inset: numb
   );
 }
 
-/** A chip's accent fill, fading in over 220 ms when it is picked (and out when another is). */
-export function ChipFill({ selected }: { selected: boolean }) {
+/**
+ * A chip's face: its accent fill fades in over 220 ms when it is picked (and out when another
+ * is), and its label's color crossfades with it, so the label stays readable all the way.
+ */
+export function ChipFace({ selected, label, textStyle }: { selected: boolean; label: string; textStyle: TextStyle }) {
   const { colors } = useTheme();
   const reduceMotion = useReduceMotion();
   const fill = useSharedValue(selected ? 1 : 0);
@@ -79,17 +83,18 @@ export function ChipFill({ selected }: { selected: boolean }) {
   }, [selected, reduceMotion, fill]);
 
   const fade = useAnimatedStyle(() => ({ opacity: fill.value }));
+  const ink = useAnimatedStyle(() => ({
+    color: interpolateColor(fill.value, [0, 1], [colors.text, colors.onAccent]),
+  }));
   return (
-    <Animated.View
-      testID={selected ? 'chip-fill-selected' : 'chip-fill'}
-      pointerEvents="none"
-      style={[
-        StyleSheet.absoluteFill,
-        styles.chipFill,
-        { backgroundColor: colors.accent, boxShadow: insetHighlight(colors.glassHighlight) },
-        fade,
-      ]}
-    />
+    <>
+      <Animated.View
+        testID={selected ? 'chip-fill-selected' : 'chip-fill'}
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, styles.chipFill, { backgroundColor: colors.accent }, fade]}
+      />
+      <Animated.Text style={[textStyle, ink]}>{label}</Animated.Text>
+    </>
   );
 }
 

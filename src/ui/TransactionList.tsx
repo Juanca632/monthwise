@@ -128,8 +128,10 @@ function DayHeader({ date, netCents, first, tag }: { date: IsoDate; netCents: nu
       accessibilityLabel={`${spokenDayName(date, today)}, net ${spokenMoney(netCents, tag)}`}
       style={[styles.dayHeader, first && styles.firstDayHeader, isLargeText && styles.dayHeaderStacked]}
     >
-      <Text style={[type.label, { color: colors.textMuted }]}>{dayName(date, today)}</Text>
-      <Text style={[type.labelStrong, { color: netCents > 0 ? colors.income : colors.textMuted }]}>
+      {/* `text` for both: headers scroll over the ambient glow, where muted text and the income
+          color drop below 4.5:1 in light; the net's sign carries its meaning (design.md). */}
+      <Text style={[type.label, { color: colors.text }]}>{dayName(date, today)}</Text>
+      <Text style={[type.labelStrong, { color: colors.text }]}>
         {net}
       </Text>
     </View>

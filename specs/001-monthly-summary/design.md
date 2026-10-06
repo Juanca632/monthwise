@@ -458,11 +458,12 @@ There is no native header (`headerShown: false`); the balance card holds the mon
    2026-10-06). Each day has a header and its own card.
    - **Day header**: padding 16 top (0 for the first day, right under the "Transactions" title)
      and 8 bottom, 24 at the sides. The day ("Today", "Yesterday", "Mon 5 Oct"; no year, a month
-     never crosses one) in `label`, `textMuted`, on the left; the day's net on the right in
-     `labelStrong`, `income` above zero and `textMuted` otherwise, with `+` above zero, minus
+     never crosses one) in `label`, `text`, on the left; the day's net on the right in
+     `labelStrong`, `text`, with `+` above zero, minus
      below and no sign at zero. When `isLargeText`, the net moves under the day, left-aligned.
-     A heading for the screen reader (Screen reader, above). `textMuted` on `background` at
-     the glow's peak is ≥ 4.5:1 (contrast test).
+     A heading for the screen reader (Screen reader, above). Headers scroll over the ambient
+     glow, where `textMuted` (4.1:1) and `income` (4.4:1) fall short in light, so both parts
+     use `text` (≥ 4.5:1 there, contrast test); the sign carries the net's meaning.
    - **The day's card** holds its rows, each at least 64 dp tall:
      - A 40 dp avatar with the category initial (`glassAvatar` with `textMuted`; income uses
        `incomeSoft` with `income`), in `avatarInitial`.
