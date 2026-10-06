@@ -198,3 +198,11 @@ it('updates on focus after a change without showing the loading state (FR-019, F
   expect(screen.getByLabelText(`Expenses, ${eur('20,00')}`)).toBeTruthy();
   expect(screen.getAllByLabelText(/^Expense, /)).toHaveLength(2);
 });
+
+it('has no dev tools unless the build sets EXPO_PUBLIC_DEV_TOOLS', async () => {
+  await databaseWith([]);
+  renderSummary();
+  await flush();
+  expect(screen.queryByText('Seed 1,000 transactions')).toBeNull();
+  expect(screen.queryByText('Simulate storage error')).toBeNull();
+});

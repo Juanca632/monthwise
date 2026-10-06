@@ -15,6 +15,8 @@ type Props = {
   header: ReactElement;
   /** Shown instead of the list when there are no rows. */
   empty?: ReactElement | null;
+  /** Below the last row; also shown when there are no rows. */
+  footer?: ReactElement | null;
   onPressItem?(id: number): void;
   /** Room under the last row so the floating Add button never covers it. */
   bottomPadding: number;
@@ -24,7 +26,7 @@ type Props = {
  * The month's transactions (design.md, Summary screen item 3). A FlatList draws only the visible
  * rows, which keeps a 1,000-transaction month fast (SC-004); the header scrolls with it.
  */
-export function TransactionList({ rows, tag, header, empty, onPressItem, bottomPadding }: Props) {
+export function TransactionList({ rows, tag, header, empty, footer, onPressItem, bottomPadding }: Props) {
   const { colors, type } = useTheme();
   return (
     <FlatList
@@ -41,6 +43,7 @@ export function TransactionList({ rows, tag, header, empty, onPressItem, bottomP
         </>
       }
       ListEmptyComponent={empty}
+      ListFooterComponent={footer}
       contentContainerStyle={{ paddingBottom: bottomPadding }}
       renderItem={({ item, index }) => (
         <TransactionRow

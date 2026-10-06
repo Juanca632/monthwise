@@ -628,17 +628,20 @@ own transactions and totals. Add one from a past month and check that it lands i
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T049 Implement the preview developer tools in `src/dev/seed.ts`:
-  - `seedCurrentMonth(db: SqlDatabase, today)` (with `db` from the dev-tools branch of T026)
-    inserts 1,000 random valid transactions dated
+- [X] T049 Implement the preview developer tools in `src/dev/seed.ts` and `src/dev/DevTools.tsx`:
+  - `seedCurrentMonth(db: SqlDatabase, today)` in `seed.ts` (with `db` from the dev-tools branch
+    of T026) inserts 1,000 random valid transactions dated
     from the 1st of the current month to today. It wraps the inserts in `BEGIN`/`COMMIT` through
-    `execAsync`, so they form one SQL transaction.
-  - After seeding, the summary reloads through `retry()`.
-  - A "Simulate storage error" switch calls `setSimulateStorageError` from T026.
-  - Render both at the bottom of the summary only inside
-    `if (process.env.EXPO_PUBLIC_DEV_TOOLS === '1')`, loading `seed.ts` with `require` inside that
-    branch. The button text is "Seed 1,000 transactions".
-  Tests in `tests/unit/seed.test.ts`: 1,000 rows, all dates within range, all valid.
+    `execAsync`, so they form one SQL transaction (`ROLLBACK` on failure).
+  - `DevTools.tsx` holds the UI: the "Seed 1,000 transactions" button and a "Simulate storage
+    error" switch that calls `setSimulateStorageError` from T026. After seeding or toggling, the
+    summary reloads through `retry()`.
+  - Render it at the bottom of the summary (the list footer) only inside
+    `if (process.env.EXPO_PUBLIC_DEV_TOOLS === '1')`, loading `DevTools.tsx` with `require` inside
+    that branch.
+  Tests in `tests/unit/seed.test.ts`: 1,000 rows, all dates within range, all valid, and a failure
+  rolls back. `tests/component/devTools.test.tsx` covers the button, the switch and the
+  conditional load; `summaryScreen.test.tsx` checks the tools are absent without the flag.
 - [ ] T050 (FR-031) Accessibility pass across `src/ui/` and `src/app/`:
   - Every tappable element has `accessibilityRole`, `accessibilityLabel`, ≥ 48 × 48 dp and
     `android_ripple` (design.md).

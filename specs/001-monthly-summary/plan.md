@@ -162,7 +162,8 @@ src/
 │   ├── StateMessage.tsx          # empty / error lines with optional action
 │   └── theme.ts                  # tokens from design.md: palettes, balance-card tones, type, spacing, large text
 ├── dev/
-│   ├── seed.ts                   # preview-only dev tools: seed for SC-004
+│   ├── DevTools.tsx              # preview-only dev tools UI: seed button and storage-error switch
+│   ├── seed.ts                   # preview-only seed for SC-004
 │   └── storageErrorFlag.ts       # preview-only flag for the simulated storage error
 └── lib/
     ├── variant.ts                # getVariant(): extra.variant, missing = production

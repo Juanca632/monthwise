@@ -18,6 +18,14 @@ const ADD_HEIGHT = 56;
 const ADD_GAP = spacing.xxl;
 const OPEN_FAILED = "Couldn't open this transaction.";
 
+// Expo inlines EXPO_PUBLIC_* at build time, so production bundles drop this branch and, with it,
+// the dev tools module (contracts/ui-screens.md). A static import would keep it.
+let DevTools: typeof import('@/dev/DevTools').DevTools | null = null;
+if (process.env.EXPO_PUBLIC_DEV_TOOLS === '1') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  DevTools = require('@/dev/DevTools').DevTools;
+}
+
 /** The monthly summary (contracts/ui-screens.md, Summary screen). */
 export default function SummaryScreen() {
   const { colors } = useTheme();
@@ -88,6 +96,8 @@ export default function SummaryScreen() {
             />
           ) : null
         }
+        // Shown in every state, so the simulated storage error can be turned off again.
+        footer={DevTools ? <DevTools onChanged={retry} /> : null}
         onPressItem={openTransaction}
         bottomPadding={ADD_HEIGHT + ADD_GAP + spacing.md + insets.bottom}
       />
