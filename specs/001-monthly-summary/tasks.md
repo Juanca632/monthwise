@@ -706,7 +706,7 @@ labels are built from data, never from animated values; no new dependency beyond
 
 ### Block 8a: setup and device spike
 
-- [ ] T056 Set up the motion and gesture libraries:
+- [x] T056 Set up the motion and gesture libraries:
   - `npx expo install react-native-gesture-handler` (SDK 57's `~2.32.0`), and pin it in
     `package.json` `overrides` like `react-native-reanimated` (plan.md, Dependencies), so the
     3.3.0 copy pulled in by `expo-router` is not used. Check with `npm ls react-native-gesture-handler`.
@@ -717,7 +717,7 @@ labels are built from data, never from animated values; no new dependency beyond
   - Run `npx expo install --check` afterwards: `react-native-reanimated` and the pinned
     `react-native-worklets` must still match SDK 57.
   Tests: `tests/component/rootLayout.test.tsx` stays green and checks the root wrapper.
-- [ ] T057 Device spike (design.md, Implementation notes): a temporary `src/app/spike.tsx`
+- [x] T057 Device spike (design.md, Implementation notes): a temporary `src/app/spike.tsx`
   shows a radial-gradient glow pair on `background` (light and dark), a `cardGlass` card with an
   inset highlight, and an accent button with its glow, all through
   `experimental_backgroundImage` and `boxShadow`. The developer opens it on the phone and
@@ -737,14 +737,15 @@ labels are built from data, never from animated values; no new dependency beyond
   the WCAG ratios in design.md ("Contrast over glass", field borders, accent buttons, selected
   segment) by alpha-blending the tokens and asserts each is ≥ 4.5:1 (text) or ≥ 3:1 (borders).
 - [ ] T059 Implement `src/ui/glass.tsx`: `GlassCard` (fill, border, highlight, shadow on a
-  non-clipping wrapper), `AccentButton` (gradient, border, highlight, glow; ripple and clipping
-  on the inner pressable) and `AmbientBackground` (the two radial glows, hidden from the screen
+  non-clipping wrapper), `AccentButton` (gradient, border and highlight, no glow; the pressed
+  overlay in `rippleOnAccent` and the clipping on the inner pressable, design.md Touch feedback) and `AmbientBackground` (the two radial glows, hidden from the screen
   reader; a tone change crossfades a second layer's opacity in over 600 ms, or swaps under
   reduce motion). Tests in `tests/component/glass.test.tsx`: the background is hidden from
   accessibility, a tone change renders the new layer, buttons keep role, label and 48 dp.
 - [ ] T060 (FR-015, FR-031) Apply glass to the summary (design.md, Components table):
   `src/app/index.tsx` gets `AmbientBackground` and the 96 dp bottom fade; `Totals` uses
-  `cardGlass` (no decorative circle) and glass stat pills; `MonthHeader` buttons, `Breakdown`
+  `cardGlass` (no decorative circle) and glass stat pills; `MonthHeader` buttons (with the
+  borderless ripple from design.md, Touch feedback, which fixes the square ripple), `Breakdown`
   and `TransactionList` cards, dividers and avatars, and `StateMessage` banner and empty card use
   their glass tokens; Add becomes an `AccentButton`. When the balance tone changes, the card's
   `cardGlass` crossfades like the glow (a second gradient layer fading in over 600 ms; a swap
@@ -755,8 +756,10 @@ labels are built from data, never from animated values; no new dependency beyond
   on the close button, segmented track, unselected chips, Date and Note, with the border rule
   from design.md ("Borders never shift the layout": 1 dp + 1 dp padding at rest, 2 dp on focus or
   error); the selected chip and segment styles; Save as an `AccentButton`; **Try again** on the
-  error screen. Tests: form suites stay green; a test checks that a field's outer size is the same
-  at rest, focused and invalid.
+  error screen. Touch feedback by shape (design.md): the close button gets the borderless
+  ripple; chips, segments and **Try again** get the pressed overlay instead of `android_ripple`.
+  Tests: form suites stay green; a test checks that a field's outer size is the same at rest,
+  focused and invalid.
 
 ### Block 8c: summary motion
 
@@ -765,7 +768,8 @@ labels are built from data, never from animated values; no new dependency beyond
   96 % with the spring, dropped under reduce motion). It replaces `Pressable` in: Add, month
   buttons (`MonthHeader`), list rows (`TransactionList`), Try again (`Totals`, error screen),
   Dismiss (`StateMessage`), and in the form: close, Type segments, chips, Date box, Delete and
-  Save. Tests in `tests/component/motion.test.tsx`: role, label and ripple still pass through;
+  Save. Tests in `tests/component/motion.test.tsx`: role, label and press feedback (ripple or
+  pressed overlay, design.md Touch feedback) still pass through;
   under reduce motion no scale is applied; the accessibility sweep (T050) stays green.
 - [ ] T063 (FR-015, FR-031) Implement `src/hooks/useCountUp.ts` (design.md, Motion, "Counting
   amounts"): it animates from the old to the new cents and writes the rounded value to state at

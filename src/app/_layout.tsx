@@ -15,6 +15,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DatabaseProvider } from '@/data/DatabaseProvider';
@@ -113,36 +114,49 @@ export default function RootLayout() {
     SplashScreen.hideAsync().catch(() => {});
   }, [fontsSettled]);
 
-  if (fatal) return <GenericErrorScreen onRetry={() => setFatal(false)} />;
+  // Gestures (the sheet's drag to close) only work inside this view, so it wraps everything; its
+  // background shows for a frame before the first screen paints.
+  const rootStyle = [styles.root, { backgroundColor: colors.background }];
+
+  if (fatal) {
+    return (
+      <GestureHandlerRootView style={rootStyle}>
+        <GenericErrorScreen onRetry={() => setFatal(false)} />
+      </GestureHandlerRootView>
+    );
+  }
 
   // The providers mount right away, so the database opens while the fonts load; only the
   // screens wait for the fonts.
   return (
-    <DatabaseProvider>
-      <SelectedMonthProvider>
-        <SummaryNoticeProvider>
-          {fontsSettled && (
-            <ThemeProvider value={navigationTheme}>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: colors.background },
-                }}
-              >
-                <Stack.Screen name="index" />
-                <Stack.Screen name="transaction/new" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="transaction/[id]" options={{ presentation: 'modal' }} />
-              </Stack>
-            </ThemeProvider>
-          )}
-          <StatusBar style="auto" />
-        </SummaryNoticeProvider>
-      </SelectedMonthProvider>
-    </DatabaseProvider>
+    <GestureHandlerRootView style={rootStyle}>
+      <DatabaseProvider>
+        <SelectedMonthProvider>
+          <SummaryNoticeProvider>
+            {fontsSettled && (
+              <ThemeProvider value={navigationTheme}>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: colors.background },
+                  }}
+                >
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="transaction/new" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="transaction/[id]" options={{ presentation: 'modal' }} />
+                </Stack>
+              </ThemeProvider>
+            )}
+            <StatusBar style="auto" />
+          </SummaryNoticeProvider>
+        </SelectedMonthProvider>
+      </DatabaseProvider>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
   errorScreen: {
     flex: 1,
     alignItems: 'center',

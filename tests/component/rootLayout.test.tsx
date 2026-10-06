@@ -3,6 +3,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as SystemUI from 'expo-system-ui';
 
 import * as RN from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { logTiming } from '@/lib/devLog';
 import { palettes } from '@/ui/theme';
@@ -128,5 +129,20 @@ it('paints the native root view in the app background, which shows while a scree
   rerender(<RootLayout />);
   await act(async () => {});
   expect(SystemUI.setBackgroundColorAsync).toHaveBeenLastCalledWith(palettes.light.background);
+  scheme.mockRestore();
+});
+
+it('wraps the app in the gesture root, filling the screen in the app background', async () => {
+  mockFonts = [true, null];
+  const scheme = jest.spyOn(RN, 'useColorScheme').mockReturnValue('dark');
+  render(<RootLayout />);
+  await act(async () => {});
+
+  const root = screen.UNSAFE_getByType(GestureHandlerRootView);
+  expect(RN.StyleSheet.flatten(root.props.style)).toMatchObject({
+    flex: 1,
+    backgroundColor: palettes.dark.background,
+  });
+  expect(screen.getByText('app screens')).toBeTruthy();
   scheme.mockRestore();
 });

@@ -1,7 +1,7 @@
-# Device checks: Hermes `Intl` output (T011)
+# Device checks
 
-Recorded on 2026-10-05 in Expo Go (Expo SDK 57, Hermes) on the developer's Android phone, with
-the temporary screen from T011 (research R7 and R13, quickstart scenario 11). These outputs are
+Hermes `Intl` output (T011), every section before "Glass spike": recorded on 2026-10-05 in Expo
+Go (Expo SDK 57, Hermes) on the developer's Android phone, with the temporary screen from T011 (research R7 and R13, quickstart scenario 11). These outputs are
 the expected values for the formatting tests in T019 and T020: where Node (Jest) differs, the
 device output wins.
 
@@ -62,3 +62,23 @@ Everything else above matches Node character for character, including the `ar-EG
 
 `useGrouping: 'min2'` has no effect on Hermes (`es-ES` 1234 still gives `1.234,00 €`). It is
 recorded only for reference; the app does not use it.
+
+## Glass spike (T057)
+
+Recorded on 2026-10-06 in Expo Go (Expo SDK 57, React Native 0.86) on the developer's Android
+phone, with the temporary `src/app/spike.tsx` (deleted at the end of block 8a). Every value came
+from design.md (Glass surfaces), drawn with `experimental_backgroundImage` and `boxShadow`, in
+light and dark and in both balance tones. design.md was updated with the results the same day.
+
+| Technique | Result | Decision |
+| --- | --- | --- |
+| Ambient glows (two `radial-gradient` disks, 340 and 300 dp plus a 70 dp fade) | Size, position and banding look right in light and dark | Keep |
+| `cardGlass` 160° `linear-gradient`, glass fills and borders | Look right | Keep |
+| Inset top highlight (`inset 0 1px 0`) and the card's outer shadow | Look right | Keep |
+| Accent glow (`0 12px 32px` accent, outer `boxShadow` on the button's wrapper) | A white rectangle around the button, at radius 999 and at half the height | Dropped from accent buttons and the selected chip |
+| Removing `borderWidth` at runtime from a view with a gradient | Expo Go closed | Borders are never removed at runtime; only their color changes |
+| `android_ripple` on a 48 dp circle with `overflow: 'hidden'`, radius 999 and 24 | A square ripple in both | Circular icon buttons use `borderless: true, radius: 24`, which the developer liked; other rounded pressables use a pressed overlay (design.md, Touch feedback) |
+| Clear-glass Add (glass fill, accent or plain border), then `expo-blur` (`dimezisBlurViewSdk31Plus`) with the iOS Liquid Glass layers (light blur, 10 % fill, lit rim, diagonal sheen) | The developer found it worse than the accent gradient, almost invisible in light | Add and Save keep the opaque accent gradient with the white border and highlight; `expo-blur` stays out |
+
+A translucent accent fill was not tried on the phone: by calculation, `onAccent` text drops
+below 4.5:1 (light 3.8:1 even at 85 % opacity).

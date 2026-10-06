@@ -170,12 +170,21 @@ decorative circle) is dropped: the ambient glow replaces it.
 - **Touch targets**: every tappable element is at least **48 × 48 dp** (FR-031). Text buttons
   (Delete, Dismiss) have `minHeight` 48 and horizontal padding 16. The filled **Try again** button
   has `minHeight` 48 and horizontal padding 24. List rows are at least 64 dp tall.
-- **Touch feedback**: every pressable uses `android_ripple` with `ripple`, or `rippleOnAccent`
-  on accent buttons. Rounded pressables clip the ripple with `overflow: 'hidden'` on the
-  pressable itself. The Add button keeps its shadow on an outer wrapper that does not clip.
+- **Touch feedback**: `overflow: 'hidden'` does not clip `android_ripple` to a rounded shape
+  (the glass spike showed a square ripple at radius 999 and at 24; 2026-10-06), so the feedback
+  depends on the shape:
+  - **Circular icon buttons** (month arrows, the form's close button): `android_ripple` with
+    `ripple`, `borderless: true` and `radius` = half the button (24), which draws a circle.
+  - **Other pressables with their own rounded shape** (Add, Save, chips, segments, **Try
+    again**): no `android_ripple`. While pressed, an overlay inside the shape (clipped by
+    `overflow: 'hidden'`, which does clip children) shows `ripple`, or `rippleOnAccent` on accent
+    buttons, together with the press scale (Motion).
+  - **Rows and text buttons** without a rounded fill of their own keep `android_ripple` with
+    `ripple`; the rounded card around them clips it.
 - **Elevation**: see Glass surfaces. Cards get a soft outer shadow and a 1 dp inner top
-  highlight; accent buttons get a colored glow. Where `boxShadow` is not supported (outer shadows
-  need Android 9, inset ones Android 10), there is no shadow, and that is acceptable.
+  highlight. Accent buttons and the selected chip have no outer glow: on the phone it drew a white
+  rectangle around the button (glass spike, 2026-10-06). Where `boxShadow` is not supported (outer
+  shadows need Android 9, inset ones Android 10), there is no shadow, and that is acceptable.
 - **Icons**: Feather from `@expo/vector-icons`: `chevron-left`, `chevron-right`, `plus`, `x`,
   `calendar`, `arrow-up`, `arrow-down`, `alert-circle`, `credit-card`, `check` (toast). 20 dp in buttons, 16 dp in
   card circles, 14 dp next to messages.
@@ -201,12 +210,14 @@ three layers that work on every Android version the app supports, with no real b
 2. **Glass fill**: cards and controls are translucent, so the glow shows through, with a 1 dp
    border and a 1 dp inner top highlight (`boxShadow` inset; Android 10+, none before, which is
    acceptable).
-3. **Depth**: a soft outer shadow on cards and a colored glow on accent buttons (`boxShadow`;
-   Android 9+).
+3. **Depth**: a soft outer shadow on cards (`boxShadow`; Android 9+). Accent buttons have no
+   glow (see Elevation).
 
 No real blur in 001: everything behind a surface is already a smooth glow, so blurring it would
 look almost the same and cost frames while the sheet moves. (`expo-blur` was evaluated for this
-and is not used.)
+and is not used. The spike tried it again on a clear-glass Add button over scrolling rows, with
+the iOS Liquid Glass layers: on the phone it looked worse than the accent gradient, almost
+invisible in light, so it stays out; 2026-10-06.)
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
@@ -231,16 +242,18 @@ and is not used.)
   `#E8EDFF` at 55 %; light negative: `#FFFFFF` at 78 % → `#FCEAE7` at 60 %. Border
   `glassBorderStrong`, highlight `glassHighlight`, shadow as in `glassShadow`.
 - **Accent buttons** (Add, Save): a vertical gradient (dark `#A0B2FF` → `#7089FA`; light
-  `#3D66EF` → `#2F5BEA`), a 1 dp border of `#FFFFFF` at 40 % (light 35 %), the inner highlight
-  and a glow of `0 12px 32px` accent at 35 % (light 32 %). Text and icon in `onAccent`
-  (dark ≥ 6.0:1, light ≥ 4.8:1 at every stop).
-- **Selected chip**: `accent` with `bodyStrong` in `onAccent`, the inner highlight and a
-  `0 8px 22px` accent glow at 35 %.
+  `#3D66EF` → `#2F5BEA`), a 1 dp border of `#FFFFFF` at 40 % (light 35 %) and the inner
+  highlight; no glow. Text and icon in `onAccent` (dark ≥ 6.0:1, light ≥ 4.8:1 at every stop).
+  The fill stays opaque: a translucent accent drops `onAccent` text below 4.5:1 (light 3.8:1 even
+  at 85 %), and the developer preferred this look over clear glass on the phone.
+- **Selected chip**: `accent` with `bodyStrong` in `onAccent` and the inner highlight; no glow.
 - **Selected segment**: one indicator that slides between the two options (Motion). Light:
   `segmentSelected`; dark: `#FFFFFF` at 16 % on the track. Both with a 1.5 dp full `accent`
   border (dark ≥ 3.0:1 against the fill around it, 5.0:1 against the track).
-- Shadows and glows go on an outer wrapper that does not clip; the gradient and the ripple go on
-  the inner pressable, which clips with `overflow: 'hidden'` (see Touch feedback).
+- Outer shadows go on an outer wrapper that does not clip; the gradient and the pressed overlay
+  go on the inner pressable, which clips with `overflow: 'hidden'` (see Touch feedback).
+- A border is never added or removed while the app runs; only its color changes (removing one
+  from a view with a gradient closed Expo Go in the spike).
 
 **Contrast over glass** (WCAG ratios computed by blending each layer at the glow's peak, the
 worst case; 2026-10-06): dark `cardLabel` positive `#D5DBF0` 6.6:1, negative `#E6D6D2` 6.8:1;
@@ -263,7 +276,7 @@ where things come from and confirms what happened. Curves: **ease-out** `(0.2, 0
 | Change month | The month's content slides 18 dp in from the side of the button tapped and fades in; the balance counts from the old to the new value | 340 ms; count 520 ms | ease-out |
 | Press | Any button, chip or row scales to 96 % and springs back | ~140 ms | spring |
 | Type switch | The selected segment indicator slides to the other option | 360 ms | spring |
-| Pick a category | The chip fills with accent and its glow fades in | 220 ms | ease-out |
+| Pick a category | The chip fills with accent | 220 ms | ease-out |
 | Keyboard opens or closes | The footer (Delete, Save) moves with the keyboard frame by frame (`useAnimatedKeyboard`), and the amount block's vertical padding goes from 32/24 to 16/12. Date and Note stay in place and reachable by scrolling (contract) | follows the keyboard | — |
 | Saved | The sheet closes; a new row grows into the list (height and fade, from 97 %); an edited row flashes `accent` at 22 % and fades; totals count to the new values; the toast shows | 560 ms | ease-out |
 | Deleted | The sheet closes; the row slides 24 dp right, fades and collapses; totals count; the toast shows | 280 ms | ease-in |
@@ -344,7 +357,7 @@ cannot be drawn.
 | Breakdown and list cards | `glassFill` | `glassBorder` | highlight, `glassShadow`; rows separated by `glassDivider` |
 | List avatars | `glassAvatar` (income: `incomeSoft`) | — | — |
 | Banner, empty-state card | `glassFill` (banner keeps `accentSoft` tint at 100 % in light, 60 % in dark) | `glassBorder` | — |
-| Add, Save | accent button | — | glow |
+| Add, Save | accent button | 1 dp white border (Glass surfaces) | highlight |
 | Form sheet | `sheetFill` | top edge `glassBorderStrong` | grab handle 40 × 5 dp, `textMuted` at 40 % |
 | Close button, segmented track, unselected chips, Date, Note | `fieldFill` | `fieldBorder` (focus `accent`, error `error`; see "Borders never shift the layout") | — |
 | Selected chip, selected segment | as in Glass surfaces | — | — |
@@ -484,6 +497,7 @@ There is no native header (`headerShown: false`).
 - Gradients (glass fills, ambient glows, the bottom fade, accent buttons) use React Native's
   built-in `experimental_backgroundImage` with `linear-gradient` / `radial-gradient`, so no
   gradient library is added. The bottom padding still keeps the last row clear of Add.
-- The first glass task is a spike on the developer's phone: radial-gradient glows (size,
-  position, banding on dark), inset `boxShadow` and the accent glow. If a technique does not
-  render well, its fallback is the solid token, and this file is updated before going on.
+- The first glass task was a spike on the developer's phone (T057, results in
+  `device-checks.md`, "Glass spike"): the radial-gradient glows, `cardGlass`, glass fills and
+  the inset highlight render well in light and dark; the accent glow does not (dropped), and
+  `android_ripple` is not clipped to rounded shapes (Touch feedback).
