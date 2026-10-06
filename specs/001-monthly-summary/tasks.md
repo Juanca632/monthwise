@@ -877,6 +877,41 @@ labels are built from data, never from animated values; no new dependency beyond
   run stays in T052). Record the results in `specs/001-monthly-summary/device-checks.md`
   (section "Glass and motion").
 
+### Block 8g: fixes from the developer's phone review (2026-10-06)
+
+Spec clarifications (Session 2026-10-06), FR-017, FR-029, contracts/ui-screens.md, research R7
+("Currency sign") and design.md (day headers, flat form look, counting) were updated first.
+
+- [ ] T073 (design.md, Motion, "Change month" and "Counting amounts") Counting only within a month: `useCountUp` forgets the last value while there
+  is nothing to show (a month loading), so a month change shows the new amounts at once and only
+  a save or delete in the month on screen counts. Tests: `tests/unit/useCountUp.test.tsx`
+  updated (null resets; a same-month change still counts); the month navigation suite shows the
+  new month's amounts right after the change.
+- [ ] T074 (FR-029) Always the `€` sign: `format/money.ts` replaces the `currency` part with `€`
+  and, when it comes before the number, drops the whitespace literal right after it (research
+  R7). Tests in `tests/unit/money.test.ts`: `es-US` gives `€1,234.00` and `-€1,234.00`;
+  `es-ES`, `en-*` and `ar-EG` outputs are unchanged; zero-euro negatives (`-€0.50`) and spoken
+  labels ("minus €1,234.00") use the sign too; the form's `€` position is unchanged.
+- [ ] T075 (FR-017) Day groups: `domain/summary.ts` (or a new `domain/days.ts`) groups the
+  month's rows by date, newest first, with each day's net in cents; `format/date.ts` names a day
+  ("Today", "Yesterday", "Mon 5 Oct") and speaks it ("Monday 5 October"); `TransactionList`
+  draws a header per day and each day's rows as their own card (first/last per day), with row
+  captions showing only the note. Entrance, month slide and row-change motion keep working, and
+  only the first 8 items (headers and rows) animate. Update plan.md's structure listing for the
+  new domain and format functions. Tests: unit tests for grouping (order, nets in cents, income
+  and expense mix, zero net) and day names (today, yesterday, older, today's date in a past
+  month view); component tests for the headers' text, heading role and spoken label, the net
+  moving under the day at large text, and the cards per day; the 1,000-row test still renders
+  only the first window; existing summary, accessibility and row-change suites stay green.
+- [ ] T076 Flat form look (design.md, Components and Transaction form): the sheet on
+  `formBackground`; close button, unselected chips, Date and Note on `surfaceMuted` with a
+  transparent 1 dp border at rest (the size rule stays); the track on `segmentTrack` and the
+  indicator on `segmentSelected`; the selected chip solid `accent` without highlight; Save solid
+  `accent` without border. The chip label's color crossfades with its fill. Restore
+  `segmentTrack` and `segmentSelected` in `theme.ts` and drop `segmentIndicator`. Tests: theme and contrast tests updated (segment border against its fill
+  and the track; `textMuted` on `background` at the glow's peak for the day headers); form
+  suites stay green, including the field size test.
+
 ---
 
 ## Dependencies & Execution Order
@@ -947,6 +982,7 @@ Task: "T035 [P] [US1] MonthHeader (title) in src/ui/MonthHeader.tsx"
 | 8d | T066, T067, T065 | Form sheet over the summary, close paths, drag to close, discard check, row changes |
 | 8e | T068, T072 | Keyboard and Save above it (SC-001); Type indicator, chips, invalid shake |
 | 8f | T069–T071 | Haptics, toast, design review, full phone check |
+| 8g | T073–T076 | Developer's phone review: month change without counting, € sign, day groups (FR-017, FR-029), flat form look (design only) |
 | 9 | T052–T054 | APK verification and final check |
 
 Commits: one or more Conventional Commits per block, proposed to the developer and made only

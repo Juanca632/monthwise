@@ -57,15 +57,14 @@ describe('useCountUp (design.md, Motion, "Counting amounts")', () => {
     expect(result.current).toBe(15099);
   });
 
-  it('keeps the last value while there is nothing to show, and counts from it', () => {
+  it('shows the next value at once after nothing to show (a month change)', () => {
     const { result, rerender } = countFrom(5000);
     rerender({ target: null });
     expect(result.current).toBeNull();
-    rerender({ target: 9000 });
-    // The first frame still shows the previous month's amount.
-    expect(result.current).toBe(5000);
+    rerender({ target: 0 });
+    expect(result.current).toBe(0);
     act(() => jest.advanceTimersByTime(600));
-    expect(result.current).toBe(9000);
+    expect(result.current).toBe(0);
   });
 });
 

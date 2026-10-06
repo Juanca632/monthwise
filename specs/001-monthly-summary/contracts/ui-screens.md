@@ -44,8 +44,14 @@ show the FR-025 save error.
   old current month moves to the new one; a past month stays (spec edge case).
 - Negative balance: a minus sign plus the negative color; the screen reader says "minus"
   (FR-015, FR-031).
-- List item: type, category label, amount, numeric date, note if any. Spoken as
-  "Expense, Food, 12,50 €, 30 September 2026, note: lunch" (FR-031).
+- The list is grouped by day (FR-017). Each day starts with a header: "Today", "Yesterday", or
+  the English short weekday, day and month ("Mon 5 Oct"), and the day's net amount (income minus
+  expenses), signed like list amounts (`+` above zero, minus below, no sign at zero). The header
+  is a screen reader heading, spoken as "Today, net minus 30,00 €" or "Monday 5 October, net
+  12,00 €". The day's rows follow in their own card.
+- List item: type, category label, amount, note if any; its date is its day's header. Spoken as
+  "Expense, Food, 12,50 €, 30 September 2026, note: lunch" (FR-031), with the date, so each item
+  makes sense on its own.
 - Tapping an item opens `/transaction/[id]`, which loads the stored row (see Edit form states).
   If loading fails, the modal closes and the summary shows "Couldn't open this transaction." in
   an inline banner above the list with a **Dismiss** button. The banner stays until it is
@@ -130,6 +136,7 @@ Validation messages:
 | --- | --- |
 | Summary buttons | **Add**, **Try again**, **Dismiss** |
 | Summary labels | "Balance", "Income", "Expenses", "Spending by category", "Transactions" |
+| Day headers | "Today", "Yesterday", or short weekday + day + short month ("Mon 5 Oct") |
 | Empty month helper line | "Tap Add to record an income or expense." (under "No transactions this month yet.") |
 | Form titles | "Add transaction", "Edit transaction" |
 | Form labels | "Type" (**Expense** / **Income**), "Amount", "Date", "Category", "Note (optional)" |
@@ -150,6 +157,7 @@ Validation messages:
   - Totals: "Income, 2000,00 €", "Expenses, 2150,00 €", "Balance, minus 150,00 €".
   - Breakdown row: "Food, 150,00 €, 30 percent"; under 0.5 %: "Bills, 1,00 €, less than 1
     percent".
+  - Day header: "Today, net minus 30,00 €"; "Monday 5 October, net 12,00 €".
   - List item: "Expense, Food, 12,50 €, 30 September 2026, note: lunch".
   - Form fields: label + current value + error message if any ("Amount, required, Enter an
     amount.").

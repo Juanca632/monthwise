@@ -13,16 +13,20 @@ const TICK_MS = 50;
 
 /**
  * Counts from the last value shown to `target`, in whole cents (design.md, Motion, "Counting
- * amounts"). `null` means "nothing to show": it returns `null` but remembers the last value, so
- * the next month counts from the previous one. The result only drives what is drawn; labels for
- * the screen reader are built from `target`.
+ * amounts"). `null` means "nothing to show" (a month loading): it also forgets the last value,
+ * so a month change shows the new amounts at once and only a change within the month on screen
+ * counts. The result only drives what is drawn; labels for the screen reader are built from
+ * `target`.
  */
 export function useCountUp(target: number | null, { animate, duration, easing }: Options): number | null {
   const [shown, setShown] = useState(target);
   const last = useRef(target);
 
   useEffect(() => {
-    if (target === null) return;
+    if (target === null) {
+      last.current = null;
+      return;
+    }
     const from = last.current;
     const show = (cents: number) => {
       last.current = cents;
@@ -43,7 +47,12 @@ export function useCountUp(target: number | null, { animate, duration, easing }:
     return () => clearInterval(timer);
   }, [target, animate, duration, easing]);
 
-  // Without animation the target shows on the same render, not one frame later.
+  // Nothing to show: forget what was shown, during this render (React's "adjusting state when a
+  // prop changes"), so the next value starts fresh.
+  if (target === null && shown !== null) setShown(null);
+
+  // Without animation, or with nothing shown before, the target shows on the same render, not one
+  // frame later.
   if (target === null) return null;
-  return animate ? shown : target;
+  return animate && shown !== null ? shown : target;
 }

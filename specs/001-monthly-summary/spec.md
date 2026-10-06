@@ -23,6 +23,17 @@
   out of both cloud backup and phone-to-phone transfer on every Android version; how data moves
   to a new phone is decided in 006.
 
+### Session 2026-10-06 (developer's phone review)
+
+- Q: A long month reads as one endless list. Should it be split by day? → A: Yes. The list is
+  grouped by day, newest first; each day has a header ("Today", "Yesterday", or "Mon 5 Oct")
+  with that day's net amount (income minus expenses) on the right, and its rows in their own
+  card below.
+- Q: On a phone whose region does not use the euro (for example `es-US`), amounts showed as
+  `EUR 1,234.00`. Should the currency be the region's code or the `€` sign? → A: Always the `€`
+  sign; the region still decides the separators and where the sign goes (`€1,234.00`,
+  `1.234,00 €`).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Record a transaction and see the month's totals (Priority: P1)
@@ -233,8 +244,12 @@ lands in that month.
   non-zero share below 0.5% shows "<1%"), largest first, ties ordered alphabetically; categories
   with no expenses are omitted.
 - **FR-017**: The summary MUST list the selected month's transactions, newest date first; on the
-  same date, the most recently recorded first. Each item shows at least amount, type, category,
-  date and note (if any).
+  same date, the most recently recorded first. The list is grouped by day: each day starts with a
+  header naming the day ("Today", "Yesterday", or the English short weekday, day and month, for
+  example "Mon 5 Oct", no year) and showing that day's net amount (its income minus its
+  expenses): `+` above zero, minus below, no sign at zero. "Today" and "Yesterday" are relative
+  to the actual date, whatever month is on screen. Each
+  item shows at least amount, type, category and note (if any); its date is its day's header.
 - **FR-018**: Each month MUST be calculated on its own; no balance carries over between months.
 - **FR-019**: Every change (add, edit, delete) MUST be reflected in the list, totals and breakdown
   as soon as the user returns to the summary.
@@ -273,13 +288,15 @@ lands in that month.
 - **FR-028**: Money MUST be calculated exactly to the cent; totals MUST stay exact for any
   combination of valid transactions and never show rounding errors.
 - **FR-029**: Amounts and numeric dates MUST be displayed using the phone's region settings
-  (decimal and thousands separators, € position, day/month order). Dates in the list and the form
-  are numeric in the region's order (for example `30/09/2026` in Spain). All interface text,
-  including the month names in the month header, is in English. The currency is always EUR.
+  (decimal and thousands separators, € position, day/month order). The currency is always EUR
+  and always shown as the `€` sign, never as the code `EUR`. Dates in the form are numeric in
+  the region's order (for example `30/09/2026` in Spain). All interface text, including the month
+  names in the month header and the list's day headers, is in English.
 - **FR-030**: The app MUST follow the phone's light or dark appearance setting.
 - **FR-031**: The app MUST stay usable with the phone's largest text size setting: no amount,
   total or label is cut off or overlapping, even for the maximum amount 999,999.99. The screen
-  reader MUST announce every button, field, amount, breakdown row and the month header; a
+  reader MUST announce every button, field, amount, breakdown row, the month header and each list
+  day header (its day in English words and its net, "minus" when negative); a
   transaction is announced with its type, category, amount, full date and note (if any), amounts
   in the region's format, and a negative balance is announced in words ("minus"). Every tappable
   element MUST be at least the platform's recommended minimum touch size.
@@ -314,7 +331,7 @@ lands in that month.
   restarting the phone.
 - **SC-004**: On a phone with Android 10 or later and 4 GB of RAM, opening the app from a cold
   start shows the current month's totals and first list items within 1 second, with 1,000
-  transactions in that month.
+  transactions in that month (grouped by day, FR-017).
 - **SC-005**: During a full test session covering all user stories, the app makes zero network
   requests, as checked with a network monitor.
 - **SC-006**: In a first-use test with at least 3 people, every participant records their first

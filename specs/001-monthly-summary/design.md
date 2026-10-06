@@ -13,7 +13,8 @@ https://claude.ai/artifact/LnJb7boknHJq2bTT5JjwWN, which only the developer can 
 2026-10-06 glass and motion revision has its own sources in
 [`design/mockups-glass/`](design/mockups-glass/) (summary dark and light, form, the full
 add/keyboard/save/edit/delete flow, and the motion table) and its own canvas,
-https://claude.ai/artifact/GBwzqQje2bi89cnwZ3f6z9. Where the two sets differ, the glass set wins;
+https://claude.ai/artifact/GBwzqQje2bi89cnwZ3f6z9. Where the two sets differ, the glass set wins, except the form, which follows the
+first set's `FormFilledDark` look on the glass set's sliding sheet (developer, 2026-10-06);
 the first set still documents layout, states and sizes the glass set does not show. Where this
 file and the mockups differ, this file wins: **every value in this file overrides the mockups**. The main differences are 48 dp
 touch targets (mockups: 44), no scroll fade, the contrast fixes, a border on the selected segment
@@ -65,9 +66,9 @@ colors or assets are copied.
 | `section` | 15 | SemiBold | "Spending by category", "Transactions" |
 | `body` | 15 | Medium | Rows, chips, inputs, unselected segment |
 | `bodyStrong` | 15 | SemiBold | Amounts in rows, category name in list items, selected chip and segment |
-| `label` | 14 | Medium | Field labels, "Balance", helper lines |
+| `label` | 14 | Medium | Field labels, "Balance", helper lines, list day names |
 | `avatarInitial` | 15 | Bold | Category initial in the list avatar |
-| `labelStrong` | 14 | SemiBold | Validation and failure messages, text buttons (Delete, Dismiss) |
+| `labelStrong` | 14 | SemiBold | Validation and failure messages, text buttons (Delete, Dismiss), list day nets |
 | `caption` | 13 | Regular | Note and date under a list item |
 | `statLabel` | 12 | Medium | "Income" / "Expenses" on the balance card |
 | `pill` | 12 | SemiBold | Percent pill |
@@ -107,9 +108,11 @@ Chosen by `useColorScheme()` (FR-030). Measured contrast:
 | --- | --- | --- | --- |
 | `background` | `#F6F7F9` | `#0D0F13` | Summary screen background |
 | `surface` | `#FFFFFF` | `#171A21` | Cards |
-| `formBackground` | `#FFFFFF` | `#0D0F13` | Form screen background |
-| `surfaceMuted` | `#F1F3F6` | `#1A1E26` | Solid fallback for `fieldFill` and `glassFillStrong` (Components) |
+| `formBackground` | `#FFFFFF` | `#0D0F13` | Form sheet fill (flat form look, Components) |
+| `surfaceMuted` | `#F1F3F6` | `#1A1E26` | Form controls: close button, unselected chips, Date, Note; solid fallback for `glassFillStrong` |
 | `avatar` | `#F1F3F6` | `#232833` | Solid fallback for `glassAvatar` |
+| `segmentTrack` | `#F1F3F6` | `#171A21` | Segmented track (Type) |
+| `segmentSelected` | `#FFFFFF` | `#262B35` | Selected segment fill, with a 1.5 dp `accent` border |
 | `divider` | `#EEF0F3` | `#232833` | Row separators |
 | `text` | `#0E1116` | `#F2F4F7` | Primary text, chevron and close icons, expense arrow |
 | `textMuted` | `#5B6472` | `#B0B8C6` | Labels, captions, placeholders, unselected segment |
@@ -123,8 +126,9 @@ Chosen by `useColorScheme()` (FR-030). Measured contrast:
 | `ripple` | `#5B6472` at 12 % | `#9AA3B2` at 12 % | Touch feedback on surfaces |
 | `rippleOnAccent` | `#FFFFFF` at 20 % | `#0D0F13` at 20 % | Touch feedback on `accent` |
 
-Form controls on the sheet use `fieldFill` with a visible `fieldBorder` (≥ 3:1 against the
-sheet, Glass surfaces), and each also keeps its always-visible label above it.
+Form controls on the sheet use the flat look: solid `surfaceMuted` with no resting border, as in
+the approved mockups; each keeps its always-visible label above it, which identifies it (focus
+and error borders are ≥ 3:1).
 
 ### Balance card tones
 
@@ -201,7 +205,8 @@ decorative circle) is dropped: the ambient glow replaces it.
     ambient background, the avatars, the icon circles, the empty-state icon and the 14 dp icons next to
     messages.
   - "Balance" plus its amount, each stat pill, each breakdown row and each list row is one
-    accessible element, with the label from the contract.
+    accessible element, with the label from the contract. Each list day header is a heading
+    (`accessibilityRole="header"`) with the contract's label ("Today, net minus 30,00 €").
   - The Type control is a container with `accessibilityRole="radiogroup"` and the label "Type".
     Its segments use `accessibilityRole="radio"` with `accessibilityState={{ checked }}`.
   - Chips use `accessibilityRole="button"` with `accessibilityState={{ selected }}`.
@@ -215,7 +220,7 @@ three layers that work on every Android version the app supports, with no real b
 1. **Ambient background**: behind the summary, two large soft glows drawn as radial gradients on
    `background`: top-left, about 340 dp, `ambientTop` (follows the balance tone); bottom-right,
    about 300 dp, `ambientBottom` (income color). Decorative: hidden from the screen reader.
-2. **Glass fill**: cards and controls are translucent, so the glow shows through, with a 1 dp
+2. **Glass fill**: summary cards and controls are translucent (the form is flat, Components), so the glow shows through, with a 1 dp
    border and a 1 dp inner top highlight (`boxShadow` inset; Android 10+, none before, which is
    acceptable).
 3. **Depth**: a soft outer shadow on cards (`boxShadow`; Android 9+). Accent buttons have no
@@ -240,11 +245,10 @@ invisible in light, so it stays out; 2026-10-06.)
 | `glassShadow` | `0 8px 24px` `#0E1116` at 5 % | `0 20px 40px` `#000000` at 35 % | Balance and breakdown cards (balance card in light: `0 18px 40px` `#1D34A6` at 12 %, the `cardShadow` token); not the list card (Components) |
 | `glassDivider` | `#0E1116` at 6 % | `#FFFFFF` at 7 % | Row separators on glass cards (replaces `divider` there) |
 | `glassAvatar` | `#F1F3F6` | `#FFFFFF` at 7 % | Expense avatar circle (income keeps `incomeSoft`) |
-| `sheetFill` | `#FFFFFF` | gradient `#1E222E` → `#0E1016` | Form sheet |
-| `fieldFill` | `#0E1116` at 6 % | `#FFFFFF` at 6 % | Date and Note boxes, unselected chips, segmented track and close button, on the sheet |
-| `fieldBorder` | `#7D8696` | `#FFFFFF` at 38 % | 1 dp resting border of those form controls (3.7:1 light, 3.5:1 dark against the sheet) |
+| `sheetFill` | `#FFFFFF` | gradient `#1E222E` → `#0E1016` | The toast (the form sheet is flat, `formBackground`) |
+| `fieldFill` | `#0E1116` at 6 % | `#FFFFFF` at 6 % | The error screen's **Try again** (the form uses the flat look) |
+| `fieldBorder` | `#7D8696` | `#FFFFFF` at 38 % | 1 dp border of the error screen's **Try again** |
 | `scrim` | `#000000` at 45 % | `#000000` at 45 % | Dims the summary behind the sheet |
-| `segmentIndicator` | `#FFFFFF` | `#FFFFFF` at 14 % | Selected Type segment fill (see "Selected segment") |
 | `bannerFill` | `#EAF0FF` | `#1E2640` at 60 % | The banner (`accentSoft` tint, Components) |
 | `accentGradient` | `#3D66EF` → `#2F5BEA` | `#A0B2FF` → `#7089FA` | Add and Save fill (see "Accent buttons") |
 | `accentBorder` | `#FFFFFF` at 35 % | `#FFFFFF` at 40 % | 1 dp border of Add and Save |
@@ -258,18 +262,17 @@ other per-tone tokens in `theme.ts` (`cardTones`).
   `#FFFFFF` at 3 %; dark negative: `#FF9A8C` at 12 % → 4 %. Light positive: `#FFFFFF` at 78 % →
   `#E8EDFF` at 55 %; light negative: `#FFFFFF` at 78 % → `#FCEAE7` at 60 %. Border
   `glassBorderStrong`, highlight `glassHighlight`, shadow as in `glassShadow`.
-- **Accent buttons** (Add, Save): `accentGradient`, a 1 dp `accentBorder` and the inner
+- **Accent button** (Add): `accentGradient`, a 1 dp `accentBorder` and the inner
   highlight; no glow. Text and icon in `onAccent` (dark ≥ 6.0:1, light ≥ 4.8:1 at every stop).
   The fill stays opaque: a translucent accent drops `onAccent` text below 4.5:1 (light 3.8:1 even
   at 85 %), and the developer preferred this look over clear glass on the phone.
-- **Selected chip**: `accent` with `bodyStrong` in `onAccent` and the inner highlight; no glow.
+- **Selected chip** (flat form look): solid `accent` with `bodyStrong` in `onAccent`; no highlight, no glow.
   It keeps the unselected chip's 1 dp border and 1 dp extra padding, with the border in `accent`
   (invisible on the `accent` fill), so selecting never adds or removes a border or shifts the
   layout.
-- **Selected segment**: one indicator that slides between the two options (Motion). Its fill is
-  `segmentIndicator`, on the track. Both schemes use a 1.5 dp full `accent`
-  border (dark 3.1:1 against its own fill and 4.9:1 against the track, at the sheet's lightest
-  stop; at 16 % the fill gave 2.9:1, so it was lowered in T058, 2026-10-06).
+- **Selected segment** (flat form look): one indicator that slides between the two options
+  (Motion), filled `segmentSelected` on `segmentTrack`, with a 1.5 dp full `accent` border
+  (dark 5.2:1 against its fill and 6.4:1 against the track; light 5.5:1 and 5.0:1).
 - Cards and the toast put their outer shadow on an outer wrapper that does not clip; the fill,
   gradient and content go on an inner view that clips with `overflow: 'hidden'`. Pressables with
   their own shape clip their gradient and pressed overlay the same way (see Touch feedback).
@@ -295,12 +298,12 @@ where things come from and confirms what happened. Curves: **ease-out** `(0.2, 0
 | Open a form | The sheet slides up from the bottom; behind it the summary scales to 92 %, moves down 6 dp and rounds to radius 28, and the `scrim` fades in over it | 440 ms | sheet |
 | Close a form | The sheet slides down; the summary and scrim return | 300 ms | ease-in |
 | Drag the sheet | It follows the finger downward (never above its resting place); the summary and scrim follow in proportion. Released past 30 % of its height or with a fast downward fling, it closes; otherwise it springs back | follows the finger | spring |
-| Change month | The month's content (the card's numbers, not its header row; the breakdown or empty card; the first 8 rows) slides 18 dp in from the side of the button tapped and fades in; the balance, income and expenses count from the old to the new values | 340 ms; count 520 ms | ease-out |
+| Change month | The month's content (the card's numbers, not its header row; the breakdown or empty card; the first 8 rows) slides 18 dp in from the side of the button tapped and fades in. The new month's amounts show at once: counting is only for a change within the month on screen (Saved, Deleted; developer, 2026-10-06) | 340 ms | ease-out |
 | Press | Any button, chip or row scales to 96 % and springs back | spring, settles in about 400 ms with a slight overshoot | spring |
 | Type switch | The selected segment indicator slides to the other option, clamped so it never passes it; the labels' weight and color switch at once | spring, settles in about 400 ms | spring |
-| Pick a category | The chip's accent fill (with its inner highlight, inside the 1 dp border) fades in, and the previous chip's fades out; the border color and the label switch at once, so for those 220 ms the label's contrast is briefly lower (accepted) | 220 ms | ease-out |
+| Pick a category | The chip's solid accent fill fades in and the previous chip's fades out; the label's color crossfades with the fill, so it stays readable; the border color switches at once | 220 ms | ease-out |
 | Keyboard opens or closes | The footer (Delete, Save) moves with the keyboard frame by frame (`useAnimatedKeyboard`), and the amount block's vertical padding goes from 32/24 to 16/12 as the keyboard's first 120 dp come up. Date and Note stay in place and reachable by scrolling (contract) | follows the keyboard | — |
-| Saved | The sheet closes; a new row grows into the list (height and fade, from 97 %); an edited row flashes `accent` at 22 % and fades; totals count to the new values; the toast shows | 560 ms | ease-out |
+| Saved | The sheet closes; a new row grows into the list (height and fade, from 97 %); an edited row flashes `accent` at 22 % and fades; totals in the month on screen count to the new values; the toast shows | 560 ms | ease-out |
 | Deleted | The sheet closes; the row slides 24 dp right, fades and collapses; totals count; the toast shows | 280 ms | ease-in |
 | Invalid Save | The first invalid field (its label, control and message together) shakes 6 dp three times; the other invalid fields only show their messages | 300 ms | ease-in-out |
 | Toast | Rises 16 dp and fades in, stays, fades out | 1800 ms in total | ease-out |
@@ -321,7 +324,8 @@ How each is built:
   own flow (Delete after its confirmation, FR-013). There is no scrim tap to close. The drag
   uses `react-native-gesture-handler`, on the grab handle and header only, so it never fights
   the form's scroll.
-- **Counting amounts**: a timer on the JS thread moves the value from the old to the new cents
+- **Counting amounts** (only for a save or delete in the month on screen; a month change shows
+  the new amounts at once): a timer on the JS thread moves the value from the old to the new cents
   along the ease-out curve and writes the rounded value into React state every 50 ms (the
   value only ever reaches the screen through React state, so a Reanimated value would add a
   thread hop and nothing else), and a normal `Text` shows it, so `numberOfLines={1}`, `adjustsFontSizeToFit` and `maxFontSizeMultiplier` (Large
@@ -337,7 +341,7 @@ How each is built:
 - **Entrance and month slide** are decided once, when the content mounts. A month slide wins
   when the month changed less than 1 s before; otherwise content mounting less than 1.5 s after
   the summary first mounted rises in. Content arriving later (a very slow first query or month)
-  just appears. Only the first 8 rows can do either. Content that arrives after its entrance
+  just appears. Only the first 8 items of the list (day headers and rows) can do either. Content that arrives after its entrance
   turn (a slow first query) keeps the 80 ms spacing among itself instead of appearing at once.
 
 **Reduce motion** (Android's "Remove animations", read with Reanimated's `useReducedMotion`):
@@ -380,10 +384,11 @@ successful save ("Saved") or delete ("Deleted"); never after a failure (contract
 ## Components
 
 With the glass revision, components use the tokens in Glass surfaces as follows; every size,
-padding and radius below stays as written. Old tokens that this table replaces (`surface`,
-`surfaceMuted`, `formBackground`, `avatar`, `divider`, and the tone table's
-`cardBackground`, `monthButton`, `statPill`) remain only as solid fallbacks where a gradient
-cannot be drawn.
+padding and radius below stays as written. Old summary tokens that this table replaces
+(`surface`, `avatar`, `divider`, and the tone table's `cardBackground`, `monthButton`,
+`statPill`) remain only as solid fallbacks where a gradient cannot be drawn. The form's flat
+tokens (`formBackground`, `surfaceMuted`, `segmentTrack`, `segmentSelected`) are its primary
+fills.
 
 | Component | Fill | Border | Extras |
 | --- | --- | --- | --- |
@@ -394,20 +399,28 @@ cannot be drawn.
 | Breakdown and list cards | `glassFill` | `glassBorder` | highlight, `glassShadow` (breakdown only, see below); rows separated by `glassDivider` |
 | List avatars | `glassAvatar` (income: `incomeSoft`) | — | — |
 | Banner, empty-state card | empty-state: `glassFill`; banner: `bannerFill` (`accentSoft` at 100 % in light, 60 % in dark) | `glassBorder` | — |
-| Add, Save | accent button | 1 dp white border (Glass surfaces) | highlight |
-| Form sheet | `sheetFill` | top edge `glassBorderStrong` | grab handle 40 × 5 dp, `textMuted` at 40 % |
-| Close button, segmented track, unselected chips, Date, Note | `fieldFill` | `fieldBorder` (focus `accent`, error `error`; see "Borders never shift the layout") | — |
-| Selected chip, selected segment | as in Glass surfaces | chip: 1 dp `accent`, same width as at rest; segment: 1.5 dp `accent` | — |
+| Add | accent button | 1 dp white border (Glass surfaces) | highlight |
+| Save | `accent`, solid | none | — |
+| Form sheet | `formBackground`, solid | top edge `glassBorderStrong` | grab handle 40 × 5 dp, `textMuted` at 40 % |
+| Close button, unselected chips, Date, Note | `surfaceMuted` | none at rest (a transparent 1 dp keeps the size); focus `accent`, error `error` (see "Borders never shift the layout") | — |
+| Segmented track | `segmentTrack` | none | — |
+| Selected chip, selected segment | chip: `accent`; segment: `segmentSelected` | chip: 1 dp `accent`, same width as at rest; segment: 1.5 dp `accent` | — |
 | Toast | `sheetFill` | `glassBorderStrong` | highlight, `glassShadow` |
 | Balance card **Try again** | `glassFillStrong` | `glassBorderStrong` | — |
 | Error screen **Try again** | `fieldFill` | `fieldBorder` | — |
 
 The transaction list card has no outer shadow (T060, 2026-10-06): the list is a `FlatList`
-that draws the card row by row, so there is no single view to carry the shadow, and a shadow on
-each row would show through the translucent rows around it. Each row draws its part of the card
-(fill, a 1 dp border whose top and bottom are transparent inside the card, and the outer rows'
-corners), so a row that becomes first or last changes only colors, its corner radii and its
-4 dp of top or bottom padding; it never adds or removes a border.
+that draws the cards row by row, so there is no single view to carry the shadow, and a shadow on
+each row would show through the translucent rows around it. Each day has its own card; each row
+draws its part of its day's card (fill, a 1 dp border whose top and bottom are transparent
+inside the card, and the day's first and last rows' corners), so a row that becomes first or
+last of its day changes only colors, its corner radii and its 4 dp of top or bottom padding; it
+never adds or removes a border.
+
+**Form controls without a resting border** (developer, 2026-10-06): Date, Note, the chips and the
+close button sit on `surfaceMuted` against `formBackground` (about 1.1:1), as in the approved
+mockups. Each has a visible label or icon that identifies it, and focus and error borders are
+≥ 3:1; the missing resting boundary is an accepted exception to WCAG 1.4.11.
 
 ### Summary screen
 
@@ -441,14 +454,22 @@ There is no native header (`headerShown: false`); the balance card holds the mon
    - Rows are separated by `glassDivider`. Numbers only, no bars (charts are feature 002).
    - With expenses at 0: "No expenses this month." (`body`, `textMuted`) inside the card, with
      padding 16.
-3. **Transactions**: a section title, then a card with rows at least 64 dp tall:
-   - A 40 dp avatar with the category initial (`glassAvatar` with `textMuted`; income uses
-     `incomeSoft` with `income`).
-   - The avatar initial uses `avatarInitial`.
-   - The category label (`bodyStrong`, `text`) above the note (if any) and the numeric date,
-     joined by " · " (`caption`, `textMuted`).
-   - The amount on the right (`bodyStrong`): expenses in `text`, income in `income`, both from
-     `formatSignedMoney` (`+` / `−` as the region formats them).
+3. **Transactions**: a section title, then the rows grouped by day (FR-017; developer,
+   2026-10-06). Each day has a header and its own card.
+   - **Day header**: padding 16 top (0 for the first day, right under the "Transactions" title)
+     and 8 bottom, 24 at the sides. The day ("Today", "Yesterday", "Mon 5 Oct"; no year, a month
+     never crosses one) in `label`, `textMuted`, on the left; the day's net on the right in
+     `labelStrong`, `income` above zero and `textMuted` otherwise, with `+` above zero, minus
+     below and no sign at zero. When `isLargeText`, the net moves under the day, left-aligned.
+     A heading for the screen reader (Screen reader, above). `textMuted` on `background` at
+     the glow's peak is ≥ 4.5:1 (contrast test).
+   - **The day's card** holds its rows, each at least 64 dp tall:
+     - A 40 dp avatar with the category initial (`glassAvatar` with `textMuted`; income uses
+       `incomeSoft` with `income`), in `avatarInitial`.
+     - The category label (`bodyStrong`, `text`) above the note, if any (`caption`,
+       `textMuted`). The date is the day header's, above.
+     - The amount on the right (`bodyStrong`): expenses in `text`, income in `income`, both
+       from `formatSignedMoney` (`+` / `−` as the region formats them).
 4. **Add button**: floating and centered, `28 + insets.bottom` above the bottom. minHeight 56,
    padding 0 × 28, fully rounded, styled as an accent button (Glass surfaces), with the `plus`
    icon and "Add" (`button`) in `onAccent`. Behind it, a 96 dp bottom fade from transparent to
@@ -465,17 +486,19 @@ There is no native header (`headerShown: false`); the balance card holds the mon
 
 ### Transaction form (modal)
 
-Presented as a sheet over the summary (Motion, "Open a form"), on `sheetFill`. Because the
+Presented as a sheet over the summary (Motion, "Open a form"), on `formBackground`. The form
+keeps the flat look of the approved mockup `FormFilledDark` (solid fills, no resting borders,
+a solid Save) on the sliding sheet with all its motion (developer, 2026-10-06). Because the
 summary stays visible behind it, the root `Stack` uses a transparent modal presentation for the
 two form routes and the app draws the sheet and the summary's scale-down itself. The root layout
 is wrapped in `GestureHandlerRootView` for the drag to close.
 
 There is no native header (`headerShown: false`).
 
-- **Header**: top padding 8, under the grab handle (the sheet already sits below the status bar). The close button (48 dp circle, `fieldFill` with
-  `fieldBorder`, `x` in `text`) is on the left and the title (`title`, `text`) centered.
+- **Header**: top padding 8, under the grab handle (the sheet already sits below the status bar). The close button (48 dp circle, `surfaceMuted`,
+  `x` in `text`) is on the left and the title (`title`, `text`) centered.
 - **Loading** (edit form, contract): the header, then a centered `ActivityIndicator` in `accent`.
-- **Type**: a segmented control. The track is `fieldFill` with `fieldBorder`, radius 16,
+- **Type**: a segmented control. The track is `segmentTrack`, radius 16,
   padding 4. Each segment has minHeight 48 and radius 12.
   - Selected: the sliding indicator from Glass surfaces (1.5 dp `accent` border), and
     `bodyStrong` text in `text`.
@@ -491,15 +514,15 @@ There is no native header (`headerShown: false`).
   16, and is fully rounded.
   - Selected: `accent` with `bodyStrong` text in `onAccent`, keeping a 1 dp border in `accent`
     (Glass surfaces).
-  - Unselected: `fieldFill` with `fieldBorder` and `body` text in `text`.
+  - Unselected: `surfaceMuted` and `body` text in `text`.
 - **Date** and **Note**: side by side in 2 columns with gap 12 (one column when `isLargeText`).
-  Each field has a label above it, then a box on `fieldFill` with minHeight 52, radius 16 and
+  Each field has a label above it, then a box on `surfaceMuted` with minHeight 52, radius 16 and
   padding 0 × 16.
   - The date box shows the `calendar` icon (`textMuted`) and the numeric date (`body`, `text`).
     The note's value is `body` in `text`.
   - The note's placeholder is `textMuted`. When focused, the note gets a 2 dp `accent` border.
-- **Borders never shift the layout**: at rest, Date, Note, chips, the close button and the
-  segmented track have a 1 dp `fieldBorder` plus 1 dp of extra padding; on focus or error the
+- **Borders never shift the layout**: at rest, Date, Note and chips have a transparent 1 dp
+  border plus 1 dp of extra padding (the selected chip's is `accent`); on focus or error the
   border becomes 2 dp (`accent` or `error`) and the extra padding goes, so the size stays the
   same. The chip group's error outline stays a separate 2 dp outline, transparent by default.
   When a field is both focused and invalid, the `error` border wins.
@@ -529,7 +552,7 @@ There is no native header (`headerShown: false`).
     delete.", "This transaction no longer exists."), when there is one, styled like the
     validation message;
   - **Delete** (edit form only): a text button, `labelStrong` in `error`, centered;
-  - **Save**: full width, minHeight 56, fully rounded, an accent button (Glass surfaces) with
+  - **Save**: full width, minHeight 56, fully rounded, solid `accent` (no border or highlight) with
     `button` text in `onAccent`.
 
 ### Dialogs and the error screen

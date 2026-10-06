@@ -29,7 +29,8 @@ npm run typecheck         # tsc --noEmit
 | Totals, balance, breakdown, percentages | Unit tests on a reference set of ≥ 50 transactions    | FR-015, FR-016, SC-002 |
 | Totals after creates, edits and deletes | Integration test: ≥ 50 repository operations, then summary | SC-002, FR-019 |
 | Note length with emojis                 | Unit tests, `countGraphemes`                          | FR-007          |
-| Money and date formatting per region    | Unit tests with `es-ES`, `en-GB`, `en-US`; separator taken from the same formatter | FR-005, FR-029 |
+| Money and date formatting per region    | Unit tests with `es-ES`, `en-GB`, `en-US`, `es-US` (always `€`); separator taken from the same formatter | FR-005, FR-029 |
+| Day groups                              | Unit tests for grouping and day names; component tests for headers, their labels and per-day cards | FR-017, FR-031 |
 | "Today", midnight and foreground        | Unit tests for `useToday` and `SelectedMonthContext` with a fake clock and `AppState` events | Spec edge case, FR-003 |
 | Month after save, reload on focus       | Component tests: after save the summary shows the saved date's month; focus triggers a reload without the loading state | FR-019, FR-020  |
 | Draft validation                        | Unit tests, `validation.ts`: date range 2000-01-01..today, category valid for type, note length | FR-006, FR-007, FR-008 |
@@ -64,7 +65,9 @@ All must pass, with lint and type check, before a PR is merged (CI).
 8. **Discard**: change a field, press Android back → "Discard changes?".
 9. **Region and theme**: switch the phone region (Spain ↔ United Kingdom) and dark mode → amounts,
    dates and colors follow without losing data. Repeat the dark mode part on the preview APK.
-10. **Accessibility**: largest font size and TalkBack on → record an expense and hear the totals
+10. **Accessibility**: largest font size and TalkBack on → the list's day headers ("Today",
+    "Yesterday", "Mon 5 Oct") read as headings with their net, and a long net moves under the
+    day; record an expense and hear the totals
     (SC-007). Scroll to the end of a long list: the last row is not covered by **Add**. With
     `999.999,99 €`, a month total above 10 million and a 100-character note, nothing is cut off;
     the stat pills, rows and Date/Note switch to one column (design.md, Large text).
