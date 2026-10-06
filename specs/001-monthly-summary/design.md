@@ -159,7 +159,7 @@ decorative circle) is dropped: the ambient glow replaces it.
   - Breakdown rows: an 8 dp gap between the amount and the percent pill.
   - Balance card body: 4 between "Balance" and the amount.
 - **Insets**: screens use `react-native-safe-area-context`. The balance card's top margin is
-  `12 + insets.top`. The form header's top padding is `8 + insets.top`. The root error screen
+  `12 + insets.top`. The form sheet's top edge is `36 + insets.top`, and its header's top padding is 8, under the grab handle. The root error screen
   centers its content inside all insets. The Add button and the form's Save footer sit `28 + insets.bottom` above the
   bottom edge. The list's bottom padding is `56 + 28 + 16 + insets.bottom`. Status bar icons
   follow the theme (`expo-status-bar`, `style="auto"`).
@@ -248,6 +248,7 @@ invisible in light, so it stays out; 2026-10-06.)
 | `accentGradient` | `#3D66EF` → `#2F5BEA` | `#A0B2FF` → `#7089FA` | Add and Save fill (see "Accent buttons") |
 | `accentBorder` | `#FFFFFF` at 35 % | `#FFFFFF` at 40 % | 1 dp border of Add and Save |
 | `bottomFade` | `background` at 0 → 45 % | `background` at 0 → 45 % | The 96 dp fade behind Add |
+| `rowFlash` | `accent` at 22 % | `accent` at 22 % | An edited row's flash (Motion, "Saved") |
 
 The balance-tone tokens `ambientTop` (above), `cardGlass` and `cardShadow` (below) live with the
 other per-tone tokens in `theme.ts` (`cardTones`).
@@ -310,6 +311,8 @@ How each is built:
   drawn behind. One shared value in the root layout (0 closed, 1 open) drives the sheet's
   position, the summary's scale, offset and radius, and the scrim's opacity. Dimming is the
   scrim overlay, not `filter: brightness()`, so it works on every Android version.
+- **While the edit form loads** there is no form yet, so nothing can be lost: X or back
+  closes the sheet at once, without the slide (the summary behind returns at once too).
 - **Closing always goes through the discard check** (FR-010): X, the back button or gesture,
   and a drag released past the threshold all first run the same check as today. With unsaved
   changes, the sheet springs back to open and "Discard changes?" appears; it slides down only
@@ -336,7 +339,7 @@ How each is built:
 
 **Reduce motion** (Android's "Remove animations", read with Reanimated's `useReducedMotion`):
 nothing moves, scales or slides. Every change above becomes an instant swap or a fade of at most
-200 ms: the sheet and scrim fade, rows fade in and out, the entrance and month-slide content
+200 ms: the sheet and scrim fade in (200 ms) and close at once, rows fade in and out, the entrance and month-slide content
 appears at once, the indicator and chips swap, the toast
 fades, counts jump to the final value, and the shake and press scale are dropped. The one
 exception is the footer following the keyboard, which the system itself moves.
@@ -462,7 +465,7 @@ is wrapped in `GestureHandlerRootView` for the drag to close.
 
 There is no native header (`headerShown: false`).
 
-- **Header**: top padding `8 + insets.top`. The close button (48 dp circle, `fieldFill` with
+- **Header**: top padding 8, under the grab handle (the sheet already sits below the status bar). The close button (48 dp circle, `fieldFill` with
   `fieldBorder`, `x` in `text`) is on the left and the title (`title`, `text`) centered.
 - **Loading** (edit form, contract): the header, then a centered `ActivityIndicator` in `accent`.
 - **Type**: a segmented control. The track is `fieldFill` with `fieldBorder`, radius 16,

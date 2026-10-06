@@ -819,13 +819,7 @@ labels are built from data, never from animated values; no new dependency beyond
   back. Tests with gesture-handler's Jest utilities: a short drag springs back; a long drag
   closes a clean form; a long drag on a dirty form shows "Discard changes?".
 
-- [ ] T065 **In progress (2026-10-06, paused):** done so far: `lastChange` and `recordChange` in
-  `SummaryNoticeContext`, set by `new.tsx` and `[id].tsx`; `src/ui/RowMotion.tsx` with
-  `useRowChanges` (matches the change against each reload result; keeps a deleted row for its
-  exit) and `RowMotion` (only the changed row gets an animated wrapper); wired into `index.tsx`
-  and `TransactionList`; `rowFlash` token. Still to do: `tests/component/rowChanges.test.tsx`
-  (below), add `rowFlash` and the reduce-motion close (instant) to design.md, run the
-  `design-reviewer` on block 8d, and check on the phone. Original task: (FR-019) Row change animations, after the sheet exists so they are seen as the form
+- [x] T065 (FR-019) Row change animations, after the sheet exists so they are seen as the form
   closes: `SummaryNoticeContext` gains a one-off `lastChange: { kind: 'created' | 'updated' |
   'deleted', id }`, set by the forms right after a successful save or delete. The summary animates only that row: created rows grow in, updated
   rows flash, and a deleted row slides out and collapses once the sheet has closed and the
