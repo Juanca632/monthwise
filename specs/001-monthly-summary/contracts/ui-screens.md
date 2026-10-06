@@ -94,6 +94,11 @@ Actions:
   field, moves focus to the first one and keeps the input. On success it sets the selected month
   to the transaction's month and closes.
 - **Delete** (edit only) asks "Delete this transaction?" with **Delete** and **Cancel** (FR-013).
+- After a successful save or delete, the summary shows a short confirmation toast, "Saved" or
+  "Deleted", for about 1.8 s, above the **Add** button (FR-032). It is announced once with
+  `announceForAccessibility`, is not focusable, ignores touches and needs no action. It confirms
+  the result; the list and totals already show it. No toast shows after a failure, nor when
+  `remove` throws `NotFoundError` (the row was already gone; the summary just reloads).
 - Changing **Type** clears the category (FR-012).
 - Leaving with unsaved changes (back button, swipe, close) asks "Discard changes?" with
   **Discard** and **Keep editing** (FR-010).
@@ -130,6 +135,7 @@ Validation messages:
 | Form labels | "Type" (**Expense** / **Income**), "Amount", "Date", "Category", "Note (optional)" |
 | Form buttons | **Save**, **Delete** |
 | Delete dialog | "Delete this transaction?" with **Delete** and **Cancel** |
+| Confirmation toast | "Saved", "Deleted" |
 | Discard dialog | "Discard changes?" with **Discard** and **Keep editing** |
 | Category labels | As in data-model.md |
 

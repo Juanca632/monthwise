@@ -1,13 +1,20 @@
 # Design: Record Transactions and Monthly Summary
 
-Visual design for 001, approved by the developer on 2026-10-05. It sets *how the screens look*.
+Visual design for 001, approved by the developer on 2026-10-05 and revised on 2026-10-06 with a
+glass look and motion (sections Glass surfaces, Motion and Haptics). It sets *how the screens look
+and move*.
 What they contain and how they behave stays in `spec.md` and `contracts/ui-screens.md`; if the two
 ever disagree, the contract wins and this file is updated.
 
 Mockups: the HTML sources of the 15 approved artboards (light and dark, keyboard open, edit, loading and error) are in
 [`design/mockups/`](design/mockups/). Each `.dc.html` file is plain HTML with inline styles and
 can be read as a reference. The live canvas is
-https://claude.ai/artifact/LnJb7boknHJq2bTT5JjwWN, which only the developer can open. Where this
+https://claude.ai/artifact/LnJb7boknHJq2bTT5JjwWN, which only the developer can open. The
+2026-10-06 glass and motion revision has its own sources in
+[`design/mockups-glass/`](design/mockups-glass/) (summary dark and light, form, the full
+add/keyboard/save/edit/delete flow, and the motion table) and its own canvas,
+https://claude.ai/artifact/GBwzqQje2bi89cnwZ3f6z9. Where the two sets differ, the glass set wins;
+the first set still documents layout, states and sizes the glass set does not show. Where this
 file and the mockups differ, this file wins: **every value in this file overrides the mockups**. The main differences are 48 dp
 touch targets (mockups: 44), no scroll fade, the contrast fixes, a border on the selected segment
 (mockups: a shadow), on-scale paddings and radii, a full-width amount field, and the card label
@@ -15,15 +22,21 @@ touch targets (mockups: 44), no scroll fade, the contrast fixes, a border on the
 
 ## Direction
 
-Clean and calm, with one clear focal point. The month's **balance** is the most visible element,
-on a softly tinted card at the top. Everything else (breakdown, list, form) sits on plain white
-(or dark) cards with generous spacing, so nothing competes with it. Color is used sparingly and
-always means something:
+Calm, alive and fluid, with one clear focal point. The month's **balance** is the most visible
+element, on a tinted glass card at the top. Everything else (breakdown, list, form) sits on
+translucent glass cards over a soft ambient background, with generous spacing, so nothing
+competes with it. The look is inspired by iOS's Liquid Glass, built with what Android does well
+(see Glass surfaces). Motion is short and purposeful: it shows where things come from and go,
+and confirms what happened (see Motion and Haptics). Color is used sparingly and always means
+something:
 
 - **Accent**: actions (Add, Save, the selected category and type).
 - **Income**: income amounts and icons.
 - **Negative**: the negative-balance card tone, always with the minus sign (FR-015).
 - **Error**: validation and failure messages.
+- **Ambient background**: the top glow follows the balance tone (accent when positive or zero,
+  coral when negative) and the bottom glow is the income color, so the screen hints at how the
+  month is going before anything is read.
 
 The reference is the clarity of modern banking apps (for example Revolut). No brand elements,
 colors or assets are copied.
@@ -95,13 +108,13 @@ Chosen by `useColorScheme()` (FR-030). Measured contrast:
 | `background` | `#F6F7F9` | `#0D0F13` | Summary screen background |
 | `surface` | `#FFFFFF` | `#171A21` | Cards |
 | `formBackground` | `#FFFFFF` | `#0D0F13` | Form screen background |
-| `surfaceMuted` | `#F1F3F6` | `#1A1E26` | Chips, inputs, date field, close button, secondary buttons |
-| `segmentTrack` | `#F1F3F6` | `#171A21` | Track of the Expense/Income control |
+| `surfaceMuted` | `#F1F3F6` | `#1A1E26` | Solid fallback for `fieldFill` and `glassFillStrong` (Components) |
+| `segmentTrack` | `#F1F3F6` | `#171A21` | Solid fallback for the segmented track (Components) |
 | `segmentSelected` | `#FFFFFF` | `#262B35` | Selected segment fill (plus a 1.5 dp `accent` border) |
 | `avatar` | `#F1F3F6` | `#232833` | Category initial circle in list items |
 | `divider` | `#EEF0F3` | `#232833` | Row separators |
 | `text` | `#0E1116` | `#F2F4F7` | Primary text, chevron and close icons, expense arrow |
-| `textMuted` | `#5B6472` | `#9AA3B2` | Labels, captions, placeholders, unselected segment |
+| `textMuted` | `#5B6472` | `#B0B8C6` | Labels, captions, placeholders, unselected segment |
 | `accent` | `#2F5BEA` | `#7D96FF` | Add, Save, selected chip, selected segment border, focused underline, text buttons |
 | `onAccent` | `#FFFFFF` | `#0D0F13` | Text and icons on `accent` |
 | `accentSoft` | `#EAF0FF` | `#1E2640` | Percent pill, empty-state icon circle, summary banner |
@@ -112,8 +125,8 @@ Chosen by `useColorScheme()` (FR-030). Measured contrast:
 | `ripple` | `#5B6472` at 12 % | `#9AA3B2` at 12 % | Touch feedback on surfaces |
 | `rippleOnAccent` | `#FFFFFF` at 20 % | `#0D0F13` at 20 % | Touch feedback on `accent` |
 
-Fields on `surfaceMuted` have a low-contrast fill. They are identified by their always-visible
-label above them, as WCAG 1.4.11 allows. The label never disappears.
+Form controls on the sheet use `fieldFill` with a visible `fieldBorder` (≥ 3:1 against the
+sheet, Glass surfaces), and each also keeps its always-visible label above it.
 
 ### Balance card tones
 
@@ -125,12 +138,16 @@ color alone. In the loading and error states (no balance yet) the card uses the 
 | --- | --- | --- | --- | --- |
 | `cardBackground` | `#E8EDFF` | `#FCEAE7` | `#161D38` | `#2A1A19` |
 | `cardInk` (month title, stat amounts, chevrons) | `#0E1116` | `#0E1116` | `#F2F4F7` | `#F2F4F7` |
-| `cardAmount` (balance) | `#1D34A6` | `#B3362A` | `#9DB0FF` | `#FF9A8C` |
-| `cardLabel` ("Balance", stat labels, card messages) | `#4A5578` | `#7A4A44` | `#A9B3D6` | `#C9B3AF` |
+| `cardAmount` (balance) | `#1D34A6` | `#B3362A` | `#F2F4F7` | `#FF9A8C` |
+| `cardLabel` ("Balance", stat labels, card messages) | `#4A5578` | `#7A4A44` | `#D5DBF0` | `#E6D6D2` |
 | `monthButton` | `#FFFFFF` | `#FFFFFF` | `#222A48` | `#3A2523` |
 | `statPill` | `#FFFFFF` | `#FFFFFF` | `#1E2541` | `#35211F` |
 | `expenseIcon` (circle) | `#ECEEF2` | `#F6DCD8` | `#2A3150` | `#4A2E2B` |
 | `cardDecor` | `#2443C7` at 6 % | `#B3362A` at 6 % | `#9DB0FF` at 6 % | `#FF9A8C` at 6 % |
+
+With the glass revision, `cardBackground` is the solid fallback; the card itself draws the
+`cardGlass` gradient from Glass surfaces on top of the ambient background. `cardDecor` (the
+decorative circle) is dropped: the ambient glow replaces it.
 
 ## Spacing, shape and touch
 
@@ -156,15 +173,15 @@ color alone. In the loading and error states (no balance yet) the card uses the 
 - **Touch feedback**: every pressable uses `android_ripple` with `ripple`, or `rippleOnAccent`
   on accent buttons. Rounded pressables clip the ripple with `overflow: 'hidden'` on the
   pressable itself. The Add button keeps its shadow on an outer wrapper that does not clip.
-- **Elevation**: flat. Only the Add button has a shadow, in light mode only:
-  `boxShadow: '0 6px 20px rgba(47,91,234,0.28)'`. Where `boxShadow` is not supported, there is no
-  shadow, and that is acceptable.
+- **Elevation**: see Glass surfaces. Cards get a soft outer shadow and a 1 dp inner top
+  highlight; accent buttons get a colored glow. Where `boxShadow` is not supported (outer shadows
+  need Android 9, inset ones Android 10), there is no shadow, and that is acceptable.
 - **Icons**: Feather from `@expo/vector-icons`: `chevron-left`, `chevron-right`, `plus`, `x`,
-  `calendar`, `arrow-up`, `arrow-down`, `alert-circle`, `credit-card`. 20 dp in buttons, 16 dp in
+  `calendar`, `arrow-up`, `arrow-down`, `alert-circle`, `credit-card`, `check` (toast). 20 dp in buttons, 16 dp in
   card circles, 14 dp next to messages.
 - **Screen reader**:
   - Decorative elements are hidden (`importantForAccessibility="no-hide-descendants"`): the
-    card's circle, the avatars, the icon circles, the empty-state icon and the 14 dp icons next to
+    ambient background, the avatars, the icon circles, the empty-state icon and the 14 dp icons next to
     messages.
   - "Balance" plus its amount, each stat pill, each breakdown row and each list row is one
     accessible element, with the label from the contract.
@@ -173,14 +190,174 @@ color alone. In the loading and error states (no balance yet) the card uses the 
   - Chips use `accessibilityRole="button"` with `accessibilityState={{ selected }}`.
   - Every `ActivityIndicator` has `accessibilityLabel="Loading"`.
 
+## Glass surfaces
+
+Android has no native Liquid Glass (`expo-glass-effect` is iOS 26 only). The look is built from
+three layers that work on every Android version the app supports, with no real blur:
+
+1. **Ambient background**: behind the summary, two large soft glows drawn as radial gradients on
+   `background`: top-left, about 340 dp, `ambientTop` (follows the balance tone); bottom-right,
+   about 300 dp, `ambientBottom` (income color). Decorative: hidden from the screen reader.
+2. **Glass fill**: cards and controls are translucent, so the glow shows through, with a 1 dp
+   border and a 1 dp inner top highlight (`boxShadow` inset; Android 10+, none before, which is
+   acceptable).
+3. **Depth**: a soft outer shadow on cards and a colored glow on accent buttons (`boxShadow`;
+   Android 9+).
+
+No real blur in 001: everything behind a surface is already a smooth glow, so blurring it would
+look almost the same and cost frames while the sheet moves. (`expo-blur` was evaluated for this
+and is not used.)
+
+| Token | Light | Dark | Use |
+| --- | --- | --- | --- |
+| `ambientTop` (positive or zero) | `#2F5BEA` at 22 % | `#7D96FF` at 30 % | Top glow |
+| `ambientTop` (negative) | `#B3362A` at 16 % | `#FF9A8C` at 24 % | Top glow, negative month |
+| `ambientBottom` | `#0B6B5E` at 12 % | `#45D3A8` at 18 % | Bottom glow |
+| `glassFill` | `#FFFFFF` at 72 % | `#FFFFFF` at 5 % | Breakdown and list cards on the summary |
+| `glassFillStrong` | `#FFFFFF` at 85 % | `#FFFFFF` at 8 % | Stat pills and month buttons on the balance card |
+| `glassBorder` | `#FFFFFF` at 95 % | `#FFFFFF` at 10 % | 1 dp border of summary cards and stat pills |
+| `glassBorderStrong` | `#0E1116` at 6 % | `#FFFFFF` at 14 % | 1 dp border of the balance card and month buttons; top edge of the sheet |
+| `glassHighlight` | `#FFFFFF` | `#FFFFFF` at 10 % | `inset 0 1px 0` top highlight |
+| `glassShadow` | `0 8px 24px` `#0E1116` at 5 % | `0 20px 40px` `#000000` at 35 % | Summary cards (balance card in light: `0 18px 40px` `#1D34A6` at 12 %) |
+| `glassDivider` | `#0E1116` at 6 % | `#FFFFFF` at 7 % | Row separators on glass cards (replaces `divider` there) |
+| `glassAvatar` | `#F1F3F6` | `#FFFFFF` at 7 % | Expense avatar circle (income keeps `incomeSoft`) |
+| `sheetFill` | `#FFFFFF` | gradient `#1E222E` → `#0E1016` | Form sheet |
+| `fieldFill` | `#0E1116` at 6 % | `#FFFFFF` at 6 % | Date and Note boxes, unselected chips, segmented track and close button, on the sheet |
+| `fieldBorder` | `#7D8696` | `#FFFFFF` at 38 % | 1 dp resting border of those form controls (3.7:1 light, 3.5:1 dark against the sheet) |
+| `scrim` | `#000000` at 45 % | `#000000` at 45 % | Dims the summary behind the sheet |
+
+- **`cardGlass`** (balance card): a 160° linear gradient. Dark positive: `#9DB0FF` at 12 % →
+  `#FFFFFF` at 3 %; dark negative: `#FF9A8C` at 12 % → 4 %. Light positive: `#FFFFFF` at 78 % →
+  `#E8EDFF` at 55 %; light negative: `#FFFFFF` at 78 % → `#FCEAE7` at 60 %. Border
+  `glassBorderStrong`, highlight `glassHighlight`, shadow as in `glassShadow`.
+- **Accent buttons** (Add, Save): a vertical gradient (dark `#A0B2FF` → `#7089FA`; light
+  `#3D66EF` → `#2F5BEA`), a 1 dp border of `#FFFFFF` at 40 % (light 35 %), the inner highlight
+  and a glow of `0 12px 32px` accent at 35 % (light 32 %). Text and icon in `onAccent`
+  (dark ≥ 6.0:1, light ≥ 4.8:1 at every stop).
+- **Selected chip**: `accent` with `bodyStrong` in `onAccent`, the inner highlight and a
+  `0 8px 22px` accent glow at 35 %.
+- **Selected segment**: one indicator that slides between the two options (Motion). Light:
+  `segmentSelected`; dark: `#FFFFFF` at 16 % on the track. Both with a 1.5 dp full `accent`
+  border (dark ≥ 3.0:1 against the fill around it, 5.0:1 against the track).
+- Shadows and glows go on an outer wrapper that does not clip; the gradient and the ripple go on
+  the inner pressable, which clips with `overflow: 'hidden'` (see Touch feedback).
+
+**Contrast over glass** (WCAG ratios computed by blending each layer at the glow's peak, the
+worst case; 2026-10-06): dark `cardLabel` positive `#D5DBF0` 6.6:1, negative `#E6D6D2` 6.8:1;
+dark negative `cardAmount` 4.7:1; dark `textMuted` `#B0B8C6` 4.9:1 on a list card at the peak;
+light `textMuted` 5.4:1, light `cardLabel` 6.8:1. These new dark values replace the old ones in
+the Color and Balance card tones tables.
+
+## Motion
+
+Built with `react-native-reanimated` (UI thread). Short, quiet and purposeful: motion shows
+where things come from and confirms what happened. Curves: **ease-out** `(0.2, 0.8, 0.2, 1)`,
+**sheet** `(0.2, 0.9, 0.25, 1)`, **ease-in** `(0.4, 0, 1, 1)`, **spring** damping 15, stiffness 300.
+
+| Moment | What moves | Time | Curve |
+| --- | --- | --- | --- |
+| Summary appears (cold start) | Balance card, breakdown, the rows visible in the first screen and Add rise 14 dp and fade in, 80 ms apart. Rows that appear later by scrolling never animate | 520 ms | ease-out |
+| Open a form | The sheet slides up from the bottom; behind it the summary scales to 92 %, moves down 6 dp and rounds to radius 28, and the `scrim` fades in over it | 440 ms | sheet |
+| Close a form | The sheet slides down; the summary and scrim return | 300 ms | ease-in |
+| Drag the sheet | It follows the finger downward (never above its resting place); the summary and scrim follow in proportion. Released past 30 % of its height or with a fast downward fling, it closes; otherwise it springs back | follows the finger | spring |
+| Change month | The month's content slides 18 dp in from the side of the button tapped and fades in; the balance counts from the old to the new value | 340 ms; count 520 ms | ease-out |
+| Press | Any button, chip or row scales to 96 % and springs back | ~140 ms | spring |
+| Type switch | The selected segment indicator slides to the other option | 360 ms | spring |
+| Pick a category | The chip fills with accent and its glow fades in | 220 ms | ease-out |
+| Keyboard opens or closes | The footer (Delete, Save) moves with the keyboard frame by frame (`useAnimatedKeyboard`), and the amount block's vertical padding goes from 32/24 to 16/12. Date and Note stay in place and reachable by scrolling (contract) | follows the keyboard | — |
+| Saved | The sheet closes; a new row grows into the list (height and fade, from 97 %); an edited row flashes `accent` at 22 % and fades; totals count to the new values; the toast shows | 560 ms | ease-out |
+| Deleted | The sheet closes; the row slides 24 dp right, fades and collapses; totals count; the toast shows | 280 ms | ease-in |
+| Invalid Save | The first invalid field shakes 6 dp three times | 300 ms | ease-in-out |
+| Toast | Rises 16 dp and fades in, stays, fades out | 1800 ms in total | ease-out |
+| Tone change | The balance card fill and the top glow crossfade between tones | 600 ms | ease-out |
+
+How each is built:
+
+- **Sheet**: the two form routes use a transparent modal presentation, so the summary stays
+  drawn behind. One shared value in the root layout (0 closed, 1 open) drives the sheet's
+  position, the summary's scale, offset and radius, and the scrim's opacity. Dimming is the
+  scrim overlay, not `filter: brightness()`, so it works on every Android version.
+- **Closing always goes through the discard check** (FR-010): X, the back button or gesture,
+  and a drag released past the threshold all first run the same check as today. With unsaved
+  changes, the sheet springs back to open and "Discard changes?" appears; it slides down only
+  after **Discard**, or right away when nothing changed. Save and Delete close it after their
+  own flow (Delete after its confirmation, FR-013). There is no scrim tap to close. The drag
+  uses `react-native-gesture-handler`, on the grab handle and header only, so it never fights
+  the form's scroll.
+- **Counting amounts**: a Reanimated value animates from the old to the new cents; a throttled
+  reaction (every 50 ms or so) writes the rounded value into React state, and a normal `Text`
+  shows it, so `numberOfLines={1}`, `adjustsFontSizeToFit` and `maxFontSizeMultiplier` (Large
+  text) keep working. The amount `Text` is not accessible on its own; its parent element keeps
+  the label built from the final data ("Balance, minus 150,00 €"), so TalkBack never reads a
+  number in between.
+- **Gradient crossfades**: a gradient string cannot be interpolated, so each tone change stacks
+  the old and new gradient layers and fades the new one's opacity in.
+- **Lists**: row enter and exit animations apply only to the row added, edited or deleted,
+  never to rows mounting while scrolling, which keeps SC-004's 1,000-row month smooth.
+
+**Reduce motion** (Android's "Remove animations", read with Reanimated's `useReducedMotion`):
+nothing moves, scales or slides. Every change above becomes an instant swap or a fade of at most
+200 ms: the sheet and scrim fade, rows fade in and out, the indicator and chips swap, the toast
+fades, counts jump to the final value, and the shake and press scale are dropped. The one
+exception is the footer following the keyboard, which the system itself moves.
+
+Motion never blocks input: a tap during an animation acts right away.
+
+## Haptics
+
+`expo-haptics`, used sparingly: one haptic per action, for its result. Whether Android's system
+"touch feedback" setting silences them is checked on the phone when they are built.
+
+| Moment | Haptic |
+| --- | --- |
+| Tap Add | `impactAsync(Light)` |
+| Change month | `impactAsync(Light)` |
+| Type switch, pick a category | `selectionAsync()` |
+| Saved | `notificationAsync(Success)` (no extra tap haptic on Save) |
+| Deleted (after confirming) | `impactAsync(Medium)` |
+| Invalid Save | `notificationAsync(Error)` |
+
+## Toast
+
+A small glass pill, centered, its bottom 12 dp above the Add button
+(`28 + insets.bottom + 56 + 12`). minHeight 44, padding 0 × 16, fully rounded, on `sheetFill`
+with `glassBorderStrong`, the inner highlight and `glassShadow`. It holds a 16 dp `check` icon
+and the text, both in `text` (`labelStrong`). It ignores touches (`pointerEvents="none"`), is
+not focusable and is announced once with `announceForAccessibility`. It is mounted in the root
+layout above the navigator, so it shows over the summary while the sheet closes. Shown after a
+successful save ("Saved") or delete ("Deleted"); never after a failure (contract, FR-032).
+
 ## Components
+
+With the glass revision, components use the tokens in Glass surfaces as follows; every size,
+padding and radius below stays as written. Old tokens that this table replaces (`surface`,
+`surfaceMuted`, `formBackground`, `segmentTrack`, `avatar`, `divider`, and the tone table's
+`cardBackground`, `monthButton`, `statPill`) remain only as solid fallbacks where a gradient
+cannot be drawn.
+
+| Component | Fill | Border | Extras |
+| --- | --- | --- | --- |
+| Summary screen | `background` + ambient glows | — | — |
+| Balance card | `cardGlass` | `glassBorderStrong` | highlight, shadow |
+| Month buttons | `glassFillStrong` | `glassBorderStrong` | — |
+| Stat pills | `glassFillStrong` | `glassBorder` | — |
+| Breakdown and list cards | `glassFill` | `glassBorder` | highlight, `glassShadow`; rows separated by `glassDivider` |
+| List avatars | `glassAvatar` (income: `incomeSoft`) | — | — |
+| Banner, empty-state card | `glassFill` (banner keeps `accentSoft` tint at 100 % in light, 60 % in dark) | `glassBorder` | — |
+| Add, Save | accent button | — | glow |
+| Form sheet | `sheetFill` | top edge `glassBorderStrong` | grab handle 40 × 5 dp, `textMuted` at 40 % |
+| Close button, segmented track, unselected chips, Date, Note | `fieldFill` | `fieldBorder` (focus `accent`, error `error`; see "Borders never shift the layout") | — |
+| Selected chip, selected segment | as in Glass surfaces | — | — |
+| Toast | `sheetFill` | `glassBorderStrong` | highlight, `glassShadow` |
+| Error screen **Try again** | `fieldFill` | `fieldBorder` | — |
 
 ### Summary screen
 
 There is no native header (`headerShown: false`); the balance card holds the month controls.
 
 1. **Balance card**: margin `12 + insets.top` top and 12 at the sides; padding 12, with 16 at
-   the bottom; radius 28; `overflow: 'hidden'` (for the decorative circle); in the balance tone.
+   the bottom; radius 28; `overflow: 'hidden'`; a glass card in the balance tone (`cardGlass`,
+   Glass surfaces).
    - Header row: the previous-month button (48 dp circle, `monthButton`, `chevron-left` in
      `cardInk`), the month title (`monthTitle`, `cardInk`) centered, then the next-month button or
      an empty 48 dp slot (FR-021). On January 2000 the previous button is likewise replaced by an
@@ -193,7 +370,6 @@ There is no native header (`headerShown: false`); the balance card holds the mon
        `arrow-down` in `text`;
      - the label (`statLabel`, `cardLabel`);
      - the amount (`statAmount`, `cardInk`).
-   - Decorative circle: 260 dp, `cardDecor`, at the top right and partly off the card.
    - **Loading**: header row, then a centered `ActivityIndicator` in `accent` (120 dp tall area).
      No amount and no pills.
    - **Error**: header row, then "Couldn't load your data." (`label`, `cardLabel`) and a
@@ -216,8 +392,9 @@ There is no native header (`headerShown: false`); the balance card holds the mon
    - The amount on the right (`bodyStrong`): expenses in `text`, income in `income`, both from
      `formatSignedMoney` (`+` / `−` as the region formats them).
 4. **Add button**: floating and centered, `28 + insets.bottom` above the bottom. minHeight 56,
-   padding 0 × 28, fully rounded. `accent` background, with the `plus` icon and "Add" (`button`)
-   in `onAccent`.
+   padding 0 × 28, fully rounded, styled as an accent button (Glass surfaces), with the `plus`
+   icon and "Add" (`button`) in `onAccent`. Behind it, a 96 dp bottom fade from transparent to
+   `background` at 45 % lets the list pass under it softly; it is a gradient, not a blur.
 5. **Empty month**: the balance card at zero, then a card with padding 32 × 24, centered (no
    "Transactions" title): a 56 dp
    icon circle (`accentSoft`, `credit-card` in `accent`), "No transactions this month yet."
@@ -230,14 +407,20 @@ There is no native header (`headerShown: false`); the balance card holds the mon
 
 ### Transaction form (modal)
 
+Presented as a sheet over the summary (Motion, "Open a form"), on `sheetFill`. Because the
+summary stays visible behind it, the root `Stack` uses a transparent modal presentation for the
+two form routes and the app draws the sheet and the summary's scale-down itself. The root layout
+is wrapped in `GestureHandlerRootView` for the drag to close.
+
 There is no native header (`headerShown: false`).
 
-- **Header**: top padding `8 + insets.top`. The close button (48 dp circle, `surfaceMuted`, `x` in
-  `text`) is on the left and the title (`title`, `text`) centered.
+- **Header**: top padding `8 + insets.top`. The close button (48 dp circle, `fieldFill` with
+  `fieldBorder`, `x` in `text`) is on the left and the title (`title`, `text`) centered.
 - **Loading** (edit form, contract): the header, then a centered `ActivityIndicator` in `accent`.
-- **Type**: a segmented control. The track is `segmentTrack`, radius 16, padding 4. Each segment
-  has minHeight 48 and radius 12.
-  - Selected: `segmentSelected` fill, a 1.5 dp `accent` border, and `bodyStrong` text in `text`.
+- **Type**: a segmented control. The track is `fieldFill` with `fieldBorder`, radius 16,
+  padding 4. Each segment has minHeight 48 and radius 12.
+  - Selected: the sliding indicator from Glass surfaces (1.5 dp `accent` border), and
+    `bodyStrong` text in `text`.
   - Unselected: transparent, `body` text in `textMuted`.
 - **Amount**: centered.
   - The label is above, and the value (`amountInput`, `text`) and `€` (`currencySuffix`,
@@ -249,16 +432,18 @@ There is no native header (`headerShown: false`).
 - **Category**: a label, then wrapping chips with gap 8. Each chip has minHeight 48, padding 0 ×
   16, and is fully rounded.
   - Selected: `accent` with `bodyStrong` text in `onAccent`.
-  - Unselected: `surfaceMuted` with `body` text in `text`.
+  - Unselected: `fieldFill` with `fieldBorder` and `body` text in `text`.
 - **Date** and **Note**: side by side in 2 columns with gap 12 (one column when `isLargeText`).
-  Each field has a label above it, then a box on `surfaceMuted` with minHeight 52, radius 16 and
+  Each field has a label above it, then a box on `fieldFill` with minHeight 52, radius 16 and
   padding 0 × 16.
   - The date box shows the `calendar` icon (`textMuted`) and the numeric date (`body`, `text`).
     The note's value is `body` in `text`.
   - The note's placeholder is `textMuted`. When focused, the note gets a 2 dp `accent` border.
-- **Borders are reserved**: Date, Note and the chip group always have a 2 dp border, transparent
-  by default, so focus or an error never shifts the layout. When a field is both focused and
-  invalid, the `error` border wins.
+- **Borders never shift the layout**: at rest, Date, Note, chips, the close button and the
+  segmented track have a 1 dp `fieldBorder` plus 1 dp of extra padding; on focus or error the
+  border becomes 2 dp (`accent` or `error`) and the extra padding goes, so the size stays the
+  same. The chip group's error outline stays a separate 2 dp outline, transparent by default.
+  When a field is both focused and invalid, the `error` border wins.
 - **Validation** (contract messages):
   - Amount: the underline turns `error`.
   - Category: a 2 dp `error` outline around the chip group, with radius 16 and an 8 dp inset.
@@ -266,9 +451,10 @@ There is no native header (`headerShown: false`).
   - The message (`labelStrong`, `error`, `alert-circle` 14 dp) sits under the field with an 8 dp
     gap.
 - **Keyboard open** (SC-001; the target is a 360 × 640 dp screen at the default text size):
-  - The form uses `KeyboardAvoidingView` with `behavior="padding"`, and the footer sits right
-    above the keyboard with a 12 dp bottom gap; `28 + insets.bottom` applies only when the
-    keyboard is closed.
+  - The footer follows the keyboard with Reanimated's `useAnimatedKeyboard` (no
+    `KeyboardAvoidingView`, which would move it twice) and sits right above it with a 12 dp
+    bottom gap; `28 + insets.bottom` applies only when the keyboard is closed. The fields'
+    scroll view gets the keyboard height as bottom padding, so every field stays reachable.
   - The amount block's vertical padding drops from 32/24 to 16/12, so the amount, all expense
     chips and Save fit above the keyboard.
   - **Fallback**, if Block 3b shows they still do not fit on the phone: the chips become a single
@@ -279,20 +465,25 @@ There is no native header (`headerShown: false`).
     delete.", "This transaction no longer exists."), when there is one, styled like the
     validation message;
   - **Delete** (edit form only): a text button, `labelStrong` in `error`, centered;
-  - **Save**: full width, minHeight 56, fully rounded, `accent` with `button` text in `onAccent`.
+  - **Save**: full width, minHeight 56, fully rounded, an accent button (Glass surfaces) with
+    `button` text in `onAccent`.
 
 ### Dialogs and the error screen
 
 - "Delete this transaction?" and "Discard changes?" use React Native's `Alert`, the platform's
   native dialog, so they look like Android dialogs and are accessible by default.
 - **"Something went wrong."** (root error boundary): on `background`, centered, the message
-  (`body`, `text`) and **Try again** (`surfaceMuted`, `bodyStrong`, `text`, fully rounded,
-  minHeight 48).
+  (`body`, `text`) and **Try again** (`fieldFill` with `fieldBorder`, `bodyStrong`, `text`,
+  fully rounded, minHeight 48).
 
 ## Implementation notes
 
 - `src/ui/theme.ts` exports both palettes, the four balance-card tones and `balanceTone()`, the
   type tokens (with the font fallback), spacing, radii, `minTouch = 48` and `isLargeText`.
   Components never hard-code a color or size that has a token.
-- The scroll fade above the Add button in the mockups is not built, to avoid a gradient
-  dependency; bottom padding does the job.
+- Gradients (glass fills, ambient glows, the bottom fade, accent buttons) use React Native's
+  built-in `experimental_backgroundImage` with `linear-gradient` / `radial-gradient`, so no
+  gradient library is added. The bottom padding still keeps the last row clear of Add.
+- The first glass task is a spike on the developer's phone: radial-gradient glows (size,
+  position, banding on dark), inset `boxShadow` and the accent glow. If a technique does not
+  render well, its fallback is the solid token, and this file is updated before going on.

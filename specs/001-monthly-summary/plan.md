@@ -59,7 +59,10 @@ table; up to thousands of transactions per month
 | V. Fast, Mobile-First UX | **Add** always visible; form opens with the amount focused (4 interactions, SC-001); loading, error and empty states defined for the summary and form ([contracts/ui-screens.md](contracts/ui-screens.md)); English UI. | PASS |
 
 **Post-design re-check (after Phase 1)**: PASS. The design adds no dependencies beyond the list
-below and no extra layers.
+below and no extra layers. The 2026-10-06 glass and motion revision adds `react-native-reanimated`
+(direct), `react-native-gesture-handler` and `expo-haptics`, approved by the developer and
+justified below. `expo-blur` was installed for it and is removed: the design review showed blur
+adds nothing over the smooth glows (design.md, Glass surfaces).
 
 ### Dependencies (principle IV)
 
@@ -70,7 +73,10 @@ below and no extra layers.
 | `expo-status-bar` | runtime (template) | Status bar icons readable in light and dark mode (`style="auto"`) | React Native's own `StatusBar` does not follow the system theme on its own (FR-030). |
 | `expo-router` (+ its required peers `react-native-screens`, `react-native-safe-area-context`, `expo-linking`, `expo-constants`, `@expo/metro-runtime`, `@expo/log-box`) | runtime | Screens, modal form, back handling; `usePreventRemove` for "Discard changes?" (FR-010) through `expo-router/react-navigation` | React Native has no built-in navigation (R6). Since SDK 56, `expo-router` bundles React Navigation, so `@react-navigation/native` is not installed: a second copy would have its own navigation context and the hook would not see the router (found in T003, 2026-10-05). Peers checked with `npm view expo-router peerDependencies` on 2026-10-05. |
 | `expo-constants` (router peer, also imported directly) | runtime | Reads `extra.variant` from the app config at runtime | The only way for code to read values computed in `app.config.ts`. |
-| `react-dom`, `react-native-reanimated`, `react-native-worklets` *(npm `overrides` pins, not dependencies)* | transitive | Keep the dependency tree valid and matching Expo Go | Packages inside `expo-router` (Radix, vaul, `@expo/ui`, the drawer) require these as peers, and npm auto-installs their latest versions. `react-dom` 19.3 needs `react` 19.3 and breaks every later install; `reanimated` 4.7 and `worklets` 0.13 are native modules newer than the ones compiled into Expo Go. `overrides` pins them to SDK 57's `bundledNativeModules.json` (19.2.3, 4.5.1, 0.10.1). Our code never imports them. Found in T003 and T007 (2026-10-05). |
+| `react-dom`, `react-native-worklets` *(npm `overrides` pins, not dependencies)*, and the pin on `react-native-reanimated` | transitive | Keep the dependency tree valid and matching Expo Go | Packages inside `expo-router` (Radix, vaul, `@expo/ui`, the drawer) require these as peers, and npm auto-installs their latest versions. `react-dom` 19.3 needs `react` 19.3 and breaks every later install; `reanimated` 4.7 and `worklets` 0.13 are native modules newer than the ones compiled into Expo Go. `overrides` pins them to SDK 57's `bundledNativeModules.json` (19.2.3, 4.5.1, 0.10.1). Our code never imports them. Found in T003 and T007 (2026-10-05). |
+| `react-native-reanimated` (4.5.1, direct since 2026-10-06) | runtime | The motion in design.md (Motion): entering and exiting rows, the form sheet, press springs, counting totals, `useAnimatedKeyboard`, `useReducedMotion` | React Native's `Animated` cannot animate layout changes or follow the keyboard frame by frame on the UI thread. Already installed by `expo-router`; now imported directly, still pinned by the override above. |
+| `react-native-gesture-handler` (SDK 57's `~2.32.0`, direct) | runtime | Drag down to close the form sheet (design.md, Motion) | React Native's responder system cannot coordinate a drag with the form's scroll view on the UI thread. `expo-router` already pulls in 3.3.0, newer than Expo Go's native module, so install it with `npx expo install` and pin it in `overrides` like reanimated. |
+| `expo-haptics` | runtime | Haptic feedback (design.md, Haptics) | React Native's `Vibration` only plays raw vibration patterns, not the system's tuned feedback types. |
 | `expo-sqlite` | runtime | Durable, indexed local storage | React Native has no built-in database (R3). |
 | `expo-localization` | runtime | Phone's locale tag, and a re-render when system settings change | `Intl` alone does not report region changes while the app runs (R7). |
 | `@react-native-community/datetimepicker` | runtime | Native date dialog with min/max dates | React Native has no date picker (R8). |

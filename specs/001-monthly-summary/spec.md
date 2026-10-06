@@ -283,6 +283,10 @@ lands in that month.
   transaction is announced with its type, category, amount, full date and note (if any), amounts
   in the region's format, and a negative balance is announced in words ("minus"). Every tappable
   element MUST be at least the platform's recommended minimum touch size.
+- **FR-032**: After a transaction is saved or deleted successfully, the app MUST briefly confirm
+  it on the summary ("Saved" or "Deleted") without needing any action and without covering the
+  month controls, and the screen reader MUST announce it once. No confirmation appears after a
+  failure.
 
 ### Key Entities
 

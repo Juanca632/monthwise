@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add transaction, dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#7D96FF}a:hover{color:#9DB0FF}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer}
+.sheet{animation:sheet 420ms cubic-bezier(.2,.9,.25,1) both}
+.rise{animation:rise 480ms cubic-bezier(.2,.8,.2,1) both}
+.press{transition:transform 140ms cubic-bezier(.3,1.4,.5,1),filter 140ms,background-color 220ms,color 220ms,border-color 220ms}
+.press:active{transform:scale(.95);filter:brightness(1.15)}
+.caret{animation:blink 1s steps(1) infinite}
+@keyframes sheet{from{opacity:0;transform:translateY(56px)}to{opacity:1;transform:none}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion: reduce){.sheet,.rise{animation:fadeOnly 200ms both}.press:active{transform:none}@keyframes fadeOnly{from{opacity:0}to{opacity:1}}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0D0F13; color: #F2F4F7; font-family: Manrope, system-ui, sans-serif; font-variant-numeric: tabular-nums;">
+  <div aria-hidden="true" style="position: absolute; width: 320px; height: 320px; right: -120px; top: -80px; border-radius: 50%; background: rgba(125, 150, 255, 0.30); filter: blur(70px);"></div>
+  <div aria-hidden="true" style="position: absolute; width: 260px; height: 260px; left: -100px; top: 380px; border-radius: 50%; background: rgba(69, 211, 168, 0.12); filter: blur(70px);"></div>
+
+  <div class="sheet" style="position: relative; height: 100%; box-sizing: border-box; padding: 44px 16px 0; display: flex; flex-direction: column;">
+    <div style="display: flex; align-items: center; padding-top: 8px;">
+      <a class="press" href="Main.dc.html" aria-label="Close" style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F2F4F7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+      </a>
+      <h1 style="flex: 1; margin: 0; text-align: center; font-size: 17px; font-weight: 600;">Add transaction</h1>
+      <div style="width: 48px; height: 48px;"></div>
+    </div>
+
+    <div role="radiogroup" aria-label="Type" style="position: relative; margin-top: 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 4px; border-radius: 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.10);">
+      <div aria-hidden="true" style="position: absolute; top: 4px; bottom: 4px; width: calc(50% - 4px); left: {{indicatorLeft}}; border-radius: 12px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.07)); border: 1px solid rgba(157, 176, 255, 0.55); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 18px rgba(0, 0, 0, 0.3); transition: left 360ms cubic-bezier(.3,1.3,.5,1);"></div>
+      <button type="button" role="radio" aria-checked="{{expenseChecked}}" onClick="{{pickExpense}}" style="position: relative; min-height: 48px; border-radius: 12px; font-size: 15px; font-weight: 600; color: {{expenseInk}}; transition: color 220ms;">Expense</button>
+      <button type="button" role="radio" aria-checked="{{incomeChecked}}" onClick="{{pickIncome}}" style="position: relative; min-height: 48px; border-radius: 12px; font-size: 15px; font-weight: 600; color: {{incomeInk}}; transition: color 220ms;">Income</button>
+    </div>
+
+    <div class="rise" style="animation-delay: 120ms; text-align: center; padding: 28px 0 20px;">
+      <div style="font-size: 14px; font-weight: 500; color: rgba(242, 244, 247, 0.62);">Amount</div>
+      <div style="display: flex; align-items: baseline; justify-content: center; gap: 8px; margin-top: 8px;">
+        <span style="font-size: 48px; font-weight: 700; letter-spacing: -1px;">42,80</span><span class="caret" aria-hidden="true" style="width: 2px; height: 44px; background: #7D96FF; align-self: center;"></span>
+        <span style="font-size: 32px; font-weight: 600; color: rgba(242, 244, 247, 0.62);">€</span>
+      </div>
+      <div aria-hidden="true" style="width: 160px; height: 3px; border-radius: 3px; margin: 10px auto 0; background: linear-gradient(90deg, rgba(125, 150, 255, 0.2), #7D96FF, rgba(125, 150, 255, 0.2)); box-shadow: 0 0 16px rgba(125, 150, 255, 0.6);"></div>
+    </div>
+
+    <div class="rise" style="animation-delay: 200ms;">
+      <div style="font-size: 14px; font-weight: 500; color: rgba(242, 244, 247, 0.62); padding: 0 0 8px 8px;">Category</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <sc-for list="{{chips}}" as="chip" hint-placeholder-count="8">
+          <button class="press" type="button" aria-pressed="{{chip.selected}}" onClick="{{chip.pick}}" style="min-height: 48px; padding: 0 16px; border-radius: 999px; font-size: 15px; font-weight: {{chip.weight}}; color: {{chip.ink}}; background: {{chip.bg}}; border: 1px solid {{chip.border}}; box-shadow: {{chip.glow}};">{{chip.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div class="rise" style="animation-delay: 280ms; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 20px;">
+      <label style="display: flex; flex-direction: column;">
+        <span style="font-size: 14px; font-weight: 500; color: rgba(242, 244, 247, 0.62); padding: 0 0 8px 8px;">Date</span>
+        <span style="min-height: 52px; box-sizing: border-box; border-radius: 16px; padding: 0 16px; display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.10);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(242,244,247,0.62)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+          06/10/2026
+        </span>
+      </label>
+      <label style="display: flex; flex-direction: column;">
+        <span style="font-size: 14px; font-weight: 500; color: rgba(242, 244, 247, 0.62); padding: 0 0 8px 8px;">Note (optional)</span>
+        <input type="text" placeholder="Add a note" style="min-height: 52px; box-sizing: border-box; border-radius: 16px; padding: 0 16px; font: inherit; font-size: 15px; font-weight: 500; color: #F2F4F7; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.10); outline-color: #7D96FF;">
+      </label>
+    </div>
+
+    <div style="flex: 1;"></div>
+    <a class="press rise" href="Main.dc.html" style="animation-delay: 340ms; margin-bottom: 44px; min-height: 56px; border-radius: 999px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 16px; font-weight: 600; color: #0D0F13; background: linear-gradient(180deg, rgba(160, 178, 255, 0.95), rgba(112, 137, 250, 0.92)); border: 1px solid rgba(255, 255, 255, 0.40); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 12px 32px rgba(125, 150, 255, 0.35);">Save</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { type: 'expense', category: 'food' };
+  }
+  renderVals() {
+    var self = this;
+    var expense = this.state.type === 'expense';
+    var labels = expense
+      ? ['Food', 'Transport', 'Housing', 'Bills', 'Health', 'Shopping', 'Leisure', 'Other']
+      : ['Salary', 'Freelance', 'Gifts', 'Other'];
+    var chips = labels.map(function (label) {
+      var key = label.toLowerCase();
+      var on = self.state.category === key;
+      return {
+        label: label,
+        selected: on ? 'true' : 'false',
+        weight: on ? 600 : 500,
+        ink: on ? '#0D0F13' : '#F2F4F7',
+        bg: on ? '#8EA4FF' : 'rgba(255, 255, 255, 0.06)',
+        border: on ? 'rgba(255, 255, 255, 0.45)' : 'rgba(255, 255, 255, 0.10)',
+        glow: on ? 'inset 0 1px 0 rgba(255,255,255,0.45), 0 8px 22px rgba(125,150,255,0.35)' : 'none',
+        pick: function () { self.setState({ category: key }); }
+      };
+    });
+    return {
+      chips: chips,
+      indicatorLeft: expense ? '4px' : '50%',
+      expenseChecked: expense ? 'true' : 'false',
+      incomeChecked: expense ? 'false' : 'true',
+      expenseInk: expense ? '#F2F4F7' : 'rgba(242, 244, 247, 0.62)',
+      incomeInk: expense ? 'rgba(242, 244, 247, 0.62)' : '#F2F4F7',
+      pickExpense: function () { self.setState({ type: 'expense', category: 'food' }); },
+      pickIncome: function () { self.setState({ type: 'income', category: 'salary' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Motion spec</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#7D96FF}a:hover{color:#9DB0FF}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer}
+.press{transition:transform 140ms cubic-bezier(.3,1.4,.5,1),filter 140ms}
+.press:active{transform:scale(.96);filter:brightness(1.15)}
+.shake{animation:shake 300ms cubic-bezier(.36,.07,.19,.97) both}
+.sheet{animation:sheet 420ms cubic-bezier(.2,.9,.25,1) both}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@keyframes sheet{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="width: 900px; height: 844px; box-sizing: border-box; padding: 40px 44px; background: #0D0F13; color: #F2F4F7; font-family: Manrope, system-ui, sans-serif; display: flex; flex-direction: column; gap: 20px;">
+  <div>
+    <h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Motion</h1>
+    <p style="margin: 6px 0 0; font-size: 15px; color: rgba(242, 244, 247, 0.62);">Short, quiet and purposeful. Everything respects Android's "Remove animations" setting.</p>
+  </div>
+
+  <div style="border-radius: 20px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.10); overflow: hidden;">
+    <div style="display: grid; grid-template-columns: 170px minmax(0, 1fr) 90px 92px 92px; gap: 12px; padding: 12px 18px; font-size: 12px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; color: rgba(242, 244, 247, 0.55); border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+      <span>Moment</span><span>What moves</span><span>Time</span><span>Curve</span><span>Haptic</span>
+    </div>
+    <sc-for list="{{rows}}" as="row" hint-placeholder-count="10">
+      <div style="display: grid; grid-template-columns: 170px minmax(0, 1fr) 90px 92px 92px; gap: 12px; padding: 10px 18px; font-size: 14px; align-items: baseline; border-bottom: {{row.divider}};">
+        <span style="font-weight: 600;">{{row.moment}}</span>
+        <span style="color: rgba(242, 244, 247, 0.80);">{{row.what}}</span>
+        <span style="font-variant-numeric: tabular-nums; color: rgba(242, 244, 247, 0.80);">{{row.time}}</span>
+        <span style="color: rgba(242, 244, 247, 0.80);">{{row.curve}}</span>
+        <span style="color: {{row.hapticInk}};">{{row.haptic}}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
+    <div style="border-radius: 20px; padding: 16px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.10); display: flex; flex-direction: column; gap: 12px; align-items: flex-start;">
+      <span style="font-size: 13px; font-weight: 600; color: rgba(242, 244, 247, 0.62);">Press (hold it)</span>
+      <button class="press" type="button" style="min-height: 48px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 600; color: #0D0F13; background: linear-gradient(180deg, rgba(160, 178, 255, 0.95), rgba(112, 137, 250, 0.92)); border: 1px solid rgba(255, 255, 255, 0.4);">Save</button>
+    </div>
+    <div style="border-radius: 20px; padding: 16px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.10); display: flex; flex-direction: column; gap: 12px; align-items: flex-start;">
+      <span style="font-size: 13px; font-weight: 600; color: rgba(242, 244, 247, 0.62);">Validation error</span>
+      <sc-if value="{{shakeA}}" hint-placeholder-val="{{ true }}">
+        <div class="shake" style="min-height: 48px; box-sizing: border-box; padding: 0 16px; border-radius: 16px; display: flex; align-items: center; font-size: 15px; background: rgba(255, 255, 255, 0.06); border: 2px solid #FF8A7A;">Enter an amount.</div>
+      </sc-if>
+      <sc-if value="{{shakeB}}" hint-placeholder-val="{{ false }}">
+        <div class="shake" style="min-height: 48px; box-sizing: border-box; padding: 0 16px; border-radius: 16px; display: flex; align-items: center; font-size: 15px; background: rgba(255, 255, 255, 0.06); border: 2px solid #FF8A7A;">Enter an amount.</div>
+      </sc-if>
+      <button class="press" type="button" onClick="{{replayShake}}" style="min-height: 40px; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 600; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12);">Replay</button>
+    </div>
+    <div style="border-radius: 20px; padding: 16px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.10); display: flex; flex-direction: column; gap: 12px; align-items: flex-start; overflow: hidden;">
+      <span style="font-size: 13px; font-weight: 600; color: rgba(242, 244, 247, 0.62);">Open form</span>
+      <sc-if value="{{sheetA}}" hint-placeholder-val="{{ true }}">
+        <div class="sheet" style="width: 100%; height: 48px; border-radius: 16px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05)); border: 1px solid rgba(255, 255, 255, 0.14);"></div>
+      </sc-if>
+      <sc-if value="{{sheetB}}" hint-placeholder-val="{{ false }}">
+        <div class="sheet" style="width: 100%; height: 48px; border-radius: 16px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05)); border: 1px solid rgba(255, 255, 255, 0.14);"></div>
+      </sc-if>
+      <button class="press" type="button" onClick="{{replaySheet}}" style="min-height: 40px; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 600; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12);">Replay</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":900,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { shake: true, sheet: true };
+  }
+  renderVals() {
+    var self = this;
+    var rows = [
+      ['App opens', 'Balance card, breakdown, list and Add rise in, 80 ms apart', '520 ms', 'ease-out', 'none'],
+      ['Open form', 'Form slides up 56 dp and fades in; fields follow', '420 ms', 'ease-out', 'none'],
+      ['Close form', 'Form slides down and fades; summary stays put', '280 ms', 'ease-in', 'none'],
+      ['Change month', 'Content slides 18 dp from that side; balance counts to the new value', '340 / 520 ms', 'ease-out', 'light'],
+      ['Press', 'Any button or row shrinks to 96 % and springs back', '140 ms', 'spring', 'Add, Save'],
+      ['Type switch', 'Selected pill slides across with a small overshoot', '360 ms', 'spring', 'selection'],
+      ['Pick category', 'Chip fills with accent and a soft glow', '220 ms', 'ease-out', 'selection'],
+      ['Saved', 'Form closes; the new row fades and grows into the list', '280 ms', 'ease-out', 'success'],
+      ['Deleted', 'Row fades and collapses; totals count to the new value', '260 ms', 'ease-in', 'medium'],
+      ['Invalid field', 'Field shakes 6 dp three times', '300 ms', 'ease-in-out', 'error']
+    ];
+    return {
+      rows: rows.map(function (r, i) {
+        return {
+          moment: r[0], what: r[1], time: r[2], curve: r[3], haptic: r[4],
+          hapticInk: r[4] === 'none' ? 'rgba(242, 244, 247, 0.45)' : '#9DB0FF',
+          divider: i === rows.length - 1 ? '0' : '1px solid rgba(255, 255, 255, 0.06)'
+        };
+      }),
+      shakeA: this.state.shake,
+      shakeB: !this.state.shake,
+      sheetA: this.state.sheet,
+      sheetB: !this.state.sheet,
+      replayShake: function () { self.setState({ shake: !self.state.shake }); },
+      replaySheet: function () { self.setState({ sheet: !self.state.sheet }); }
+    };
+  }
+}
+</script>
+</body>
+</html>
