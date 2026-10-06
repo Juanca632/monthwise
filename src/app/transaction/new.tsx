@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useDatabase } from '@/data/DatabaseProvider';
 import { StorageError } from '@/data/errors';
 import { defaultFormDate, monthOf } from '@/domain/month';
+import type { Transaction } from '@/data/transactionRepository';
 import type { TransactionDraft, TransactionInput } from '@/domain/validation';
 import { useConfirmChange } from '@/hooks/useConfirmChange';
 import { getToday } from '@/hooks/useToday';
@@ -30,16 +31,18 @@ export default function NewTransactionScreen() {
   }));
 
   const save = async (input: TransactionInput): Promise<FormResult> => {
+    let created: Transaction;
     try {
       // whenReady, not a repository captured at render: a Save tapped while the database is still
       // opening waits for it (at most 10 s).
       const repository = await whenReady();
-      const created = await repository.create(input, Date.now());
-      confirmChange({ kind: 'created', id: created.id });
+      created = await repository.create(input, Date.now());
     } catch (e) {
       reportError(e instanceof StorageError ? e.code : 'create');
       return "Couldn't save. Your changes are still here.";
     }
+    // Outside the try: the row is stored, so nothing here may turn it into a "Couldn't save".
+    confirmChange({ kind: 'created', id: created.id });
     // FR-020: the summary shows the month the transaction landed in.
     setSelected(monthOf(input.date));
     return null;

@@ -506,7 +506,8 @@ export function TransactionForm({
         testID="form-footer"
         style={[styles.footer, { paddingBottom: spacing.xxl + insets.bottom }, keyboardLift.footer]}
       >
-        {failure && <FieldError message={failure} />}
+        {/* Announced when it appears, so a TalkBack user learns that Save or Delete failed. */}
+        <View accessibilityLiveRegion="polite">{failure && <FieldError message={failure} />}</View>
         {onDelete && (
           <PressableScale
             accessibilityRole="button"

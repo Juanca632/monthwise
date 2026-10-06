@@ -867,7 +867,8 @@ labels are built from data, never from animated values; no new dependency beyond
   `NotFoundError`. Tests in `tests/component/toast.test.tsx`: shown and announced after save and
   delete; not after a failed save, a failed delete, or `NotFoundError` on remove; its bottom
   offset; no translate under reduce motion; gone after its time.
-- [ ] T071 Check the implemented UI: run the `design-reviewer` agent on `src/ui/`, `src/app/`
+- [ ] T071 **Design review done (2026-10-06); the developer's phone pass is pending** (checklist in
+  device-checks.md, "Glass and motion"). Check the implemented UI: run the `design-reviewer` agent on `src/ui/`, `src/app/`
   and `theme.ts` against design.md, and fix or accept its findings as for the docs. Then the
   developer checks on the phone: light and dark, largest font, TalkBack, "Remove animations",
   a seeded 1,000-row month scrolling smoothly, SC-001 with the keyboard open at default font, the

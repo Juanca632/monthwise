@@ -64,12 +64,13 @@ export default function EditTransactionScreen() {
   const save = async (input: TransactionInput): Promise<FormResult> => {
     try {
       await (await whenReady()).update(id, input);
-      confirmChange({ kind: 'updated', id });
     } catch (e) {
       if (e instanceof NotFoundError) return 'This transaction no longer exists.';
       reportError(e instanceof StorageError ? e.code : 'update');
       return "Couldn't save. Your changes are still here.";
     }
+    // Outside the try: the change is stored, so nothing here may turn it into a failure.
+    confirmChange({ kind: 'updated', id });
     // FR-020: a date moved to another month takes the summary there.
     setSelected(monthOf(input.date));
     return null;
@@ -78,13 +79,13 @@ export default function EditTransactionScreen() {
   const remove = async (): Promise<FormResult> => {
     try {
       await (await whenReady()).remove(id);
-      confirmChange({ kind: 'deleted', id });
     } catch (e) {
-      // Already gone: the goal is met, so it closes like a successful delete.
+      // Already gone: the goal is met, so it closes like a successful delete, without a toast.
       if (e instanceof NotFoundError) return null;
       reportError(e instanceof StorageError ? e.code : 'remove');
       return "Couldn't delete.";
     }
+    confirmChange({ kind: 'deleted', id });
     return null;
   };
 

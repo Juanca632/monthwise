@@ -157,7 +157,8 @@ decorative circle) is dropped: the ambient glow replaces it.
   - Stat pills: a 12 dp gap between the icon and the text, and 4 between the label and the amount.
   - List items: a 12 dp gap between the avatar and the text, and 4 between the lines.
   - Breakdown rows: an 8 dp gap between the amount and the percent pill.
-  - Balance card body: 4 between "Balance" and the amount.
+  - Balance card body: 4 between "Balance" and the amount; 28 above the error message.
+  - Banner: 12 above it. Empty-state card: 28 above it and a 12 dp gap between its items.
 - **Insets**: screens use `react-native-safe-area-context`. The balance card's top margin is
   `12 + insets.top`. The form sheet's top edge is `36 + insets.top`, and its header's top padding is 8, under the grab handle. The root error screen
   centers its content inside all insets. The Add button and the form's Save footer sit `28 + insets.bottom` above the

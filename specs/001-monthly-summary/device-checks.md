@@ -82,3 +82,32 @@ light and dark and in both balance tones. design.md was updated with the results
 
 A translucent accent fill was not tried on the phone: by calculation, `onAccent` text drops
 below 4.5:1 (light 3.8:1 even at 85 % opacity).
+
+## Glass and motion (T071)
+
+The `design-reviewer` pass over `src/ui/`, `src/app/` and `theme.ts` ran on 2026-10-06 with no
+critical or major findings; its minor findings were fixed or listed below. The phone checks are
+the developer's single final pass (blocks 8b–8f were built back to back without stopping); each
+one gets a result here.
+
+| Check | Result |
+| --- | --- |
+| Light and dark: ambient glows (position, banding), card glass and the tone crossfade (positive ↔ negative) | Pending |
+| Card shadows: no white rectangle around the balance and breakdown cards (shadow on a wrapper) | Pending |
+| Ripples: month arrows and close are circles; first and last list row and Dismiss stay inside their card's corners | Pending |
+| Form borders: chips, Type track, Date and Note; focusing Note or a date error moves nothing | Pending |
+| Press scale and its spring (not too bouncy); entrance on a cold start; month slide; counting totals | Pending |
+| Sheet: opens over the summary, X / back / drag close it, "Discard changes?" on a dirty form, a second back while closing does nothing, Discard really closes | Pending |
+| Row changes: new row grows in, edited row flashes inside its card, deleted row slides out | Pending |
+| Keyboard (SC-001, default font, 360 × 640 dp or this phone): amount, all expense chips and Save fit above it; footer moves with it, not twice | Pending |
+| Type indicator, chip fill, invalid shake | Pending |
+| Haptics, and whether Android's touch-feedback setting silences them | Pending |
+| Toast over the closing sheet, "Saved" and "Deleted" | Pending |
+| Largest font: nothing cut off (balance, stat pills, form) | Pending |
+| TalkBack: summary labels, the Date field read once or twice (review finding), the failure message announced, the summary behind an open sheet not reachable | Pending |
+| "Remove animations": nothing moves; sheet closes at once; drag is off | Pending |
+| A seeded 1,000-row month scrolls smoothly; rough cold-start feel with the new libraries | Pending |
+
+Known minor items left for the fine-tuning pass: sizes such as 56, 52, 64, 40 and the 1.5 dp
+segment border are written in a few files instead of shared tokens; the chip's inner highlight
+now sits 1 dp lower (inside the border); for 220 ms a picked chip's label has lower contrast.
