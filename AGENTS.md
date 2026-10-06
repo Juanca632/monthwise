@@ -31,6 +31,12 @@ network calls.
   before UI tasks are implemented. After writing or changing it, run the `design-reviewer` agent
   (`.claude/agents/design-reviewer.md`) the same way.
 - The developer reviews the output of each step before moving to the next.
+- **Fine-tuning mode**: after a phone test, small UI tweaks that stay within spec.md and plan.md
+  (look, spacing, text, motion feel) are made in code only, with their related tests, and the
+  developer checks them on the phone. Once the developer approves a batch, design.md (and any
+  other doc the batch touches) is updated once and reviewed in one round before the commit. A
+  tweak that changes a requirement, the data, or adds a library follows the full flow above
+  (constitution, principle I).
 
 Roadmap (one feature at a time):
 
