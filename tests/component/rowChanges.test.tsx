@@ -6,7 +6,7 @@ import { openAndMigrate } from '@/data/migrations';
 import type { SqlParam } from '@/data/sqlDatabase';
 import { createTransactionRepository, type TransactionRepository } from '@/data/transactionRepository';
 import type { TransactionInput } from '@/domain/validation';
-import { SelectedMonthProvider } from '@/state/SelectedMonthContext';
+import { SelectedMonthProvider, useSelectedMonth, type SelectedMonthValue } from '@/state/SelectedMonthContext';
 import { SummaryNoticeProvider, useSummaryNotice, type SummaryNoticeValue } from '@/state/SummaryNoticeContext';
 
 import { ignoreListBatchingWarnings } from '../helpers/listWarnings';
@@ -57,8 +57,10 @@ const expense = (amountCents: number, date: string): TransactionInput => ({
 });
 
 const notice: { current: SummaryNoticeValue | null } = { current: null };
+const month: { current: SelectedMonthValue | null } = { current: null };
 function Harness() {
   notice.current = useSummaryNotice();
+  month.current = useSelectedMonth();
   return <SummaryScreen />;
 }
 
@@ -120,6 +122,18 @@ it('grows in only the created row', async () => {
   const style = getAnimatedStyle(changed()[0]) as { opacity: number; height: number };
   expect(style.opacity).toBe(0);
   expect(style.height).toBe(0);
+});
+
+it('grows in a row saved into another month once that month has loaded (FR-020)', async () => {
+  await renderSummary(MONTH);
+  const created = await repository.create(expense(400, '2026-09-20'), 99);
+  // What the add form does: record the change, then show the row's month.
+  act(() => {
+    notice.current!.recordChange({ kind: 'created', id: created.id });
+    month.current!.setSelected({ year: 2026, month: 9 });
+  });
+  await flush();
+  expect(changed().map((n) => n.props.testID)).toEqual(['row-created']);
 });
 
 it('flashes only the edited row, once the reload shows its new values', async () => {

@@ -329,7 +329,9 @@ How each is built:
   number in between.
 - **Gradient crossfades**: a gradient string cannot be interpolated, so each tone change stacks
   the old and new gradient layers and fades the new one's opacity in.
-- **Lists**: row enter and exit animations apply only to the row added, edited or deleted,
+- **Lists**: row enter and exit animations apply only to the row added, edited or deleted, once a
+  reload that reflects the change arrives (after the sheet closes; for a save that moved the
+  summary to another month, once that month has loaded),
   never to rows mounting while scrolling, which keeps SC-004's 1,000-row month smooth.
 - **Entrance and month slide** are decided once, when the content mounts. A month slide wins
   when the month changed less than 1 s before; otherwise content mounting less than 1.5 s after
@@ -339,7 +341,8 @@ How each is built:
 
 **Reduce motion** (Android's "Remove animations", read with Reanimated's `useReducedMotion`):
 nothing moves, scales or slides. Every change above becomes an instant swap or a fade of at most
-200 ms: the sheet and scrim fade in (200 ms) and close at once, rows fade in and out, the entrance and month-slide content
+200 ms: the sheet and scrim fade in (200 ms) and close at once, dragging the sheet is off (X and
+back still close it), rows fade in and out, the entrance and month-slide content
 appears at once, the indicator and chips swap, the toast
 fades, counts jump to the final value, and the shake and press scale are dropped. The one
 exception is the footer following the keyboard, which the system itself moves.

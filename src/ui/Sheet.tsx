@@ -7,6 +7,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   ReduceMotion,
   useAnimatedStyle,
+  useSharedValue,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
@@ -33,6 +34,11 @@ type SheetControls = {
    * once. Only the first call counts, so a second back press never navigates twice.
    */
   close(then: () => void): void;
+  /**
+   * True while the sheet slides down and its navigation has not run yet. Any other way out in
+   * that time is dropped: the navigation is already on its way.
+   */
+  sliding(): boolean;
 };
 
 const SheetContext = createContext<SheetControls | null>(null);
@@ -55,7 +61,11 @@ export function Sheet({ header, children }: Props) {
   const router = useRouter();
   const progress = useSheetProgress();
   const reduceMotion = useReduceMotion();
-  const closing = useRef(false);
+  // closing: a close started; released: its navigation ran (or is running).
+  // A shared value, not a ref: the drag callbacks read it too.
+  const closing = useSharedValue(false);
+  const released = useRef(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const top = insets.top + SHEET_TOP_GAP;
   const height = windowHeight - top;
 
@@ -72,24 +82,32 @@ export function Sheet({ header, children }: Props) {
     return () => progress.set(0);
   }, [progress, reduceMotion]);
 
+  // A sheet removed before its slide ended (another navigation) must not navigate again later.
+  useEffect(() => () => clearTimeout(closeTimer.current ?? undefined), []);
+
   const controls = useMemo<SheetControls>(
     () => ({
       close(then) {
-        if (closing.current) return;
-        closing.current = true;
+        if (closing.get()) return;
+        closing.set(true);
+        const leave = () => {
+          released.current = true;
+          then();
+        };
         if (reduceMotion) {
           progress.set(0);
-          then();
+          leave();
           return;
         }
         progress.set(
           withTiming(0, { duration: CLOSE_MS, easing: easeIn, reduceMotion: ReduceMotion.Never }),
         );
         // Navigation waits for the slide: the route removal itself has no animation.
-        setTimeout(then, CLOSE_MS);
+        closeTimer.current = setTimeout(leave, CLOSE_MS);
       },
+      sliding: () => closing.get() && !released.current,
     }),
-    [progress, reduceMotion],
+    [progress, reduceMotion, closing],
   );
 
   // Dragging runs on the JS thread: the sheet follows the finger through the shared value, and the
@@ -100,9 +118,16 @@ export function Sheet({ header, children }: Props) {
       Gesture.Pan()
         .runOnJS(true)
         .withTestId('sheet-drag')
+        // Under reduce motion nothing follows the finger; X and back still close (design.md).
+        .enabled(!reduceMotion)
         .activeOffsetY(8)
-        .onUpdate((e) => progress.set(1 - Math.max(0, e.translationY) / height))
+        .onUpdate((e) => {
+          // Once it is closing, the slide down wins over the finger.
+          if (closing.get()) return;
+          progress.set(1 - Math.max(0, e.translationY) / height);
+        })
         .onEnd((e) => {
+          if (closing.get()) return;
           // Back to open first: a dirty form keeps the sheet open behind "Discard changes?"; a
           // clean one starts the close slide from here, which replaces this spring.
           // Clamped: the sheet never springs above its resting place (design.md).
@@ -110,7 +135,7 @@ export function Sheet({ header, children }: Props) {
           const dragged = Math.max(0, e.translationY);
           if (dragged > height * CLOSE_DRAG || e.velocityY > FLING) router.back();
         }),
-    [progress, height, router],
+    [progress, height, router, reduceMotion, closing],
   );
 
   const sheetStyle = useAnimatedStyle(() =>
@@ -158,10 +183,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     borderTopLeftRadius: radii.sheet,
     borderTopRightRadius: radii.sheet,
-    // The top edge; the sides fade into the screen edges.
+    // Only the top edge (design.md, Components).
     borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
     overflow: 'hidden',
   },
   handle: {

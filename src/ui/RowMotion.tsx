@@ -2,7 +2,7 @@
 // grows in, an edited row flashes, a deleted row slides out and collapses. Every other row,
 // including the 1,000 of a big month, never animates.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   ReduceMotion,
   useAnimatedStyle,
@@ -43,7 +43,7 @@ type Shown = {
  */
 export function useRowChanges(
   rows: readonly Transaction[],
-  ready: boolean,
+  status: 'loading' | 'error' | 'ready',
   lastChange: LastChange | null,
 ): { rows: readonly Transaction[]; changeFor(id: number): RowChange | null } {
   const reduceMotion = useReduceMotion();
@@ -54,9 +54,11 @@ export function useRowChanges(
   let current = shown;
   if (rows !== shown.rows) {
     current = { rows, matched: shown.matched, active: null, exiting: shown.exiting };
-    if (lastChange && lastChange !== shown.matched) {
+    // While loading (a save that moved the summary to the row's month) the change waits for the
+    // result; an error uses it up, so a later retry does not animate.
+    if (lastChange && lastChange !== shown.matched && status !== 'loading') {
       current.matched = lastChange;
-      if (ready) {
+      if (status === 'ready') {
         const { kind, id } = lastChange;
         if (kind === 'deleted') {
           const index = shown.rows.findIndex((r) => r.id === id);
@@ -98,12 +100,23 @@ export function useRowChanges(
  * Plays a row's change. Rows without one get no wrapper at all, so a long list pays nothing; the
  * changed row is remounted inside the animated wrapper, which is cheap for one row.
  */
-export function RowMotion({ change, children }: { change: RowChange | null; children: ReactNode }) {
+type RowMotionProps = {
+  change: RowChange | null;
+  /** The row's card shape (its margins and outer corners), so the flash stays inside it. */
+  flashShape: StyleProp<ViewStyle>;
+  children: ReactNode;
+};
+
+export function RowMotion({ change, flashShape, children }: RowMotionProps) {
   if (!change) return children;
-  return <ChangingRow change={change}>{children}</ChangingRow>;
+  return (
+    <ChangingRow change={change} flashShape={flashShape}>
+      {children}
+    </ChangingRow>
+  );
 }
 
-function ChangingRow({ change, children }: { change: RowChange; children: ReactNode }) {
+function ChangingRow({ change, flashShape, children }: RowMotionProps & { change: RowChange }) {
   const { colors } = useTheme();
   const reduceMotion = useReduceMotion();
   const moving = !reduceMotion;
@@ -163,7 +176,7 @@ function ChangingRow({ change, children }: { change: RowChange; children: ReactN
       {change === 'updated' && (
         <Animated.View
           pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: colors.rowFlash }, flashStyle]}
+          style={[styles.flash, flashShape, { backgroundColor: colors.rowFlash }, flashStyle]}
         />
       )}
     </Animated.View>
@@ -172,4 +185,5 @@ function ChangingRow({ change, children }: { change: RowChange; children: ReactN
 
 const styles = StyleSheet.create({
   clip: { overflow: 'hidden' },
+  flash: { position: 'absolute', top: 0, bottom: 0 },
 });

@@ -10,6 +10,8 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
+import { radii } from './theme';
+
 export const easeOut = Easing.bezier(0.2, 0.8, 0.2, 1);
 export const sheetCurve = Easing.bezier(0.2, 0.9, 0.25, 1);
 export const easeIn = Easing.bezier(0.4, 0, 1, 1);
@@ -41,7 +43,7 @@ export const distances = {
 export const createdRowScale = 0.97;
 
 /** The summary behind an open sheet (design.md, Motion, "Open a form"). */
-export const behindSheet = { scale: 0.92, offset: 6, radius: 28 } as const;
+export const behindSheet = { scale: 0.92, offset: 6, radius: radii.sheet } as const;
 
 /** Android's "Remove animations": every change becomes an instant swap (design.md, Reduce motion). */
 export function useReduceMotion(): boolean {

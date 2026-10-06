@@ -176,9 +176,45 @@ describe('the sheet (T066)', () => {
     wait(350);
     expect(mockDispatch).toHaveBeenCalledTimes(1);
   });
+  it('a back during the slide after Save is dropped: one navigation, no dialog', async () => {
+    const { onDone } = renderSheet(SAVED);
+    wait(500);
+    fireEvent.press(screen.getByRole('button', { name: 'Save' }));
+    await flush();
+    wait(100);
+    act(() => mockBack());
+    expect(mockDispatch).not.toHaveBeenCalled();
+    wait(250);
+    expect(onDone).toHaveBeenCalledTimes(1);
+    expect(mockDispatch).toHaveBeenCalledTimes(1);
+    expect(Alert.alert).not.toHaveBeenCalled();
+  });
+
+  it('a back during the slide after Discard does not ask again', () => {
+    renderSheet();
+    wait(500);
+    fireEvent.changeText(screen.getByTestId('amount-input'), '5');
+    act(() => mockBack());
+    act(() => alertButton('Discard').onPress!());
+    act(() => mockBack());
+    expect(Alert.alert).toHaveBeenCalledTimes(1);
+    wait(350);
+    expect(mockDispatch).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('drag to close (T067)', () => {
+  it('a drag while the sheet slides down does not pull it back open', () => {
+    renderSheet();
+    wait(500);
+    act(() => mockBack());
+    wait(100);
+    drag(50);
+    wait(250);
+    expect(sheetOffset()).toBeGreaterThan(0);
+    expect(mockDispatch).toHaveBeenCalledTimes(1);
+  });
+
   it('a short drag springs back', () => {
     renderSheet();
     wait(500);

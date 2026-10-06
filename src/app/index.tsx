@@ -89,7 +89,7 @@ export default function SummaryScreen() {
   const motion = useSummaryMotion();
   const behind = useBehindSheet();
   // The totals come from the stored rows; the list may still show a deleted row leaving.
-  const changes = useRowChanges(rows, status === 'ready', notice.lastChange);
+  const changes = useRowChanges(rows, status, notice.lastChange);
 
   // Announced once when it appears; it stays on screen until dismissed (contract, FR-025).
   useEffect(() => {

@@ -153,6 +153,8 @@ export function TransactionForm({
   // then navigates; changes ask first. While an operation runs, leaving waits for it (contract,
   // Form states). After a save or delete the sheet has already closed, so it just navigates.
   usePreventRemove(true, ({ data }) => {
+    // A back while the sheet slides down is dropped: its navigation is already coming.
+    if (sheet?.sliding()) return;
     const navigate = () => navigation.dispatch(data.action);
     if (finished.current) return navigate();
     const leave = () => closeSheet(navigate);

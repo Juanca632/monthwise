@@ -64,7 +64,14 @@ export function TransactionList({
         // so one crossing index 8 after a delete is not remounted.
         return (
           <Appear on={['entrance', 'month']} slot={2 + index} enabled={index < MAX_ANIMATED_ROWS}>
-            <RowMotion change={changeFor?.(item.id) ?? null}>
+            <RowMotion
+              change={changeFor?.(item.id) ?? null}
+              flashShape={[
+                styles.flashShape,
+                index === 0 && styles.firstCard,
+                index === rows.length - 1 && styles.lastCard,
+              ]}
+            >
               <TransactionRow
                 row={item}
                 tag={tag}
@@ -191,6 +198,8 @@ const styles = StyleSheet.create({
   // No outer shadow: a shadow per row would show through the translucent rows above it, and a
   // FlatList has no single view around its rows to carry one (design.md, Components).
   card: { marginHorizontal: spacing.md, borderWidth: 1, overflow: 'hidden' },
+  // The row's card, for the edited-row flash drawn over it.
+  flashShape: { left: spacing.md, right: spacing.md },
   firstCard: { borderTopLeftRadius: radii.card, borderTopRightRadius: radii.card },
   lastCard: { borderBottomLeftRadius: radii.card, borderBottomRightRadius: radii.card },
   highlight: {
