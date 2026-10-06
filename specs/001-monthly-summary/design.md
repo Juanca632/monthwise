@@ -296,12 +296,12 @@ where things come from and confirms what happened. Curves: **ease-out** `(0.2, 0
 | Drag the sheet | It follows the finger downward (never above its resting place); the summary and scrim follow in proportion. Released past 30 % of its height or with a fast downward fling, it closes; otherwise it springs back | follows the finger | spring |
 | Change month | The month's content (the card's numbers, not its header row; the breakdown or empty card; the first 8 rows) slides 18 dp in from the side of the button tapped and fades in; the balance, income and expenses count from the old to the new values | 340 ms; count 520 ms | ease-out |
 | Press | Any button, chip or row scales to 96 % and springs back | spring, settles in about 400 ms with a slight overshoot | spring |
-| Type switch | The selected segment indicator slides to the other option | 360 ms | spring |
-| Pick a category | The chip fills with accent | 220 ms | ease-out |
-| Keyboard opens or closes | The footer (Delete, Save) moves with the keyboard frame by frame (`useAnimatedKeyboard`), and the amount block's vertical padding goes from 32/24 to 16/12. Date and Note stay in place and reachable by scrolling (contract) | follows the keyboard | — |
+| Type switch | The selected segment indicator slides to the other option, clamped so it never passes it; the labels' weight and color switch at once | spring, settles in about 400 ms | spring |
+| Pick a category | The chip's accent fill (with its inner highlight, inside the 1 dp border) fades in, and the previous chip's fades out; the border color and the label switch at once, so for those 220 ms the label's contrast is briefly lower (accepted) | 220 ms | ease-out |
+| Keyboard opens or closes | The footer (Delete, Save) moves with the keyboard frame by frame (`useAnimatedKeyboard`), and the amount block's vertical padding goes from 32/24 to 16/12 as the keyboard's first 120 dp come up. Date and Note stay in place and reachable by scrolling (contract) | follows the keyboard | — |
 | Saved | The sheet closes; a new row grows into the list (height and fade, from 97 %); an edited row flashes `accent` at 22 % and fades; totals count to the new values; the toast shows | 560 ms | ease-out |
 | Deleted | The sheet closes; the row slides 24 dp right, fades and collapses; totals count; the toast shows | 280 ms | ease-in |
-| Invalid Save | The first invalid field shakes 6 dp three times | 300 ms | ease-in-out |
+| Invalid Save | The first invalid field (its label, control and message together) shakes 6 dp three times; the other invalid fields only show their messages | 300 ms | ease-in-out |
 | Toast | Rises 16 dp and fades in, stays, fades out | 1800 ms in total | ease-out |
 | Tone change | The balance card fill and the top glow crossfade between tones | 600 ms | ease-out |
 

@@ -90,3 +90,15 @@ it('gives the fields as much room as the footer rose, so Date and Note stay reac
   expect(screen.getByText('Date')).toBeTruthy();
   expect(screen.getByLabelText(/^Note \(optional\)/)).toBeTruthy();
 });
+
+it('tightens the amount block from 32/24 to 16/12 as the keyboard comes up', () => {
+  renderForm();
+  const padding = () =>
+    getAnimatedStyle(screen.getByTestId('field-amount')) as { paddingTop: number; paddingBottom: number };
+  keyboardAt(0);
+  expect(padding()).toMatchObject({ paddingTop: 32, paddingBottom: 24 });
+  keyboardAt(60);
+  expect(padding()).toMatchObject({ paddingTop: 24, paddingBottom: 18 });
+  keyboardAt(300);
+  expect(padding()).toMatchObject({ paddingTop: 16, paddingBottom: 12 });
+});

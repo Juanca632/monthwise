@@ -2,12 +2,11 @@ import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from 'expo-router';
 import { usePreventRemove } from 'expo-router/react-navigation';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import {
   AccessibilityInfo,
   Alert,
   findNodeHandle,
-  Keyboard,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -121,7 +120,6 @@ export function TransactionForm({
   const [failure, setFailure] = useState<string | null>(null);
   const [amountFocused, setAmountFocused] = useState(false);
   const [noteFocused, setNoteFocused] = useState(false);
-  const keyboardOpen = useKeyboardOpen();
   const keyboardLift = useKeyboardLift(spacing.xxl + insets.bottom);
   // One per field, so the first invalid one shakes on Save (design.md, Motion, "Invalid Save").
   const shakes: Record<DraftField, ReturnType<typeof useShake>> = {
@@ -284,10 +282,6 @@ export function TransactionForm({
   const fieldLabel = (label: string, value: string, error?: string) =>
     [label, value, error].filter(Boolean).join(', ');
 
-  const amountBlockPadding = keyboardOpen
-    ? { paddingTop: spacing.md, paddingBottom: spacing.sm }
-    : { paddingTop: spacing.xxxl, paddingBottom: spacing.xl };
-
   return (
     // The sheet around it draws the fill and the header (routes render both).
     <View style={styles.screen}>
@@ -336,7 +330,7 @@ export function TransactionForm({
 
         <Animated.View
           testID="field-amount"
-          style={[styles.amountBlock, amountBlockPadding, shakes.amount.style]}
+          style={[styles.amountBlock, keyboardLift.amountPadding, shakes.amount.style]}
         >
           <Text style={[type.label, { color: colors.textMuted }]}>Amount</Text>
           {/* The whole row is tappable, so the field is easy to hit whatever the amount's width. */}
@@ -585,22 +579,20 @@ function useKeyboardLift(restBottom: number) {
   const lift = useDerivedValue(() => Math.max(0, keyboard.height.value + spacing.sm - restBottom));
   const footer = useAnimatedStyle(() => ({ transform: [{ translateY: -lift.value }] }));
   const spacer = useAnimatedStyle(() => ({ height: lift.value }));
-  return { footer, spacer };
+  // The amount block tightens from 32/24 to 16/12 as the keyboard's first 120 dp come up, so the
+  // amount, chips and Save fit above it (SC-001) and the layout moves with the keyboard, not
+  // after it.
+  const amountPadding = useAnimatedStyle(() => {
+    const t = Math.min(1, keyboard.height.value / AMOUNT_TIGHTEN_RANGE);
+    return {
+      paddingTop: spacing.xxxl - (spacing.xxxl - spacing.md) * t,
+      paddingBottom: spacing.xl - (spacing.xl - spacing.sm) * t,
+    };
+  });
+  return { footer, spacer, amountPadding };
 }
 
-/** The layout tightens while the keyboard is open, so amount, chips and Save fit (SC-001). */
-function useKeyboardOpen(): boolean {
-  const [open, setOpen] = useState(Keyboard.isVisible());
-  useEffect(() => {
-    const shown = Keyboard.addListener('keyboardDidShow', () => setOpen(true));
-    const hidden = Keyboard.addListener('keyboardDidHide', () => setOpen(false));
-    return () => {
-      shown.remove();
-      hidden.remove();
-    };
-  }, []);
-  return open;
-}
+const AMOUNT_TIGHTEN_RANGE = 120;
 
 const BORDER = 2;
 const REST_BORDER = 1;
