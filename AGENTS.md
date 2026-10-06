@@ -6,8 +6,11 @@ UI in English, currency EUR.
 
 ## Status
 
-No app code yet. The tech stack is decided in the first feature's `/speckit-plan`. As soon as
-code exists, add setup, commands and project structure to this file.
+Feature `001` (record transactions, monthly summary) is implemented and tested; its APK
+verification (tasks T052–T053) is pending. Stack: Expo SDK 57 (React Native 0.86, TypeScript),
+Expo Router for screens, `expo-sqlite` for on-device storage, Jest with React Native Testing
+Library for tests, and EAS Build for APKs. The app stores everything on the phone and makes no
+network calls.
 
 ## How we work: Spec-Driven Development (GitHub Spec Kit)
 
@@ -41,13 +44,49 @@ Roadmap (one feature at a time):
 
 ## Setup and commands
 
-TBD once the stack is chosen.
+Needs Node 22 and the Expo Go app on an Android phone.
+
+```bash
+npm install                          # install dependencies
+npm start                            # dev server; scan the QR code with Expo Go
+npm start -- --tunnel                # same, when the phone cannot reach the computer (e.g. WSL2)
+EXPO_PUBLIC_DEV_TOOLS=1 npm start    # also show the dev tools (seed data, simulated storage error)
+npx eas-cli build --platform android --profile preview      # installable APK with dev tools
+npx eas-cli build --platform android --profile production   # installable APK, no logs or dev tools
+```
+
+- Use `npm start`, not `npx expo start`: the script sets `APP_VARIANT=development`. Without it
+  the app config falls back to `production`, which blocks the INTERNET permission Expo Go needs.
+- Add native-compatible dependencies with `npx expo install <package>`, so versions match the SDK.
+- Build profiles live in `eas.json`; the variant-dependent config is in `app.config.ts`.
+
+Project structure (details in `specs/001-monthly-summary/plan.md`):
+
+```text
+src/
+├── app/      # screens and routes (Expo Router): summary, new and edit transaction forms
+├── ui/       # presentational components and theme tokens from design.md
+├── domain/   # pure TypeScript business rules: amounts in cents, months, summary, validation
+├── data/     # SQLite: database provider, migrations, transaction repository
+├── format/   # cents and dates to text for the UI (Intl, EUR)
+├── hooks/    # useMonthSummary, useToday, useRegion
+├── state/    # React contexts: selected month, summary notices
+├── lib/      # app variant, logging rules, error reporting (codes only)
+└── dev/      # preview-only dev tools, never in production builds
+tests/        # unit/, integration/ (real SQL on better-sqlite3), component/, fixtures/, helpers/
+plugins/      # Expo config plugins
+specs/        # Spec Kit artifacts per feature
+```
+
+Dependencies point inward: `app/` → `ui/` and `hooks/` → `data/` and `domain/`. `domain/`
+imports nothing from React, Expo or SQLite.
 
 ## Testing
 
 - Every behavior change ships with tests; money calculations are unit-tested.
 - Tests never hit the network.
-- Commands: TBD once the stack is chosen.
+- `npm test` (Jest), `npm run lint` (ESLint) and `npm run typecheck` (TypeScript). CI runs all
+  three on pull requests into `develop` and `main` and on pushes to them.
 
 ## Code style
 

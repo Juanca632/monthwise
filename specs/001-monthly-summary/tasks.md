@@ -655,7 +655,7 @@ own transactions and totals. Add one from a past month and check that it lands i
   Tests in `tests/component/accessibility.test.tsx` assert the example announcements from
   contracts/ui-screens.md: month header, previous button, the three totals including "minus", a
   breakdown row, a list item and a form field with an error.
-- [ ] T051 [P] Update `AGENTS.md`: replace the "Status" and "Setup and commands" TBDs with the
+- [X] T051 [P] Update `AGENTS.md`: replace the "Status" and "Setup and commands" TBDs with the
   stack (Expo SDK 57), `npm start` (and why not `npx expo start`), `npm test`, `npm run lint`,
   `npm run typecheck`, the project structure summary from plan.md and the EAS build commands.
 - [ ] T052 Verification on the `preview` APK. First time only: `npx eas-cli login` and
