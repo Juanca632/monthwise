@@ -28,8 +28,8 @@ describe('color scheme', () => {
   it('uses the light palette in light mode', () => {
     const { result } = renderHook(() => useTheme());
     expect(result.current.scheme).toBe('light');
-    expect(result.current.colors.background).toBe('#F6F7F9');
-    expect(result.current.cardTones.negative.cardAmount).toBe('#B3362A');
+    expect(result.current.colors.background).toBe('#F2F3F7');
+    expect(result.current.cardTones.negative.cardAmount).toBe('#FFFFFF');
   });
 
   it('uses the dark palette in dark mode', () => {
@@ -38,7 +38,7 @@ describe('color scheme', () => {
     expect(result.current.scheme).toBe('dark');
     expect(result.current.colors).toBe(palettes.dark);
     expect(result.current.colors.accent).toBe('#7D96FF');
-    expect(result.current.cardTones.positive.cardBackground).toBe('#161D38');
+    expect(result.current.cardTones.positive.cardBackground).toBe('#1B2A6B');
   });
 
   it('falls back to light when the scheme is unknown', () => {
@@ -64,28 +64,31 @@ describe('color scheme', () => {
 });
 
 describe('glass tokens (design.md, Glass surfaces)', () => {
-  it('uses the dark values that pass contrast over glass', () => {
+  it('makes the balance card vivid with white text in both schemes', () => {
     expect(palettes.dark.textMuted).toBe('#B0B8C6');
-    expect(cardTones.dark.positive.cardLabel).toBe('#D5DBF0');
-    expect(cardTones.dark.negative.cardLabel).toBe('#E6D6D2');
-    expect(cardTones.dark.positive.cardAmount).toBe('#F2F4F7');
+    for (const scheme of ['light', 'dark'] as const) {
+      for (const tone of ['positive', 'negative'] as const) {
+        expect(cardTones[scheme][tone].cardInk).toBe('#FFFFFF');
+        expect(cardTones[scheme][tone].cardAmount).toBe('#FFFFFF');
+      }
+    }
   });
 
   it('writes design.md opacities as rgba', () => {
     expect(withAlpha('#2F5BEA', 0.22)).toBe('rgba(47, 91, 234, 0.22)');
     expect(palettes.light.glassFill).toBe('rgba(255, 255, 255, 0.72)');
     expect(palettes.dark.fieldBorder).toBe('rgba(255, 255, 255, 0.38)');
-    expect(cardTones.dark.negative.ambientTop).toBe('rgba(255, 154, 140, 0.24)');
+    expect(cardTones.dark.negative.ambientTop).toBe('rgba(250, 82, 82, 0.32)');
   });
 
   it('builds the gradients and shadows from design.md', () => {
     expect(cardTones.light.positive.cardGlass).toBe(
-      'linear-gradient(160deg, rgba(255, 255, 255, 0.78), rgba(232, 237, 255, 0.55))',
+      'linear-gradient(135deg, #1E2E73 0%, #1E2E73 30%, #2C43A0 48%, #1E2E73 66%, #15215A 100%)',
     );
-    expect(palettes.dark.accentGradient).toBe('linear-gradient(180deg, #A0B2FF, #7089FA)');
+    expect(palettes.dark.accentGradient).toBe('linear-gradient(135deg, #364FC7, #5F3DC4)');
     expect(palettes.dark.sheetFill).toBe('linear-gradient(180deg, #1E222E, #0E1016)');
-    expect(cardTones.light.negative.cardShadow).toBe('0 18px 40px rgba(29, 52, 166, 0.12)');
-    expect(cardTones.dark.positive.cardShadow).toBe(palettes.dark.glassShadow);
+    expect(cardTones.light.negative.cardShadow).toBe('0 16px 36px rgba(110, 26, 43, 0.35)');
+    expect(cardTones.dark.positive.cardShadow).toBe('0 20px 40px rgba(0, 0, 0, 0.45)');
   });
 });
 
@@ -103,9 +106,9 @@ describe('fonts', () => {
   it('uses Manrope families when the font is loaded', () => {
     const { result } = renderHook(() => useTheme());
     expect(result.current.type.display).toEqual({
-      fontSize: 54,
+      fontSize: 62,
       fontFamily: 'Manrope_700Bold',
-      letterSpacing: -1.5,
+      letterSpacing: -2,
       fontVariant: ['tabular-nums'],
     });
     expect(result.current.type.body.fontFamily).toBe('Manrope_500Medium');

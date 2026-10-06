@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { getAnimatedStyle } from 'react-native-reanimated';
 
 import { Sheet } from '@/ui/Sheet';
-import { palettes } from '@/ui/theme';
+import { cardTones, palettes } from '@/ui/theme';
 import { FormHeader, TransactionForm } from '@/ui/TransactionForm';
 
 // T072 (design.md, Motion: "Type switch", "Pick a category", "Invalid Save").
@@ -81,42 +81,6 @@ describe('Type indicator', () => {
   });
 });
 
-describe('category chips', () => {
-  it('fill with accent over 220 ms', () => {
-    renderForm();
-    fireEvent.press(screen.getByRole('button', { name: 'Food' }));
-    wait(100);
-    const halfway = opacity('chip-fill-selected');
-    expect(halfway).toBeGreaterThan(0);
-    expect(halfway).toBeLessThan(1);
-    wait(200);
-    expect(opacity('chip-fill-selected')).toBe(1);
-  });
-
-  it('crossfade the label with the fill, so it stays readable', () => {
-    renderForm();
-    fireEvent.press(screen.getByRole('button', { name: 'Food' }));
-    wait(100);
-    const label = screen.getByText('Food');
-    const color = (getAnimatedStyle(label) as { color: string }).color;
-    expect(color).not.toBe(palettes.light.text);
-    expect(color).not.toBe(palettes.light.onAccent);
-    wait(200);
-    // onAccent (#FFFFFF in light), as interpolateColor writes it.
-    expect((getAnimatedStyle(screen.getByText('Food')) as { color: string }).color).toBe(
-      'rgba(255, 255, 255, 1)',
-    );
-  });
-
-  it('swap under reduce motion', () => {
-    mockReduceMotion.mockReturnValue(true);
-    renderForm();
-    fireEvent.press(screen.getByRole('button', { name: 'Food' }));
-    wait(16);
-    expect(opacity('chip-fill-selected')).toBe(1);
-  });
-});
-
 describe('invalid Save', () => {
   it('shakes the first invalid field only, then rests', () => {
     renderForm();
@@ -139,15 +103,14 @@ describe('invalid Save', () => {
 });
 
 describe('flat form look (design.md, Components; T076)', () => {
-  it('draws the sheet solid and Save as a solid accent button without border', () => {
+  it('draws the sheet solid and Save in the balance card\'s deep blue, without border', () => {
     renderForm();
     expect(StyleSheet.flatten(screen.getByTestId('sheet').props.style)).toMatchObject({
       backgroundColor: palettes.light.formBackground,
     });
     const save = StyleSheet.flatten(screen.getByRole('button', { name: 'Save' }).props.style);
-    expect(save.backgroundColor).toBe(palettes.light.accent);
+    expect(save.experimental_backgroundImage).toBe(cardTones.light.positive.cardGlass);
     expect(save.borderWidth ?? 0).toBe(0);
-    expect(save.experimental_backgroundImage).toBeUndefined();
   });
 
   it('gives unselected chips a solid fill with no visible border', () => {

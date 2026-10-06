@@ -2,6 +2,8 @@
 import * as Font from 'expo-font';
 import { useColorScheme, useWindowDimensions, type TextStyle } from 'react-native';
 
+import type { ExpenseCategory } from '@/domain/categories';
+
 export type Scheme = 'light' | 'dark';
 
 export type Palette = {
@@ -50,6 +52,11 @@ export type Palette = {
   bottomFade: string;
   /** An edited row's flash: `accent` at 22 % (Motion, "Saved"). */
   rowFlash: string;
+  /**
+   * The category tiles' shadow, small so neighbors 12 dp apart never merge; none in dark, where
+   * the lighter surface already lifts them (fine-tuning 2026-10-06). Empty means no shadow.
+   */
+  tileShadow: string;
 };
 
 /** `#RRGGBB` at an opacity, written the way design.md gives it ("`#2F5BEA` at 22 %"). */
@@ -66,7 +73,8 @@ const verticalGradient = (top: string, bottom: string) =>
 
 export const palettes: Record<Scheme, Palette> = {
   light: {
-    background: '#F6F7F9',
+    // A plain grouped background; white sections sit on it (fine-tuning 2026-10-06).
+    background: '#F2F3F7',
     surface: '#FFFFFF',
     formBackground: '#FFFFFF',
     surfaceMuted: '#F1F3F6',
@@ -85,7 +93,7 @@ export const palettes: Record<Scheme, Palette> = {
     underlineIdle: '#8A93A3',
     ripple: withAlpha('#5B6472', 0.12),
     rippleOnAccent: withAlpha('#FFFFFF', 0.2),
-    ambientBottom: withAlpha('#0B6B5E', 0.12),
+    ambientBottom: withAlpha('#12B886', 0.22),
     glassFill: withAlpha('#FFFFFF', 0.72),
     glassFillStrong: withAlpha('#FFFFFF', 0.85),
     glassBorder: withAlpha('#FFFFFF', 0.95),
@@ -98,21 +106,26 @@ export const palettes: Record<Scheme, Palette> = {
     fieldFill: withAlpha('#0E1116', 0.06),
     fieldBorder: '#7D8696',
     scrim: withAlpha('#000000', 0.45),
-    accentGradient: verticalGradient('#3D66EF', '#2F5BEA'),
-    accentBorder: withAlpha('#FFFFFF', 0.35),
+    // Add matches the balance card's gradient.
+    accentGradient: 'linear-gradient(135deg, #3B5BDB, #6741D9)',
+    accentBorder: withAlpha('#FFFFFF', 0.18),
     bannerFill: '#EAF0FF',
-    bottomFade: verticalGradient(withAlpha('#F6F7F9', 0), withAlpha('#F6F7F9', 0.45)),
+    bottomFade: verticalGradient(withAlpha('#F2F3F7', 0), withAlpha('#F2F3F7', 0.6)),
     rowFlash: withAlpha('#2F5BEA', 0.22),
+    tileShadow: `0 2px 8px ${withAlpha('#0E1116', 0.06)}`,
   },
   dark: {
-    background: '#0D0F13',
-    surface: '#171A21',
+    // Near-black and plain; sections are clearly lighter, as in professional dark apps: what is
+    // closer to you is lighter (fine-tuning 2026-10-06).
+    background: '#07080A',
+    surface: '#1B1D24',
     formBackground: '#0D0F13',
     surfaceMuted: '#1A1E26',
     segmentTrack: '#171A21',
-    segmentSelected: '#262B35',
+    // A light glass drop on the track (fine-tuning 2026-10-06).
+    segmentSelected: withAlpha('#FFFFFF', 0.16),
     avatar: '#232833',
-    divider: '#232833',
+    divider: '#2A2D36',
     text: '#F2F4F7',
     textMuted: '#B0B8C6',
     accent: '#7D96FF',
@@ -124,7 +137,7 @@ export const palettes: Record<Scheme, Palette> = {
     underlineIdle: '#626B7C',
     ripple: withAlpha('#9AA3B2', 0.12),
     rippleOnAccent: withAlpha('#0D0F13', 0.2),
-    ambientBottom: withAlpha('#45D3A8', 0.18),
+    ambientBottom: withAlpha('#20C997', 0.24),
     glassFill: withAlpha('#FFFFFF', 0.05),
     glassFillStrong: withAlpha('#FFFFFF', 0.08),
     glassBorder: withAlpha('#FFFFFF', 0.1),
@@ -137,11 +150,12 @@ export const palettes: Record<Scheme, Palette> = {
     fieldFill: withAlpha('#FFFFFF', 0.06),
     fieldBorder: withAlpha('#FFFFFF', 0.38),
     scrim: withAlpha('#000000', 0.45),
-    accentGradient: verticalGradient('#A0B2FF', '#7089FA'),
-    accentBorder: withAlpha('#FFFFFF', 0.4),
+    accentGradient: 'linear-gradient(135deg, #364FC7, #5F3DC4)',
+    accentBorder: withAlpha('#FFFFFF', 0.18),
     bannerFill: withAlpha('#1E2640', 0.6),
-    bottomFade: verticalGradient(withAlpha('#0D0F13', 0), withAlpha('#0D0F13', 0.45)),
+    bottomFade: verticalGradient(withAlpha('#07080A', 0), withAlpha('#07080A', 0.6)),
     rowFlash: withAlpha('#7D96FF', 0.22),
+    tileShadow: '',
   },
 };
 
@@ -155,6 +169,8 @@ export type CardTone = {
   monthButton: string;
   statPill: string;
   expenseIcon: string;
+  /** The 1 dp rim of the white-glass controls on the card. */
+  cardRim: string;
   /** The top ambient glow (Glass surfaces, `ambientTop`). */
   ambientTop: string;
   /** The balance card's fill, an `experimental_backgroundImage` value. */
@@ -163,63 +179,113 @@ export type CardTone = {
   cardShadow: string;
 };
 
-const cardGlass = (from: string, to: string) => `linear-gradient(160deg, ${from}, ${to})`;
-const LIGHT_CARD_SHADOW = `0 18px 40px ${withAlpha('#1D34A6', 0.12)}`;
+/**
+ * One deep hue with a soft diagonal sheen, like a metal card (fine-tuning 2026-10-06): `base` at
+ * both ends, a lighter `sheen` band across the middle.
+ */
+const metalCard = (base: string, sheen: string, end: string) =>
+  `linear-gradient(135deg, ${base} 0%, ${base} 30%, ${sheen} 48%, ${base} 66%, ${end} 100%)`;
 
-export const cardTones: Record<Scheme, Record<BalanceTone, CardTone>> = {
+// The balance card is the screen's one vivid element (fine-tuning 2026-10-06): an opaque color
+// gradient with white text, so it stands out from the content below. Controls on it are dark
+// tinted glass with a white rim: white glass would lift the background and drop the labels under
+// 4.5:1. Every stop keeps its text at 4.5:1 or more (contrast test).
+const CARD_GLASS = withAlpha('#0A0E28', 0.18);
+const WHITE_RIM = withAlpha('#FFFFFF', 0.3);
+
+const metalTones: Record<Scheme, Record<BalanceTone, CardTone>> = {
   light: {
     positive: {
-      cardBackground: '#E8EDFF',
-      cardInk: '#0E1116',
-      cardAmount: '#1D34A6',
-      cardLabel: '#4A5578',
-      monthButton: '#FFFFFF',
-      statPill: '#FFFFFF',
-      expenseIcon: '#ECEEF2',
-      ambientTop: withAlpha('#2F5BEA', 0.22),
-      cardGlass: cardGlass(withAlpha('#FFFFFF', 0.78), withAlpha('#E8EDFF', 0.55)),
-      cardShadow: LIGHT_CARD_SHADOW,
+      cardBackground: '#1E2E73',
+      cardInk: '#FFFFFF',
+      cardAmount: '#FFFFFF',
+      cardLabel: '#E7EAFF',
+      monthButton: CARD_GLASS,
+      statPill: CARD_GLASS,
+      cardRim: WHITE_RIM,
+      expenseIcon: withAlpha('#FFFFFF', 0.2),
+      ambientTop: withAlpha('#3B5BDB', 0.34),
+      cardGlass: metalCard('#1E2E73', '#2C43A0', '#15215A'),
+      cardShadow: `0 16px 36px ${withAlpha('#1E2E73', 0.35)}`,
     },
     negative: {
-      cardBackground: '#FCEAE7',
-      cardInk: '#0E1116',
-      cardAmount: '#B3362A',
-      cardLabel: '#7A4A44',
-      monthButton: '#FFFFFF',
-      statPill: '#FFFFFF',
-      expenseIcon: '#F6DCD8',
-      ambientTop: withAlpha('#B3362A', 0.16),
-      cardGlass: cardGlass(withAlpha('#FFFFFF', 0.78), withAlpha('#FCEAE7', 0.6)),
-      cardShadow: LIGHT_CARD_SHADOW,
+      cardBackground: '#6E1A2B',
+      cardInk: '#FFFFFF',
+      cardAmount: '#FFFFFF',
+      cardLabel: '#FFE3E3',
+      monthButton: CARD_GLASS,
+      statPill: CARD_GLASS,
+      cardRim: WHITE_RIM,
+      expenseIcon: withAlpha('#FFFFFF', 0.2),
+      ambientTop: withAlpha('#E03131', 0.26),
+      cardGlass: metalCard('#6E1A2B', '#93283E', '#53121F'),
+      cardShadow: `0 16px 36px ${withAlpha('#6E1A2B', 0.35)}`,
     },
   },
   dark: {
     positive: {
-      cardBackground: '#161D38',
-      cardInk: '#F2F4F7',
-      cardAmount: '#F2F4F7',
-      cardLabel: '#D5DBF0',
-      monthButton: '#222A48',
-      statPill: '#1E2541',
-      expenseIcon: '#2A3150',
-      ambientTop: withAlpha('#7D96FF', 0.3),
-      cardGlass: cardGlass(withAlpha('#9DB0FF', 0.12), withAlpha('#FFFFFF', 0.03)),
-      cardShadow: DARK_GLASS_SHADOW,
+      cardBackground: '#1B2A6B',
+      cardInk: '#FFFFFF',
+      cardAmount: '#FFFFFF',
+      cardLabel: '#E7EAFF',
+      monthButton: CARD_GLASS,
+      statPill: CARD_GLASS,
+      cardRim: WHITE_RIM,
+      expenseIcon: withAlpha('#FFFFFF', 0.2),
+      ambientTop: withAlpha('#5C7CFA', 0.4),
+      cardGlass: metalCard('#1B2A6B', '#2A3F97', '#131E50'),
+      cardShadow: `0 20px 40px ${withAlpha('#000000', 0.45)}`,
     },
     negative: {
-      cardBackground: '#2A1A19',
-      cardInk: '#F2F4F7',
-      cardAmount: '#FF9A8C',
-      cardLabel: '#E6D6D2',
-      monthButton: '#3A2523',
-      statPill: '#35211F',
-      expenseIcon: '#4A2E2B',
-      ambientTop: withAlpha('#FF9A8C', 0.24),
-      cardGlass: cardGlass(withAlpha('#FF9A8C', 0.12), withAlpha('#FF9A8C', 0.04)),
-      cardShadow: DARK_GLASS_SHADOW,
+      cardBackground: '#651727',
+      cardInk: '#FFFFFF',
+      cardAmount: '#FFFFFF',
+      cardLabel: '#FFE3E3',
+      monthButton: CARD_GLASS,
+      statPill: CARD_GLASS,
+      cardRim: WHITE_RIM,
+      expenseIcon: withAlpha('#FFFFFF', 0.2),
+      ambientTop: withAlpha('#FA5252', 0.32),
+      cardGlass: metalCard('#651727', '#8A2539', '#4A101C'),
+      cardShadow: `0 20px 40px ${withAlpha('#000000', 0.45)}`,
     },
   },
 };
+
+// The sober card (N26 / Apple style, fine-tuning 2026-10-06): the same surface as the sections,
+// neutral text, and color only in the amount (income green when positive, error red when
+// negative). Kept next to the metal card while the developer compares them.
+const soberTone = (
+  scheme: Scheme,
+  amount: string,
+): CardTone => {
+  const light = scheme === 'light';
+  const surface = light ? '#FFFFFF' : '#1B1D24';
+  return {
+    cardBackground: surface,
+    cardInk: light ? '#0E1116' : '#F2F4F7',
+    cardAmount: amount,
+    cardLabel: light ? '#5B6472' : '#B0B8C6',
+    monthButton: light ? '#F1F3F6' : '#262A33',
+    statPill: light ? '#F1F3F6' : '#262A33',
+    cardRim: light ? '#E6E9EF' : '#2A2D36',
+    expenseIcon: light ? '#E2E6EC' : '#323743',
+    ambientTop: withAlpha(amount, 0.2),
+    cardGlass: `linear-gradient(160deg, ${surface}, ${surface})`,
+    cardShadow: light ? `0 8px 24px ${withAlpha('#0E1116', 0.06)}` : `0 20px 40px ${withAlpha('#000000', 0.45)}`,
+  };
+};
+
+const soberTones: Record<Scheme, Record<BalanceTone, CardTone>> = {
+  light: { positive: soberTone('light', '#0B6B5E'), negative: soberTone('light', '#B3362A') },
+  dark: { positive: soberTone('dark', '#45D3A8'), negative: soberTone('dark', '#FF8A7A') },
+};
+
+/** Which balance card the app draws: 'metal' (deep color with a sheen) or 'sober'. */
+type CardStyle = 'metal' | 'sober';
+const CARD_STYLE = 'metal' as CardStyle;
+
+export const cardTones = CARD_STYLE === 'metal' ? metalTones : soberTones;
 
 /** Zero counts as positive; loading and error states also use the positive tone (design.md). */
 export function balanceTone(balanceCents: number): BalanceTone {
@@ -239,12 +305,15 @@ const MANROPE: Record<Weight, string> = {
 type TypeSpec = { size: number; weight: Weight; letterSpacing?: number; numeric?: boolean };
 
 const TYPE_SPECS = {
-  display: { size: 54, weight: 700, letterSpacing: -1.5, numeric: true },
+  display: { size: 62, weight: 700, letterSpacing: -2, numeric: true },
   amountInput: { size: 48, weight: 700, letterSpacing: -1, numeric: true },
   currencySuffix: { size: 32, weight: 600 },
   title: { size: 17, weight: 600 },
+  heading: { size: 22, weight: 700, letterSpacing: -0.3 },
   monthTitle: { size: 16, weight: 600 },
-  statAmount: { size: 16, weight: 700, numeric: true },
+  // Bank-app scale for the balance card (fine-tuning 2026-10-06).
+  balanceLabel: { size: 16, weight: 500 },
+  statAmount: { size: 19, weight: 700, numeric: true },
   button: { size: 16, weight: 600 },
   section: { size: 15, weight: 600 },
   body: { size: 15, weight: 500 },
@@ -253,7 +322,7 @@ const TYPE_SPECS = {
   avatarInitial: { size: 15, weight: 700 },
   labelStrong: { size: 14, weight: 600 },
   caption: { size: 13, weight: 400, numeric: true },
-  statLabel: { size: 12, weight: 500 },
+  statLabel: { size: 14, weight: 500 },
   pill: { size: 12, weight: 600, numeric: true },
 } satisfies Record<string, TypeSpec>;
 
@@ -344,3 +413,33 @@ export function useTheme(): Theme {
     isLargeText: isLargeTextScale(fontScale),
   };
 }
+
+/**
+ * Each expense category's own color, so the breakdown and the list read at a glance instead of as
+ * a wall of numbers (fine-tuning 2026-10-06). Icons and tiles use it on a 14 % (light) or 18 %
+ * (dark) tint of itself; income keeps `income` / `incomeSoft`.
+ */
+export const categoryColors: Record<Scheme, Record<ExpenseCategory, string>> = {
+  light: {
+    food: '#D9480F',
+    transport: '#1864AB',
+    housing: '#6741D9',
+    bills: '#0B7285',
+    health: '#C92A2A',
+    shopping: '#A61E4D',
+    leisure: '#2B8A3E',
+    other: '#495057',
+  },
+  dark: {
+    food: '#FF922B',
+    transport: '#4DABF7',
+    housing: '#9775FA',
+    bills: '#3BC9DB',
+    health: '#FF6B6B',
+    shopping: '#F06595',
+    leisure: '#69DB7C',
+    other: '#ADB5BD',
+  },
+};
+
+export const CATEGORY_TINT: Record<Scheme, number> = { light: 0.14, dark: 0.18 };

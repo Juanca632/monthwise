@@ -132,6 +132,7 @@ src/
 ├── app/                          # Expo Router routes (screens only, little logic)
 │   ├── _layout.tsx               # providers: database, selected month, summary notice; fonts; error boundary
 │   ├── index.tsx                 # monthly summary
+│   ├── transactions.tsx          # all of the month's transactions (See all, FR-017)
 │   └── transaction/
 │       ├── new.tsx               # add form (modal)
 │       └── [id].tsx              # edit/delete form (modal)

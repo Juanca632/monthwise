@@ -33,6 +33,10 @@
   `EUR 1,234.00`. Should the currency be the region's code or the `€` sign? → A: Always the `€`
   sign; the region still decides the separators and where the sign goes (`€1,234.00`,
   `1.234,00 €`).
+- Q: The floating **Add** button covers the middle of the screen, and a long month makes the
+  summary an endless list. → A: **Add** moves next to the "Transactions" title, which the
+  summary shows in every state. The summary lists only the month's 5 most recent transactions;
+  **See all** opens a page with every transaction of the month, grouped by day.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -156,6 +160,9 @@ lands in that month.
 6. **Given** the user is viewing September 2026, **When** they tap **Add**, **Then** the form's
    date defaults to 30 September 2026, and after saving the app shows September 2026 with the new
    transaction in it.
+7. **Given** a month with 12 transactions, **When** the user views it, **Then** the summary lists
+   the 5 most recent with **See all**, which opens every one of the 12, grouped by day, and Back
+   returns to the summary.
 7. **Given** the user edits a transaction and moves its date to another month, **When** they save,
    **Then** the app shows the month of the new date, with the transaction in it.
 
@@ -202,8 +209,8 @@ lands in that month.
 
 - **FR-001**: Users MUST be able to record a transaction with: type (income or expense), amount in
   EUR, date, category and an optional note.
-- **FR-002**: The **Add** action MUST be visible on the summary at all times, including while data
-  loads and when loading fails.
+- **FR-002**: The **Add** action MUST be on the summary in every state (loading, load error, empty
+  month, month with transactions), next to the "Transactions" title.
 - **FR-003**: A new transaction form MUST open with type Expense, the amount field ready for
   input (focused, numeric keyboard shown) and no category selected. The date defaults to today
   when the current month is on screen,
@@ -243,8 +250,11 @@ lands in that month.
   and the share of total expenses as a whole percent (rounded half up, so 12.5% shows 13%; a
   non-zero share below 0.5% shows "<1%"), largest first, ties ordered alphabetically; categories
   with no expenses are omitted.
-- **FR-017**: The summary MUST list the selected month's transactions, newest date first; on the
-  same date, the most recently recorded first. The list is grouped by day: each day starts with a
+- **FR-017**: The summary MUST list the selected month's 5 most recent transactions (counted as
+  transactions, so the last day shown may list only some of its transactions; its header's net
+  still covers the whole day); when the month has more, a **See all** action opens a page
+  listing all of them. Both lists show transactions
+  newest date first; on the same date, the most recently recorded first. The list is grouped by day: each day starts with a
   header naming the day ("Today", "Yesterday", or the English short weekday, day and month, for
   example "Mon 5 Oct", no year) and showing that day's net amount (its income minus its
   expenses): `+` above zero, minus below, no sign at zero. "Today" and "Yesterday" are relative
@@ -330,8 +340,9 @@ lands in that month.
 - **SC-003**: 100% of saved transactions are still present after closing the app and after
   restarting the phone.
 - **SC-004**: On a phone with Android 10 or later and 4 GB of RAM, opening the app from a cold
-  start shows the current month's totals and first list items within 1 second, with 1,000
-  transactions in that month (grouped by day, FR-017).
+  start shows the current month's totals and its 5 most recent transactions within 1 second,
+  with 1,000 transactions in that month; the **See all** page shows its first items within
+  1 second and scrolls that month smoothly (FR-017).
 - **SC-005**: During a full test session covering all user stories, the app makes zero network
   requests, as checked with a network monitor.
 - **SC-006**: In a first-use test with at least 3 people, every participant records their first

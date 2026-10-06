@@ -68,7 +68,8 @@ All must pass, with lint and type check, before a PR is merged (CI).
 10. **Accessibility**: largest font size and TalkBack on → the list's day headers ("Today",
     "Yesterday", "Mon 5 Oct") read as headings with their net, and a long net moves under the
     day; record an expense and hear the totals
-    (SC-007). Scroll to the end of a long list: the last row is not covered by **Add**. With
+    (SC-007). In a month with more than 5 transactions, **See all** opens every one of them by day,
+    and Back returns to the summary; the last row clears the bottom edge. With
     `999.999,99 €`, a month total above 10 million and a 100-character note, nothing is cut off;
     the stat pills, rows and Date/Note switch to one column (design.md, Large text).
 11. **Intl on Hermes** (first task, then once per SDK upgrade): on the device, check the output of

@@ -9,6 +9,7 @@ phone's region (research R7).
 | Route                | File                               | Presentation  | Purpose                      |
 | -------------------- | ---------------------------------- | ------------- | ---------------------------- |
 | `/`                  | `src/app/index.tsx`                | Main screen   | Monthly summary (US1, US2, US4) |
+| `/transactions`      | `src/app/transactions.tsx`         | Stack screen  | All of the month's transactions (US1, FR-017) |
 | `/transaction/new`   | `src/app/transaction/new.tsx`      | Modal         | Add form (US1)               |
 | `/transaction/[id]`  | `src/app/transaction/[id].tsx`     | Modal         | Edit or delete form (US3)    |
 
@@ -18,18 +19,19 @@ the current month (FR-014). The forms set it after a successful save (FR-020).
 ## Summary screen (`/`)
 
 Layout from top to bottom: month header with previous/next controls, totals (income, expenses,
-balance), expense breakdown, transaction list. **Add** is a floating button that is always
-visible (FR-002), including while the database opens. The list has bottom padding at least as
-tall as the button plus its margin, so the last row is never covered (FR-031). A Save tapped while the database is
+balance), expense breakdown, then the "Transactions" title with **Add** next to it, and the
+month's 5 most recent transactions (FR-017). The title row with **Add** shows in every state,
+including while the database opens (FR-002). When the month has more than 5 transactions,
+**See all** under the list opens `/transactions`. A Save tapped while the database is
 still opening waits in the saving state until it is open, at most 10 s; after that it counts as a failed open. Only if opening failed does the form
 show the FR-025 save error.
 
 | State   | When                         | Shows                                                         | Spec            |
 | ------- | ---------------------------- | ------------------------------------------------------------- | --------------- |
-| loading | Database opening or migrating, or month query in progress | Header + loading indicator instead of totals and list; **Add**| FR-023          |
-| error   | Database failed to open or migrate, or the query threw `StorageError`; **Try again** reopens the database if it is not open, then reloads the month | Header + "Couldn't load your data." + **Try again**; **Add**  | FR-024          |
-| empty   | Month has no transactions    | Totals at 0 + "No transactions this month yet." + **Add**. The breakdown section and its "No expenses" line are not shown. | FR-022 |
-| ready   | Month has transactions       | Totals, breakdown (or "No expenses this month."), list        | FR-015 to FR-017|
+| loading | Database opening or migrating, or month query in progress | Header + loading indicator instead of totals; "Transactions" + **Add**; no list | FR-023          |
+| error   | Database failed to open or migrate, or the query threw `StorageError`; **Try again** reopens the database if it is not open, then reloads the month | Header + "Couldn't load your data." + **Try again**; "Transactions" + **Add**; no list | FR-024          |
+| empty   | Month has no transactions    | Totals at 0; "Transactions" + **Add**; "No transactions this month yet.". The breakdown section and its "No expenses" line are not shown. | FR-022 |
+| ready   | Month has transactions       | Totals, breakdown (or "No expenses this month."), "Transactions" + **Add**, the 5 most recent, **See all** when there are more | FR-015 to FR-017|
 
 - Previous is hidden on January 2000; next is hidden on the current month (FR-021). Month
   navigation works in every state, including loading and error. `useMonthSummary` discards any
@@ -58,6 +60,26 @@ show the FR-025 save error.
   dismissed, the month changes or another transaction opens. It is announced once with
   `AccessibilityInfo.announceForAccessibility`. The user ends up on the summary they came from
   (FR-025).
+
+## All transactions (`/transactions`)
+
+Opened by **See all** (FR-017). A stack screen for the month selected on the summary: a header
+with a back button ("Back", 48 dp) and the title "Transactions" with the month below it
+("October 2026"), then every transaction of that month grouped by day, exactly as on the
+summary (day headers, items, spoken labels). It reloads its month on focus, like the summary
+(FR-019).
+
+| State   | Shows |
+| ------- | ----- |
+| loading | Header + loading indicator |
+| error   | Header + "Couldn't load your data." + **Try again** (as on the summary) |
+| empty   | Header + "No transactions this month yet." (for example after deleting the last one here; FR-022) |
+| ready   | Header + the full list |
+
+- Tapping an item opens `/transaction/[id]` over this screen, as on the summary; a load failure
+  goes back to this screen with the same banner text and **Dismiss**.
+- Android's back button or **Back** returns to the summary. A long month scrolls smoothly
+  (SC-004 applies to this list too).
 
 ## Transaction form (`/transaction/new`, `/transaction/[id]`)
 
@@ -134,7 +156,8 @@ Validation messages:
 
 | Where | Text |
 | --- | --- |
-| Summary buttons | **Add**, **Try again**, **Dismiss** |
+| Summary buttons | **Add**, **Try again**, **Dismiss**, **See all** |
+| All transactions | Title "Transactions" + month ("October 2026"); **Back** |
 | Summary labels | "Balance", "Income", "Expenses", "Spending by category", "Transactions" |
 | Day headers | "Today", "Yesterday", or short weekday + day + short month ("Mon 5 Oct") |
 | Empty month helper line | "Tap Add to record an income or expense." (under "No transactions this month yet.") |

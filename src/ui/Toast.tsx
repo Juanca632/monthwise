@@ -18,7 +18,6 @@ import { useToast, type ShownToast } from '@/state/ToastContext';
 import { durations, easeOut, useReduceMotion } from './motion';
 import { iconSize, insetHighlight, radii, spacing, useTheme } from './theme';
 
-const ADD_HEIGHT = 56;
 const RISE = 16;
 const MIN_HEIGHT = 44;
 const never = { reduceMotion: ReduceMotion.Never };
@@ -71,8 +70,8 @@ function ToastPill({ toast, onDone }: { toast: ShownToast; onDone(): void }) {
       accessibilityElementsHidden
       style={[
         styles.wrapper,
-        // Its bottom 12 dp above Add (design.md, Toast).
-        { bottom: spacing.xxl + insets.bottom + ADD_HEIGHT + spacing.sm, boxShadow: colors.glassShadow },
+        // design.md, Toast: `28 + insets.bottom` above the bottom edge.
+        { bottom: spacing.xxl + insets.bottom, boxShadow: colors.glassShadow },
         motion,
       ]}
     >

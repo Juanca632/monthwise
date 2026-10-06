@@ -1,4 +1,5 @@
 import { useMemo, type ReactElement } from 'react';
+import { Feather } from '@expo/vector-icons';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 import type { Transaction } from '@/data/transactionRepository';
@@ -12,13 +13,19 @@ import { useSelectedMonth } from '@/state/SelectedMonthContext';
 import { Appear, MAX_ANIMATED_ROWS } from './Appear';
 import { PressableScale } from './motion';
 import { RowMotion, type RowChange } from './RowMotion';
-import { insetHighlight, radii, spacing, useTheme } from './theme';
+import { categoryLook } from './categoryLook';
+import { ShapePressable } from './glass';
+import { iconSize, insetHighlight, minTouch, radii, spacing, useTheme } from './theme';
 
 type Props = {
   rows: readonly Transaction[];
   tag: string;
   /** Everything above the list (balance card, banner, breakdown); scrolls with it. */
   header: ReactElement;
+  /** The "Transactions" title row, shown in every state; none on the all-transactions page. */
+  title?: ReactElement | null;
+  /** Shows at most this many rows (the summary's preview); all by default. */
+  limit?: number;
   /** Shown instead of the list when there are no rows. */
   empty?: ReactElement | null;
   /** Below the last row; also shown when there are no rows. */
@@ -36,20 +43,25 @@ type Item =
   | { kind: 'row'; key: string; row: Transaction; first: boolean; last: boolean };
 
 /** Rows grouped by day (FR-017), flattened so one FlatList still draws only what is visible. */
-function itemsOf(rows: readonly Transaction[]): Item[] {
+function itemsOf(rows: readonly Transaction[], limit: number): Item[] {
   const items: Item[] = [];
-  groupByDay(rows).forEach((day, d) => {
+  let left = limit;
+  for (const [d, day] of groupByDay(rows).entries()) {
+    if (left === 0) break;
+    // A day cut by the limit keeps its whole net, so its total never misleads (FR-017).
+    const shown = day.rows.slice(0, left);
+    left -= shown.length;
     items.push({ kind: 'day', key: `day-${day.date}`, date: day.date, netCents: day.netCents, first: d === 0 });
-    day.rows.forEach((row, i) =>
+    shown.forEach((row, i) =>
       items.push({
         kind: 'row',
         key: String(row.id),
         row,
         first: i === 0,
-        last: i === day.rows.length - 1,
+        last: i === shown.length - 1,
       }),
     );
-  });
+  }
   return items;
 }
 
@@ -61,14 +73,15 @@ export function TransactionList({
   rows,
   tag,
   header,
+  title = null,
+  limit = Infinity,
   empty,
   footer,
   onPressItem,
   changeFor,
   bottomPadding,
 }: Props) {
-  const { colors, type } = useTheme();
-  const items = useMemo(() => itemsOf(rows), [rows]);
+  const items = useMemo(() => itemsOf(rows, limit), [rows, limit]);
   return (
     <FlatList
       data={items}
@@ -76,11 +89,7 @@ export function TransactionList({
       ListHeaderComponent={
         <>
           {header}
-          {rows.length > 0 && (
-            <Text style={[type.section, styles.sectionTitle, { color: colors.text }]}>
-              Transactions
-            </Text>
-          )}
+          {title}
         </>
       }
       ListEmptyComponent={empty}
@@ -109,6 +118,56 @@ export function TransactionList({
         </Appear>
       )}
     />
+  );
+}
+
+/** The "Transactions" title with **Add** on its right (FR-002); shown in every summary state. */
+export function TransactionsTitle({ onAdd }: { onAdd(): void }) {
+  const { colors, type } = useTheme();
+  return (
+    <View style={styles.titleRow}>
+      <Text accessibilityRole="header" style={[type.heading, styles.flex, { color: colors.text }]}>
+        Transactions
+      </Text>
+      {/* A plain glass pill: translucent fill, bright rim and top highlight, no color of its own
+          (fine-tuning 2026-10-06). */}
+      {/* The soft shadow sits on a wrapper that does not clip; the pill clips its overlay. */}
+      <View style={[styles.addShadow, { boxShadow: colors.glassShadow }]}>
+        <ShapePressable
+          accessibilityRole="button"
+          accessibilityLabel="Add transaction"
+          onPress={onAdd}
+          style={[
+            styles.addButton,
+            {
+              backgroundColor: colors.glassFillStrong,
+              borderColor: colors.glassBorderStrong,
+              boxShadow: insetHighlight(colors.glassHighlight),
+            },
+          ]}
+        >
+          <Feather name="plus" size={iconSize.circle} color={colors.text} />
+          <Text style={[type.button, { color: colors.text }]}>Add</Text>
+        </ShapePressable>
+      </View>
+    </View>
+  );
+}
+
+/** Under the summary's preview when the month has more (FR-017). */
+export function SeeAll({ onPress }: { onPress(): void }) {
+  const { colors, type } = useTheme();
+  return (
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel="See all transactions"
+      onPress={onPress}
+      android_ripple={{ color: colors.ripple }}
+      style={styles.seeAll}
+    >
+      <Text style={[type.labelStrong, { color: colors.accent }]}>See all</Text>
+      <Feather name="chevron-right" size={iconSize.circle} color={colors.accent} />
+    </PressableScale>
   );
 }
 
@@ -145,9 +204,10 @@ type RowProps = {
 };
 
 function TransactionRow({ row, tag, first, last, onPress }: RowProps) {
-  const { colors, type, isLargeText } = useTheme();
+  const { colors, type, isLargeText, scheme } = useTheme();
   // Stored categories always match their type (database CHECK).
   const label = labelFor(row.type, row.category as CategoryKey);
+  const look = categoryLook(row.type, row.category as CategoryKey, scheme, colors);
   const income = row.type === 'income';
   const spoken = [
     income ? 'Income' : 'Expense',
@@ -168,19 +228,18 @@ function TransactionRow({ row, tag, first, last, onPress }: RowProps) {
       style={[
         styles.rowContent,
         // Only the color changes: borders are never removed at runtime (design.md).
-        { borderBottomColor: last ? 'transparent' : colors.glassDivider },
+        { borderBottomColor: last ? 'transparent' : colors.divider },
       ]}
     >
       <View
         importantForAccessibility="no-hide-descendants"
         style={[
           styles.avatar,
-          { backgroundColor: income ? colors.incomeSoft : colors.glassAvatar },
+          // The category's own color and icon, instead of its initial (fine-tuning 2026-10-06).
+          { backgroundColor: look.tint },
         ]}
       >
-        <Text style={[type.avatarInitial, { color: income ? colors.income : colors.textMuted }]}>
-          {label[0]}
-        </Text>
+        <Feather name={look.icon} size={iconSize.button} color={look.ink} />
       </View>
       <View style={styles.text}>
         <Text style={[type.bodyStrong, { color: colors.text }]}>{label}</Text>
@@ -206,19 +265,14 @@ function TransactionRow({ row, tag, first, last, onPress }: RowProps) {
         first && styles.firstCard,
         last && styles.lastCard,
         {
-          backgroundColor: colors.glassFill,
-          borderColor: colors.glassBorder,
-          borderTopColor: first ? colors.glassBorder : 'transparent',
-          borderBottomColor: last ? colors.glassBorder : 'transparent',
+          // Content, not glass: a solid surface (Liquid Glass is for the floating layer only).
+          backgroundColor: colors.surface,
+          borderColor: colors.surface,
+          borderTopColor: first ? colors.surface : 'transparent',
+          borderBottomColor: last ? colors.surface : 'transparent',
         },
       ]}
     >
-      {first && (
-        <View
-          pointerEvents="none"
-          style={[styles.highlight, { boxShadow: insetHighlight(colors.glassHighlight) }]}
-        />
-      )}
       {onPress ? (
         <PressableScale
           accessibilityRole="button"
@@ -239,10 +293,36 @@ function TransactionRow({ row, tag, first, last, onPress }: RowProps) {
 }
 
 const styles = StyleSheet.create({
-  sectionTitle: {
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xs,
-    paddingHorizontal: spacing.xl,
+  // 32 dp of air above, like the other section titles; Add sits on the right.
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingTop: spacing.xxxl,
+    paddingBottom: spacing.sm,
+    paddingLeft: spacing.xl,
+    paddingRight: spacing.md,
+  },
+  flex: { flex: 1 },
+  addShadow: { borderRadius: radii.full },
+  addButton: {
+    minHeight: minTouch,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  seeAll: {
+    alignSelf: 'flex-end',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xxs,
+    minHeight: minTouch,
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.xs,
+    marginRight: spacing.xs,
   },
   // No outer shadow: a shadow per row would show through the translucent rows above it, and a
   // FlatList has no single view around its rows to carry one (design.md, Components).
@@ -264,15 +344,6 @@ const styles = StyleSheet.create({
   dayHeaderStacked: { flexDirection: 'column', alignItems: 'flex-start' },
   firstCard: { borderTopLeftRadius: radii.card, borderTopRightRadius: radii.card },
   lastCard: { borderBottomLeftRadius: radii.card, borderBottomRightRadius: radii.card },
-  highlight: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    borderTopLeftRadius: radii.card - 1,
-    borderTopRightRadius: radii.card - 1,
-  },
   row: { paddingHorizontal: spacing.md },
   firstRow: { paddingTop: spacing.xxs },
   lastRow: { paddingBottom: spacing.xxs },

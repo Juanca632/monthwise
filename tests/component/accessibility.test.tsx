@@ -236,7 +236,10 @@ describe('large text (fontScale 1.3, design.md)', () => {
     const incomePill = screen.getByLabelText(`Income, ${eur('2.000,00')}`);
     expect(direction(hostParent(incomePill))).toBe('column');
 
-    expect(direction(screen.getByLabelText(/^Food, .* percent$/))).toBe('column');
+    // Breakdown tiles stack their content already; they grow instead of having a fixed width.
+    const tile = styleOf(screen.getByLabelText(/^Food, .* percent$/));
+    expect(tile.width).toBeUndefined();
+    expect(tile.minWidth).toBeGreaterThan(0);
 
     // A day header's net moves under the day (design.md, Summary screen item 3).
     expect(direction(screen.getAllByLabelText(/, net /)[0])).toBe('column');
@@ -251,13 +254,14 @@ describe('large text (fontScale 1.3, design.md)', () => {
   it('keeps everything side by side at the default size', async () => {
     await renderSummary();
     expect(direction(hostParent(screen.getByLabelText(`Income, ${eur('2.000,00')}`)))).toBe('row');
-    expect(direction(screen.getByLabelText(/^Food, .* percent$/))).toBe('row');
   });
 
-  it('stacks Date and Note in the form', () => {
+  it('keeps Date and Note as rows of one list card in the form', () => {
     mockFontScale = 1.3;
     renderForm();
-    const dateLabel = screen.getByText('Date');
-    expect(direction(hostParent(hostParent(dateLabel)!))).toBe('column');
+    // Each is a row (label and value side by side); the card stacks the rows at any text size.
+    const dateRow = hostParent(screen.getByText('Date'))!;
+    expect(direction(dateRow)).toBe('row');
+    expect(direction(hostParent(dateRow))).not.toBe('row');
   });
 });

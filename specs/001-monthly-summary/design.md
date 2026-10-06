@@ -60,6 +60,7 @@ colors or assets are copied.
 | `amountInput` | 48 | Bold, letter spacing −1 | Amount field in the form |
 | `currencySuffix` | 32 | SemiBold | The € next to the amount field |
 | `title` | 17 | SemiBold | Form title |
+| `heading` | 22 | Bold, letter spacing −0.3 | Section titles ("Spending by category", "Transactions") and the All transactions title |
 | `monthTitle` | 16 | SemiBold | Month name on the balance card |
 | `statAmount` | 16 | Bold | Income and Expenses amounts on the balance card |
 | `button` | 16 | SemiBold | Add, Save |
@@ -165,8 +166,8 @@ decorative circle) is dropped: the ambient glow replaces it.
   - Banner: 12 above it. Empty-state card: 28 above it and a 12 dp gap between its items.
 - **Insets**: screens use `react-native-safe-area-context`. The balance card's top margin is
   `12 + insets.top`. The form sheet's top edge is `36 + insets.top`, and its header's top padding is 8, under the grab handle. The root error screen
-  centers its content inside all insets. The Add button and the form's Save footer sit `28 + insets.bottom` above the
-  bottom edge. The list's bottom padding is `56 + 28 + 16 + insets.bottom`. Status bar icons
+  centers its content inside all insets. The form's Save footer and the toast sit `28 + insets.bottom` above the
+  bottom edge. Lists end with `28 + insets.bottom` of bottom padding (nothing floats over them). Status bar icons
   follow the theme (`expo-status-bar`, `style="auto"`).
 - **Radii**: balance card 28; cards 20; stat pills 16; banner, inputs, date field and segmented track 16;
   segments 12; percent pill 8; chips, buttons and icon circles fully rounded.
@@ -252,7 +253,6 @@ invisible in light, so it stays out; 2026-10-06.)
 | `bannerFill` | `#EAF0FF` | `#1E2640` at 60 % | The banner (`accentSoft` tint, Components) |
 | `accentGradient` | `#3D66EF` → `#2F5BEA` | `#A0B2FF` → `#7089FA` | Add and Save fill (see "Accent buttons") |
 | `accentBorder` | `#FFFFFF` at 35 % | `#FFFFFF` at 40 % | 1 dp border of Add and Save |
-| `bottomFade` | `background` at 0 → 45 % | `background` at 0 → 45 % | The 96 dp fade behind Add |
 | `rowFlash` | `accent` at 22 % | `accent` at 22 % | An edited row's flash (Motion, "Saved") |
 
 The balance-tone tokens `ambientTop` (above), `cardGlass` and `cardShadow` (below) live with the
@@ -294,7 +294,7 @@ where things come from and confirms what happened. Curves: **ease-out** `(0.2, 0
 
 | Moment | What moves | Time | Curve |
 | --- | --- | --- | --- |
-| Summary appears (cold start) | Balance card, breakdown, then Add with the first row, then the other rows of the first screen (up to 8) rise 14 dp and fade in, 80 ms apart. Rows that appear later by scrolling never animate | 520 ms | ease-out |
+| Summary appears (cold start) | Balance card, breakdown, then the "Transactions" title with Add and the first row, then the other rows of the first screen (up to 8) rise 14 dp and fade in, 80 ms apart. Rows that appear later by scrolling never animate | 520 ms | ease-out |
 | Open a form | The sheet slides up from the bottom; behind it the summary scales to 92 %, moves down 6 dp and rounds to radius 28, and the `scrim` fades in over it | 440 ms | sheet |
 | Close a form | The sheet slides down; the summary and scrim return | 300 ms | ease-in |
 | Drag the sheet | It follows the finger downward (never above its resting place); the summary and scrim follow in proportion. Released past 30 % of its height or with a fast downward fling, it closes; otherwise it springs back | follows the finger | spring |
@@ -365,6 +365,7 @@ navigation is already on its way.
 | Moment | Haptic |
 | --- | --- |
 | Tap Add | `impactAsync(Light)` |
+| See all, Back | none (plain navigation) |
 | Change month | `impactAsync(Light)` |
 | Type switch, pick a category | `selectionAsync()` |
 | Saved | `notificationAsync(Success)` (no extra tap haptic on Save) |
@@ -373,8 +374,7 @@ navigation is already on its way.
 
 ## Toast
 
-A small glass pill, centered, its bottom 12 dp above the Add button
-(`28 + insets.bottom + 56 + 12`). minHeight 44, padding 0 × 16, fully rounded, on `sheetFill`
+A small glass pill, centered, its bottom `28 + insets.bottom` above the bottom edge. minHeight 44, padding 0 × 16, fully rounded, on `sheetFill`
 with `glassBorderStrong`, the inner highlight and `glassShadow`. It holds a 16 dp `check` icon
 and the text, both in `text` (`labelStrong`). It ignores touches (`pointerEvents="none"`), is
 not focusable and is announced once with `announceForAccessibility`. It is mounted in the root
@@ -399,7 +399,9 @@ fills.
 | Breakdown and list cards | `glassFill` | `glassBorder` | highlight, `glassShadow` (breakdown only, see below); rows separated by `glassDivider` |
 | List avatars | `glassAvatar` (income: `incomeSoft`) | — | — |
 | Banner, empty-state card | empty-state: `glassFill`; banner: `bannerFill` (`accentSoft` at 100 % in light, 60 % in dark) | `glassBorder` | — |
-| Add | accent button | 1 dp white border (Glass surfaces) | highlight |
+| Add (next to "Transactions") | accent button | 1 dp white border (Glass surfaces) | highlight |
+| See all | none (text button) | none | — |
+| All transactions Back | `surface` (a content screen header, not on the colored card) | none | — |
 | Save | `accent`, solid | none | — |
 | Form sheet | `formBackground`, solid | top edge `glassBorderStrong` | grab handle 40 × 5 dp, `textMuted` at 40 % |
 | Close button, unselected chips, Date, Note | `surfaceMuted` | none at rest (a transparent 1 dp keeps the size); focus `accent`, error `error` (see "Borders never shift the layout") | — |
@@ -471,12 +473,17 @@ There is no native header (`headerShown: false`); the balance card holds the mon
        `textMuted`). The date is the day header's, above.
      - The amount on the right (`bodyStrong`): expenses in `text`, income in `income`, both
        from `formatSignedMoney` (`+` / `−` as the region formats them).
-4. **Add button**: floating and centered, `28 + insets.bottom` above the bottom. minHeight 56,
-   padding 0 × 28, fully rounded, styled as an accent button (Glass surfaces), with the `plus`
-   icon and "Add" (`button`) in `onAccent`. Behind it, a 96 dp bottom fade from transparent to
-   `background` at 45 % lets the list pass under it softly; it is a gradient, not a blur.
-5. **Empty month**: the balance card at zero, then a card with padding 32 × 24, centered (no
-   "Transactions" title): a 56 dp
+4. **Add button** (FR-002; developer, 2026-10-06): on the right of the "Transactions" title,
+   which shows in every state (loading, error, empty, ready). minHeight 48, padding 0 × 16, fully
+   rounded, the accent gradient (Glass surfaces) with a 16 dp `plus` icon and "Add" (`button`)
+   in white. The title row aligns the title and the button vertically. Nothing floats over the
+   list any more, so there is no bottom fade.
+   - **Preview and See all** (FR-017): the summary shows the month's 5 most recent transactions,
+     grouped by day as in item 3. When the month has more, **See all** follows the last card: a
+     text button (`labelStrong`, `accent`, minHeight 48, padding 0 × 16) with a 16 dp
+     `chevron-right`, right-aligned with the cards, 8 dp below them.
+5. **Empty month**: the balance card at zero, then the "Transactions" title with Add, then a
+   card with padding 32 × 24, centered: a 56 dp
    icon circle (`accentSoft`, `credit-card` in `accent`), "No transactions this month yet."
    (`bodyStrong`) and the contract's helper line (`label`, `textMuted`). No breakdown section.
 6. **Banner** ("Couldn't open this transaction."): a card on `bannerFill` with a `glassBorder`, radius 16, padding 16,
@@ -484,6 +491,25 @@ There is no native header (`headerShown: false`); the balance card holds the mon
    and the message, both in `text` (`label`), and a **Dismiss** text button (`labelStrong`,
    `accent`).
 7. **Section titles** use `section` in `text`.
+
+### All transactions (`/transactions`)
+
+A stack screen opened by **See all**, on `background`, with the same content look as the
+summary's list.
+
+- **Header**: top padding `8 + insets.top`. A 48 dp back button (`chevron-left` in `text`, on
+  `surface`, fully rounded, borderless ripple like the month arrows) on the left; then
+  "Transactions" (`heading`, `text`) with the month (`label`, `textMuted`) under it.
+- **List**: the month's transactions grouped by day, exactly as in Summary screen item 3; the
+  header ends with 16 dp of space and the first day header has no top padding of its own. The
+  list ends with `28 + insets.bottom` of padding. There is no Add here: it lives on the summary.
+- **Screen reader**: the back button is "Back" (`button`), the title "Transactions" is a
+  heading, and the list reads as on the summary.
+- **Loading, error, empty**: as on the summary (a centered `ActivityIndicator` in `accent`;
+  "Couldn't load your data." with **Try again**; the empty-month card).
+- **Motion**: the standard stack push and pop (Android's own, which follows "Remove
+  animations"); row changes after a form closes animate as on the summary, and the screen
+  scales back behind an open form's sheet like the summary does.
 
 ### Transaction form (modal)
 
@@ -569,9 +595,9 @@ There is no native header (`headerShown: false`).
 - `src/ui/theme.ts` exports both palettes, the four balance-card tones and `balanceTone()`, the
   type tokens (with the font fallback), spacing, radii, `minTouch = 48` and `isLargeText`.
   Components never hard-code a color or size that has a token.
-- Gradients (glass fills, ambient glows, the bottom fade, accent buttons) use React Native's
+- Gradients (glass fills, ambient glows, accent buttons) use React Native's
   built-in `experimental_backgroundImage` with `linear-gradient` / `radial-gradient`, so no
-  gradient library is added. The bottom padding still keeps the last row clear of Add.
+  gradient library is added. Lists end with `28 + insets.bottom` of padding.
 - The first glass task was a spike on the developer's phone (T057, results in
   `device-checks.md`, "Glass spike"): the radial-gradient glows, `cardGlass`, glass fills and
   the inset highlight render well in light and dark; the accent glow does not (dropped), and

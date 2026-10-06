@@ -63,8 +63,9 @@ export function StateMessage(props: Props) {
   return (
     <GlassCard
       radius={radii.card}
-      fill={colors.glassFill}
-      border={colors.glassBorder}
+      // Content, not glass: a solid surface.
+      fill={colors.surface}
+      border={colors.surface}
       style={styles.cardWrapper}
       contentStyle={styles.card}
     >

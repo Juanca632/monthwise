@@ -72,7 +72,7 @@ describe.each(schemes)('%s summary at the glow peak', (scheme) => {
     // Each end of the card's gradient, then a stat pill on top of it.
     for (const stop of stops(t.cardGlass)) {
       const card = blend(c.background, t.ambientTop, stop);
-      const pill = blend(c.background, t.ambientTop, stop, c.glassFillStrong);
+      const pill = blend(c.background, t.ambientTop, stop, t.statPill);
       expect(ratio(parse(t.cardLabel), card)).toBeGreaterThanOrEqual(TEXT);
       expect(ratio(parse(t.cardAmount), card)).toBeGreaterThanOrEqual(TEXT);
       expect(ratio(parse(t.cardInk), card)).toBeGreaterThanOrEqual(TEXT);
@@ -111,10 +111,9 @@ describe.each(schemes)('%s form (flat look on formBackground)', (scheme) => {
     }
   });
 
-  it('the selected segment border stands out from its fill and the track (≥ 3:1)', () => {
-    expect(ratio(parse(c.accent), parse(c.segmentSelected))).toBeGreaterThanOrEqual(INDICATOR);
-    expect(ratio(parse(c.accent), parse(c.segmentTrack))).toBeGreaterThanOrEqual(INDICATOR);
-    expect(ratio(parse(c.text), parse(c.segmentSelected))).toBeGreaterThanOrEqual(TEXT);
+  it('the selected segment\'s glass drop keeps its text readable over the track', () => {
+    const drop = blend(c.segmentTrack, c.segmentSelected);
+    expect(ratio(parse(c.text), drop)).toBeGreaterThanOrEqual(TEXT);
     expect(ratio(parse(c.textMuted), parse(c.segmentTrack))).toBeGreaterThanOrEqual(TEXT);
   });
 
@@ -122,13 +121,15 @@ describe.each(schemes)('%s form (flat look on formBackground)', (scheme) => {
     expect(ratio(blend(c.background, c.fieldBorder), parse(c.background))).toBeGreaterThanOrEqual(INDICATOR);
   });
 
-  it('accent buttons keep onAccent text readable at every gradient stop', () => {
+  it('Add keeps its white text readable at every gradient stop', () => {
     const gradient = stops(c.accentGradient);
     expect(gradient).toHaveLength(2);
     for (const stop of gradient) {
-      expect(ratio(parse(c.onAccent), parse(stop))).toBeGreaterThanOrEqual(TEXT);
+      expect(ratio(parse(cardTones[scheme].positive.cardInk), parse(stop))).toBeGreaterThanOrEqual(TEXT);
     }
-    // The selected chip is plain accent.
+  });
+
+  it('Save and the selected chip keep onAccent text readable on accent', () => {
     expect(ratio(parse(c.onAccent), parse(c.accent))).toBeGreaterThanOrEqual(TEXT);
   });
 });

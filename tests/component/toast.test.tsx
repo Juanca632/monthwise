@@ -71,11 +71,11 @@ it.each([
   expect(announce).toHaveBeenCalledWith(message);
 });
 
-it('sits 12 dp above Add, ignores touches and is not a focus stop', () => {
+it('sits 28 dp above the bottom inset, ignores touches and is not a focus stop', () => {
   renderApp();
   act(() => confirm.current!({ kind: 'created', id: 1 }));
   const style = StyleSheet.flatten(toast()!.props.style);
-  expect(style.bottom).toBe(28 + INSETS.bottom + 56 + 12);
+  expect(style.bottom).toBe(28 + INSETS.bottom);
   expect(toast()!.props.pointerEvents).toBe('none');
   expect(toast()!.props.importantForAccessibility).toBe('no-hide-descendants');
 });

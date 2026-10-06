@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { formatMoney, spokenMoney } from '@/format/money';
@@ -36,10 +36,13 @@ const AMOUNT_MAX_SCALE = 1.3;
 
 /** The balance card at the top of the summary (design.md, Summary screen item 1). */
 export function Totals({ header, content, tag }: Props) {
-  const { colors, cardTones, type, isLargeText } = useTheme();
+  const { cardTones, type, isLargeText } = useTheme();
   // Loading and error have no balance yet, so they use the positive tone.
   const toneName = content.kind === 'values' ? balanceTone(content.balanceCents) : 'positive';
   const tone = cardTones[toneName];
+  // The card keeps the height of the last month's numbers while the next one loads (or fails),
+  // so it never shrinks and grows again on a month change (fine-tuning 2026-10-06).
+  const [bodyHeight, setBodyHeight] = useState<number | null>(null);
   const values = content.kind === 'values' ? content : null;
   // 520 ms ease-out, or a jump under reduce motion. The counters live here, not in the values
   // block, which unmounts while a month loads; they reset while it loads, so a new month shows
@@ -52,7 +55,7 @@ export function Totals({ header, content, tag }: Props) {
   return (
     <GlassCard
       radius={radii.balanceCard}
-      border={colors.glassBorderStrong}
+      border={tone.cardRim}
       highlight
       shadow={tone.cardShadow}
       style={styles.card}
@@ -75,13 +78,13 @@ export function Totals({ header, content, tag }: Props) {
       {header(tone)}
 
       {content.kind === 'loading' && (
-        <View style={styles.loading}>
-          <ActivityIndicator accessibilityLabel="Loading" color={colors.accent} size="large" />
+        <View style={[styles.loading, bodyHeight !== null && { height: bodyHeight }]}>
+          <ActivityIndicator accessibilityLabel="Loading" color={tone.cardInk} size="large" />
         </View>
       )}
 
       {content.kind === 'error' && (
-        <View style={styles.error}>
+        <View style={[styles.error, bodyHeight !== null && { minHeight: bodyHeight }]}>
           <Text style={[type.label, styles.centered, { color: tone.cardLabel }]}>
             Couldn&apos;t load your data.
           </Text>
@@ -89,9 +92,11 @@ export function Totals({ header, content, tag }: Props) {
             accessibilityRole="button"
             accessibilityLabel="Try again"
             onPress={content.onRetry}
+            // White feedback on the colored card.
+            overlay={tone.cardRim}
             style={[
               styles.retry,
-              { backgroundColor: colors.glassFillStrong, borderColor: colors.glassBorderStrong },
+              { backgroundColor: tone.monthButton, borderColor: tone.cardRim },
             ]}
           >
             <Text style={[type.bodyStrong, { color: tone.cardInk }]}>Try again</Text>
@@ -102,43 +107,45 @@ export function Totals({ header, content, tag }: Props) {
       {/* The month's numbers slide in on a month change; the header row stays put. */}
       {content.kind === 'values' && (
         <Appear on={['month']}>
-          {/* "Balance" and the amount are read as one element: "Balance, minus 150,00 €". */}
-          <View
-            accessible
-            accessibilityLabel={`Balance, ${spokenMoney(content.balanceCents, tag)}`}
-            style={styles.balance}
-          >
-            <Text style={[type.label, { color: tone.cardLabel }]}>Balance</Text>
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              maxFontSizeMultiplier={AMOUNT_MAX_SCALE}
-              style={[type.display, { color: tone.cardAmount }]}
+          <View onLayout={(e) => setBodyHeight(e.nativeEvent.layout.height)}>
+            {/* "Balance" and the amount are read as one element: "Balance, minus 150,00 €". */}
+            <View
+              accessible
+              accessibilityLabel={`Balance, ${spokenMoney(content.balanceCents, tag)}`}
+              style={styles.balance}
             >
-              {formatMoney(balance ?? content.balanceCents, tag)}
-            </Text>
-          </View>
-          <View style={[styles.stats, isLargeText && styles.statsStacked]}>
-            <StatPill
-              label="Income"
-              cents={content.incomeCents}
-              shownCents={income ?? content.incomeCents}
-              tag={tag}
-              tone={tone}
-              icon="arrow-up"
-              iconColor={colors.income}
-              iconBackground={colors.incomeSoft}
-            />
-            <StatPill
-              label="Expenses"
-              cents={content.expenseCents}
-              shownCents={expenses ?? content.expenseCents}
-              tag={tag}
-              tone={tone}
-              icon="arrow-down"
-              iconColor={colors.text}
-              iconBackground={tone.expenseIcon}
-            />
+              <Text style={[type.balanceLabel, { color: tone.cardLabel }]}>Balance</Text>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                maxFontSizeMultiplier={AMOUNT_MAX_SCALE}
+                style={[type.display, { color: tone.cardAmount }]}
+              >
+                {formatMoney(balance ?? content.balanceCents, tag)}
+              </Text>
+            </View>
+            <View style={[styles.stats, isLargeText && styles.statsStacked]}>
+              <StatPill
+                label="Income"
+                cents={content.incomeCents}
+                shownCents={income ?? content.incomeCents}
+                tag={tag}
+                tone={tone}
+                icon="arrow-up"
+                iconColor={tone.cardInk}
+                iconBackground={tone.expenseIcon}
+              />
+              <StatPill
+                label="Expenses"
+                cents={content.expenseCents}
+                shownCents={expenses ?? content.expenseCents}
+                tag={tag}
+                tone={tone}
+                icon="arrow-down"
+                iconColor={tone.cardInk}
+                iconBackground={tone.expenseIcon}
+              />
+            </View>
           </View>
         </Appear>
       )}
@@ -160,7 +167,7 @@ type StatPillProps = {
 };
 
 function StatPill({ label, cents, shownCents, tag, tone, icon, iconColor, iconBackground }: StatPillProps) {
-  const { colors, type, isLargeText } = useTheme();
+  const { type, isLargeText } = useTheme();
   return (
     <View
       accessible
@@ -169,7 +176,7 @@ function StatPill({ label, cents, shownCents, tag, tone, icon, iconColor, iconBa
       style={[
         styles.pill,
         !isLargeText && styles.flex,
-        { backgroundColor: colors.glassFillStrong, borderColor: colors.glassBorder },
+        { backgroundColor: tone.statPill, borderColor: tone.cardRim },
       ]}
     >
       <View
@@ -232,8 +239,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   iconCircle: {
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     borderRadius: radii.full,
     alignItems: 'center',
     justifyContent: 'center',

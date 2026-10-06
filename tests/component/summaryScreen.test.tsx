@@ -150,7 +150,9 @@ it('shows zero totals and the empty line for a month with no transactions (FR-02
   expect(screen.getAllByText(eur('0,00'))).toHaveLength(3);
   expect(screen.getByText('No transactions this month yet.')).toBeTruthy();
   expect(screen.getByText('Tap Add to record an income or expense.')).toBeTruthy();
-  expect(screen.queryByText('Transactions')).toBeNull();
+  // The title with Add shows in every state (FR-002).
+  expect(screen.getByText('Transactions')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Add transaction' })).toBeTruthy();
   expect(addButton()).toBeTruthy();
 });
 
@@ -232,4 +234,36 @@ it('has no dev tools unless the build sets EXPO_PUBLIC_DEV_TOOLS', async () => {
   await flush();
   expect(screen.queryByText('Seed 1,000 transactions')).toBeNull();
   expect(screen.queryByText('Simulate storage error')).toBeNull();
+});
+
+describe('Add next to "Transactions" and See all (FR-002, FR-017)', () => {
+  const seven = Array.from({ length: 7 }, (_, i) =>
+    expense(100 * (i + 1), `2026-10-${String(15 - Math.floor(i / 2)).padStart(2, '0')}`, 'food'),
+  );
+
+  it('shows Add while loading and when loading fails', async () => {
+    mockOpen.mockReturnValue(new Promise(() => {}));
+    renderSummary();
+    await flush();
+    expect(screen.getByRole('button', { name: 'Add transaction' })).toBeTruthy();
+  });
+
+  it('lists the 5 most recent with See all, and a cut day still nets the whole day', async () => {
+    await databaseWith(seven);
+    renderSummary();
+    await flush();
+    expect(screen.getAllByLabelText(/^Expense, Food, /)).toHaveLength(5);
+    // 13 October holds the 5th and 6th rows: only one shows, its header nets both (5,00 + 6,00).
+    expect(screen.getByLabelText(`Tuesday 13 October, net minus ${eur('11,00')}`)).toBeTruthy();
+    fireEvent.press(screen.getByRole('button', { name: 'See all transactions' }));
+    expect(mockPush).toHaveBeenCalledWith('/transactions');
+  });
+
+  it('shows no See all with 5 or fewer', async () => {
+    await databaseWith(seven.slice(0, 5));
+    renderSummary();
+    await flush();
+    expect(screen.getAllByLabelText(/^Expense, Food, /)).toHaveLength(5);
+    expect(screen.queryByRole('button', { name: 'See all transactions' })).toBeNull();
+  });
 });

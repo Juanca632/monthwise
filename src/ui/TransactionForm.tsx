@@ -38,7 +38,8 @@ import { getToday } from '@/hooks/useToday';
 import { useRegion } from '@/hooks/useRegion';
 import { haptics } from '@/lib/haptics';
 
-import { ChipFace, SEGMENT_BORDER, TypeIndicator, useShake } from './formMotion';
+import { SEGMENT_BORDER, TypeIndicator, useShake } from './formMotion';
+import { categoryLook } from './categoryLook';
 import { ShapePressable } from './glass';
 import { useSheet } from './Sheet';
 import { PressableScale } from './motion';
@@ -109,7 +110,7 @@ export function TransactionForm({
   onDelete,
   onDone,
 }: Props) {
-  const { colors, type, isLargeText } = useTheme();
+  const { colors, type, cardTones } = useTheme();
   const { tag } = useRegion();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -358,7 +359,8 @@ export function TransactionForm({
               style={[
                 type.amountInput,
                 styles.amountInput,
-                { color: colors.text },
+                // Income reads green at a glance (fine-tuning 2026-10-06).
+                { color: draft.type === 'income' ? colors.income : colors.text },
                 draft.amountText.length > LONG_AMOUNT && { fontSize: LONG_AMOUNT_SIZE },
               ]}
             />
@@ -398,55 +400,34 @@ export function TransactionForm({
                 { borderColor: categoryError ? colors.error : 'transparent' },
               ]}
             >
-              {categoriesFor(draft.type).map((c) => {
-                const selected = draft.category === c.key;
-                return (
-                  <ShapePressable
-                    key={c.key}
-                    accessibilityRole="button"
-                    accessibilityLabel={c.label}
-                    accessibilityState={{ selected }}
-                    onPress={() => {
-                      if (!selected) haptics.select();
-                      update('category', c.key);
-                    }}
-                    overlay={selected ? colors.rippleOnAccent : colors.ripple}
-                    style={[
-                      styles.chip,
-                      // Flat look: no visible border at rest; selecting keeps the 1 dp border,
-                      // in accent, so the chip never changes size (design.md). The accent fill
-                      // fades in on top.
-                      {
-                        backgroundColor: colors.surfaceMuted,
-                        borderColor: selected ? colors.accent : 'transparent',
-                      },
-                    ]}
-                  >
-                    <ChipFace
-                      selected={selected}
-                      label={c.label}
-                      textStyle={selected ? type.bodyStrong : type.body}
-                    />
-                  </ShapePressable>
-                );
-              })}
+              {categoriesFor(draft.type).map((c) => (
+                <CategoryTile
+                  key={c.key}
+                  type={draft.type}
+                  categoryKey={c.key}
+                  label={c.label}
+                  selected={draft.category === c.key}
+                  onPress={() => {
+                    if (draft.category !== c.key) haptics.select();
+                    update('category', c.key);
+                  }}
+                />
+              ))}
             </View>
             {categoryError && <FieldError message={categoryError} />}
           </Animated.View>
 
+          {/* Date and Note as one list card, like the iOS Settings rows (fine-tuning 2026-10-06). */}
           <View
-            style={[styles.pair, isLargeText && styles.pairStacked]}
+            style={[styles.details, { backgroundColor: colors.surfaceMuted }]}
             onLayout={(e) => (fieldY.current.date = e.nativeEvent.layout.y)}
           >
-            <Animated.View style={[!isLargeText && styles.flex, shakes.date.style]}>
+            <Animated.View style={[styles.detailRow, { borderBottomColor: colors.divider }, shakes.date.style]}>
+              <Feather name="calendar" size={iconSize.button} color={colors.textMuted} />
               <Text
                 ref={dateLabelRef}
-                accessibilityLabel={fieldLabel(
-                  'Date',
-                  formatSpokenDate(draft.date),
-                  dateError,
-                )}
-                style={[type.label, styles.fieldLabel, { color: colors.textMuted }]}
+                accessibilityLabel={fieldLabel('Date', formatSpokenDate(draft.date), dateError)}
+                style={[type.body, { color: colors.text }]}
               >
                 Date
               </Text>
@@ -455,24 +436,18 @@ export function TransactionForm({
                 accessibilityRole="button"
                 accessibilityLabel={fieldLabel('Date', formatSpokenDate(draft.date), dateError)}
                 onPress={openDatePicker}
-                style={[
-                  styles.box,
-                  styles.dateBox,
-                  { backgroundColor: colors.surfaceMuted },
-                  fieldBorderStyle(colors, { invalid: !!dateError }),
-                ]}
+                style={[styles.box, styles.dateValue, fieldBorderStyle(colors, { invalid: !!dateError })]}
               >
-                <Feather name="calendar" size={iconSize.button} color={colors.textMuted} />
-                <Text style={[type.body, { color: colors.text }]}>
+                <Text style={[type.body, { color: colors.textMuted }]}>
                   {formatNumericDate(draft.date, tag)}
                 </Text>
+                <Feather name="chevron-right" size={iconSize.button} color={colors.textMuted} />
               </ShapePressable>
-              {dateError && <FieldError message={dateError} />}
             </Animated.View>
-
-            <Animated.View style={[!isLargeText && styles.flex, shakes.note.style]}>
-              <Text style={[type.label, styles.fieldLabel, { color: colors.textMuted }]}>
-                Note (optional)
+            <Animated.View style={[styles.detailRow, styles.lastDetailRow, shakes.note.style]}>
+              <Feather name="edit-3" size={iconSize.button} color={colors.textMuted} />
+              <Text importantForAccessibility="no" style={[type.body, { color: colors.text }]}>
+                Note
               </Text>
               <TextInput
                 ref={noteRef}
@@ -481,20 +456,22 @@ export function TransactionForm({
                 value={draft.note}
                 // Cut by visible characters, not maxLength, which counts UTF-16 units (FR-007).
                 onChangeText={(text) => update('note', cutToGraphemes(text, NOTE_MAX_GRAPHEMES))}
-                placeholder="Add a note"
+                placeholder="Add a note (optional)"
                 placeholderTextColor={colors.textMuted}
                 onFocus={() => setNoteFocused(true)}
                 onBlur={() => setNoteFocused(false)}
                 style={[
                   type.body,
                   styles.box,
-                  { color: colors.text, backgroundColor: colors.surfaceMuted },
+                  styles.noteInput,
+                  { color: colors.text },
                   fieldBorderStyle(colors, { invalid: !!noteError, focused: noteFocused }),
                 ]}
               />
-              {noteError && <FieldError message={noteError} />}
             </Animated.View>
           </View>
+          {dateError && <FieldError message={dateError} />}
+          {noteError && <FieldError message={noteError} />}
         </View>
         {/* As much room as the footer rose, so Date and Note scroll above it (contract). */}
         <Animated.View testID="keyboard-spacer" style={keyboardLift.spacer} />
@@ -523,9 +500,11 @@ export function TransactionForm({
           accessibilityLabel="Save"
           onPress={save}
           overlay={colors.rippleOnAccent}
-          style={[styles.saveButton, { backgroundColor: colors.accent }]}
+          // The balance card's deep blue, so the form belongs to the same app (fine-tuning
+          // 2026-10-06).
+          style={[styles.saveButton, { experimental_backgroundImage: cardTones.positive.cardGlass }]}
         >
-          <Text style={[type.button, { color: colors.onAccent }]}>Save</Text>
+          <Text style={[type.button, { color: cardTones.positive.cardInk }]}>Save</Text>
         </ShapePressable>
       </Animated.View>
     </View>
@@ -557,6 +536,59 @@ export function FormHeader({ title, onClose }: { title: string; onClose(): void 
       </Text>
       <View style={styles.slot} />
     </View>
+  );
+}
+
+/**
+ * A category as a small tile with its icon in its own color, like the summary's tiles. Picking
+ * it fills the tile with a stronger tint of that color and outlines it in the color (the 1 dp
+ * border is always there, so nothing shifts; fine-tuning 2026-10-06).
+ */
+function CategoryTile({
+  type: txType,
+  categoryKey,
+  label,
+  selected,
+  onPress,
+}: {
+  type: TransactionType;
+  categoryKey: CategoryKey;
+  label: string;
+  selected: boolean;
+  onPress(): void;
+}) {
+  const { colors, type, scheme } = useTheme();
+  const look = categoryLook(txType, categoryKey, scheme, colors);
+  return (
+    <ShapePressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      style={[
+        styles.tile,
+        {
+          backgroundColor: selected ? look.tint : colors.surfaceMuted,
+          borderColor: selected ? look.ink : 'transparent',
+        },
+      ]}
+    >
+      <View
+        importantForAccessibility="no-hide-descendants"
+        style={[styles.tileIcon, { backgroundColor: selected ? colors.surface : look.tint }]}
+      >
+        <Feather name={look.icon} size={iconSize.button} color={look.ink} />
+      </View>
+      {/* Same weight when picked, so the label never grows; a long word shrinks a little
+          instead of spilling out of a narrow tile. */}
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        style={[type.label, styles.tileLabel, { color: colors.text }]}
+      >
+        {label}
+      </Text>
+    </ShapePressable>
   );
 }
 
@@ -685,6 +717,43 @@ const styles = StyleSheet.create({
     padding: spacing.xs - BORDER,
     margin: -spacing.xs,
   },
+  // Four per row; they grow with large text instead of cutting their labels (FR-031).
+  tile: {
+    flexBasis: '22%',
+    flexGrow: 1,
+    minHeight: 76,
+    borderWidth: REST_BORDER,
+    borderRadius: radii.input,
+    padding: spacing.xs,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xxs,
+  },
+  tileIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tileLabel: { textAlign: 'center' },
+  details: { borderRadius: radii.input, overflow: 'hidden' },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingLeft: spacing.md,
+    borderBottomWidth: 1,
+  },
+  lastDetailRow: { borderBottomColor: 'transparent' },
+  dateValue: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: spacing.xxs,
+  },
+  noteInput: { flex: 1, textAlign: 'right' },
   chip: {
     minHeight: minTouch,
     borderWidth: REST_BORDER,

@@ -150,6 +150,9 @@ export default function RootLayout() {
                       }}
                     >
                       <Stack.Screen name="index" />
+                    {/* The iOS-style push and pop: in from the right, out to the right, with
+                        the screen behind moving a little (developer, 2026-10-06). */}
+                    <Stack.Screen name="transactions" options={{ animation: 'ios_from_right' }} />
                       <Stack.Screen name="transaction/new" options={FORM_SHEET} />
                       <Stack.Screen name="transaction/[id]" options={FORM_SHEET} />
                     </Stack>

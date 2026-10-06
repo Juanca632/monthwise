@@ -14,9 +14,12 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { durations, easeOut, spring, useReduceMotion } from './motion';
-import { radii, useTheme } from './theme';
+import { insetHighlight, radii, useTheme } from './theme';
 
 const never = { reduceMotion: ReduceMotion.Never };
+const DROP_STRETCH = 0.25;
+// Dark mode has no tile shadow; the drop still needs a little lift off the track.
+const DARK_DROP_SHADOW = '0 2px 6px rgba(0, 0, 0, 0.4)';
 /** The selected segment's accent border (design.md); the segments reserve the same width. */
 export const SEGMENT_BORDER = 1.5;
 
@@ -36,9 +39,17 @@ export function TypeIndicator({ index, inset, gap }: { index: 0 | 1; inset: numb
     position.set(reduceMotion ? index : withSpring(index, { ...spring, overshootClamping: true, ...never }));
   }, [index, reduceMotion, position]);
 
-  const slide = useAnimatedStyle(() => ({
-    transform: [{ translateX: position.value * (segmentWidth + gap) }],
-  }));
+  // A liquid drop (fine-tuning 2026-10-06): it stretches up to 25 % wider halfway across and
+  // settles back as it arrives. Under reduce motion it only swaps, so it never stretches.
+  const slide = useAnimatedStyle(() => {
+    const travel = 1 - Math.abs(2 * position.value - 1);
+    return {
+      transform: [
+        { translateX: position.value * (segmentWidth + gap) },
+        { scaleX: 1 + DROP_STRETCH * travel },
+      ],
+    };
+  });
 
   return (
     <View
@@ -52,10 +63,12 @@ export function TypeIndicator({ index, inset, gap }: { index: 0 | 1; inset: numb
           testID="type-indicator"
           style={[
             styles.indicator,
+            // Glass: a light fill, a bright rim, the top highlight and a soft shadow.
             {
               width: segmentWidth,
               backgroundColor: colors.segmentSelected,
-              borderColor: colors.accent,
+              borderColor: colors.glassBorderStrong,
+              boxShadow: `${insetHighlight(colors.glassHighlight)}, ${colors.tileShadow || DARK_DROP_SHADOW}`,
             },
             slide,
           ]}
