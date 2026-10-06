@@ -283,7 +283,7 @@ the Color and Balance card tones tables.
 
 ## Motion
 
-Built with `react-native-reanimated` (UI thread). Short, quiet and purposeful: motion shows
+Built with `react-native-reanimated` (UI thread; the counted amounts are the one exception, see "Counting amounts"). Short, quiet and purposeful: motion shows
 where things come from and confirms what happened. Curves: **ease-out** `(0.2, 0.8, 0.2, 1)`,
 **sheet** `(0.2, 0.9, 0.25, 1)`, **ease-in** `(0.4, 0, 1, 1)`, **spring** damping 15, stiffness 300.
 
@@ -293,8 +293,8 @@ where things come from and confirms what happened. Curves: **ease-out** `(0.2, 0
 | Open a form | The sheet slides up from the bottom; behind it the summary scales to 92 %, moves down 6 dp and rounds to radius 28, and the `scrim` fades in over it | 440 ms | sheet |
 | Close a form | The sheet slides down; the summary and scrim return | 300 ms | ease-in |
 | Drag the sheet | It follows the finger downward (never above its resting place); the summary and scrim follow in proportion. Released past 30 % of its height or with a fast downward fling, it closes; otherwise it springs back | follows the finger | spring |
-| Change month | The month's content (the card's numbers, not its header row; the breakdown or empty card; the first 8 rows) slides 18 dp in from the side of the button tapped and fades in; the balance counts from the old to the new value | 340 ms; count 520 ms | ease-out |
-| Press | Any button, chip or row scales to 96 % and springs back | ~140 ms | spring |
+| Change month | The month's content (the card's numbers, not its header row; the breakdown or empty card; the first 8 rows) slides 18 dp in from the side of the button tapped and fades in; the balance, income and expenses count from the old to the new values | 340 ms; count 520 ms | ease-out |
+| Press | Any button, chip or row scales to 96 % and springs back | spring, settles in about 400 ms with a slight overshoot | spring |
 | Type switch | The selected segment indicator slides to the other option | 360 ms | spring |
 | Pick a category | The chip fills with accent | 220 ms | ease-out |
 | Keyboard opens or closes | The footer (Delete, Save) moves with the keyboard frame by frame (`useAnimatedKeyboard`), and the amount block's vertical padding goes from 32/24 to 16/12. Date and Note stay in place and reachable by scrolling (contract) | follows the keyboard | — |
@@ -318,7 +318,7 @@ How each is built:
   uses `react-native-gesture-handler`, on the grab handle and header only, so it never fights
   the form's scroll.
 - **Counting amounts**: a timer on the JS thread moves the value from the old to the new cents
-  along the ease-out curve and writes the rounded value into React state every 50 ms (T063: the
+  along the ease-out curve and writes the rounded value into React state every 50 ms (the
   value only ever reaches the screen through React state, so a Reanimated value would add a
   thread hop and nothing else), and a normal `Text` shows it, so `numberOfLines={1}`, `adjustsFontSizeToFit` and `maxFontSizeMultiplier` (Large
   text) keep working. The amount `Text` is not accessible on its own; its parent element keeps
@@ -328,10 +328,16 @@ How each is built:
   the old and new gradient layers and fades the new one's opacity in.
 - **Lists**: row enter and exit animations apply only to the row added, edited or deleted,
   never to rows mounting while scrolling, which keeps SC-004's 1,000-row month smooth.
+- **Entrance and month slide** are decided once, when the content mounts. A month slide wins
+  when the month changed less than 1 s before; otherwise content mounting less than 1.5 s after
+  the summary first mounted rises in. Content arriving later (a very slow first query or month)
+  just appears. Only the first 8 rows can do either. Content that arrives after its entrance
+  turn (a slow first query) keeps the 80 ms spacing among itself instead of appearing at once.
 
 **Reduce motion** (Android's "Remove animations", read with Reanimated's `useReducedMotion`):
 nothing moves, scales or slides. Every change above becomes an instant swap or a fade of at most
-200 ms: the sheet and scrim fade, rows fade in and out, the indicator and chips swap, the toast
+200 ms: the sheet and scrim fade, rows fade in and out, the entrance and month-slide content
+appears at once, the indicator and chips swap, the toast
 fades, counts jump to the final value, and the shake and press scale are dropped. The one
 exception is the footer following the keyboard, which the system itself moves.
 

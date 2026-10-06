@@ -48,22 +48,18 @@ export function TransactionList({ rows, tag, header, empty, footer, onPressItem,
       ListFooterComponent={footer}
       contentContainerStyle={{ paddingBottom: bottomPadding }}
       renderItem={({ item, index }) => {
-        const row = (
-          <TransactionRow
-            row={item}
-            tag={tag}
-            first={index === 0}
-            last={index === rows.length - 1}
-            onPress={onPressItem}
-          />
-        );
-        // Only the first screen's rows can animate; the rest never pay for it (SC-004).
-        return index < MAX_ANIMATED_ROWS ? (
-          <Appear on={['entrance', 'month']} slot={2 + index}>
-            {row}
+        // Only the first screen's rows can animate (SC-004). Every row keeps the same wrapper,
+        // so one crossing index 8 after a delete is not remounted.
+        return (
+          <Appear on={['entrance', 'month']} slot={2 + index} enabled={index < MAX_ANIMATED_ROWS}>
+            <TransactionRow
+              row={item}
+              tag={tag}
+              first={index === 0}
+              last={index === rows.length - 1}
+              onPress={onPressItem}
+            />
           </Appear>
-        ) : (
-          row
         );
       }}
     />

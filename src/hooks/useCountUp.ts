@@ -43,5 +43,7 @@ export function useCountUp(target: number | null, { animate, duration, easing }:
     return () => clearInterval(timer);
   }, [target, animate, duration, easing]);
 
-  return target === null ? null : shown;
+  // Without animation the target shows on the same render, not one frame later.
+  if (target === null) return null;
+  return animate ? shown : target;
 }

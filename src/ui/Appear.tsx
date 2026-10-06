@@ -35,6 +35,12 @@ type Moment = 'entrance' | 'month';
 
 function planFor(motion: SummaryMotion | null, on: readonly Moment[], slot: number, now: number): Plan | null {
   if (!motion) return null;
+  // A month change wins: a quick tap right after the cold start still slides sideways.
+  const change = motion.monthChange;
+  if (on.includes('month') && change && now - change.at < MONTH_WINDOW) {
+    const dx = change.from === 'left' ? -distances.monthSlide : distances.monthSlide;
+    return { delay: 0, duration: durations.monthChange, dx, dy: 0 };
+  }
   const sinceStart = now - motion.entranceStart;
   if (on.includes('entrance') && sinceStart < ENTRANCE_WINDOW) {
     // 80 ms apart from the cold start. Content that arrives late (the first query) keeps the
@@ -42,11 +48,6 @@ function planFor(motion: SummaryMotion | null, on: readonly Moment[], slot: numb
     const { entranceStagger: step } = durations;
     const delay = Math.max(slot * step - sinceStart, (slot - 1) * step, 0);
     return { delay, duration: durations.entrance, dx: 0, dy: distances.entranceRise };
-  }
-  const change = motion.monthChange;
-  if (on.includes('month') && change && now - change.at < MONTH_WINDOW) {
-    const dx = change.from === 'left' ? -distances.monthSlide : distances.monthSlide;
-    return { delay: 0, duration: durations.monthChange, dx, dy: 0 };
   }
   return null;
 }
@@ -56,16 +57,20 @@ type Props = {
   on: readonly Moment[];
   /** Its place in the entrance order: card 0, breakdown 1, then Add and the rows. */
   slot?: number;
+  /** False keeps the wrapper (so a row never remounts when its index changes) but never animates. */
+  enabled?: boolean;
   style?: StyleProp<ViewStyle>;
   children: ReactNode;
 };
 
 /** Rises in on the cold start or slides in on a month change; under reduce motion it just shows. */
-export function Appear({ on, slot = 0, style, children }: Props) {
+export function Appear({ on, slot = 0, enabled = true, style, children }: Props) {
   const motion = useContext(SummaryMotionContext);
   const reduceMotion = useReduceMotion();
   // Decided once, at mount.
-  const [plan] = useState(() => (reduceMotion ? null : planFor(motion, on, slot, Date.now())));
+  const [plan] = useState(() =>
+    reduceMotion || !enabled ? null : planFor(motion, on, slot, Date.now()),
+  );
   if (!plan) return <View style={style}>{children}</View>;
   return (
     <Moving plan={plan} style={style}>

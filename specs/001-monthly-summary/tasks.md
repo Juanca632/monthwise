@@ -773,7 +773,7 @@ labels are built from data, never from animated values; no new dependency beyond
   96 % with the spring, dropped under reduce motion). It replaces `Pressable` in: Add, month
   buttons (`MonthHeader`), list rows (`TransactionList`), Try again (`Totals`, error screen),
   Dismiss (`StateMessage`), and in the form: close, Type segments, chips, Date box, Delete and
-  Save. Tests in `tests/component/motion.test.tsx`: role, label and press feedback (ripple or
+  Save. (The amount row's `Pressable` stays: it is not a button, it only focuses the input.) Tests in `tests/component/motion.test.tsx`: role, label and press feedback (ripple or
   pressed overlay, design.md Touch feedback) still pass through;
   under reduce motion no scale is applied; the accessibility sweep (T050) stays green.
 - [x] T063 (FR-015, FR-031) Implement `src/hooks/useCountUp.ts` (design.md, Motion, "Counting
@@ -786,7 +786,7 @@ labels are built from data, never from animated values; no new dependency beyond
 - [x] T064 (FR-021) Summary entrance and month change: on cold start the balance card, breakdown,
   the rows in the first screen and Add rise in 80 ms apart; rows mounting later by scrolling never
   animate. Changing month slides the content 18 dp in from the side of the button tapped and
-  counts the balance. Tests: month navigation suite stays green; under reduce motion no
+  counts the balance, income and expenses. Tests: month navigation suite stays green; under reduce motion no
   translate is applied.
 
 ### Block 8d: the form sheet
