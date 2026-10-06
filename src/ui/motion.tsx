@@ -27,6 +27,8 @@ export const durations = {
   monthChange: 340,
   count: 520,
   toneChange: 600,
+  chipFill: 220,
+  shake: 300,
   saved: 560,
   deleted: 280,
   /** The longest fade allowed under reduce motion. */

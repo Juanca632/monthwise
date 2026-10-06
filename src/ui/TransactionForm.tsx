@@ -8,7 +8,6 @@ import {
   Alert,
   findNodeHandle,
   Keyboard,
-  KeyboardAvoidingView,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,6 +15,11 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import Animated, {
+  useAnimatedKeyboard,
+  useAnimatedStyle,
+  useDerivedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MAX_AMOUNT_CENTS } from '@/domain/amount';
@@ -34,10 +38,11 @@ import { currencyPosition, formatAmountForInput } from '@/format/money';
 import { getToday } from '@/hooks/useToday';
 import { useRegion } from '@/hooks/useRegion';
 
+import { ChipFill, TypeIndicator, useShake } from './formMotion';
 import { AccentButton, ShapePressable } from './glass';
 import { useSheet } from './Sheet';
 import { PressableScale } from './motion';
-import { iconSize, insetHighlight, minTouch, radii, spacing, useTheme, type Palette } from './theme';
+import { iconSize, minTouch, radii, spacing, useTheme, type Palette } from './theme';
 
 /** `null` means the operation succeeded; a string is the form-level failure message to show. */
 export type FormResult = string | null;
@@ -117,6 +122,14 @@ export function TransactionForm({
   const [amountFocused, setAmountFocused] = useState(false);
   const [noteFocused, setNoteFocused] = useState(false);
   const keyboardOpen = useKeyboardOpen();
+  const keyboardLift = useKeyboardLift(spacing.xxl + insets.bottom);
+  // One per field, so the first invalid one shakes on Save (design.md, Motion, "Invalid Save").
+  const shakes: Record<DraftField, ReturnType<typeof useShake>> = {
+    amount: useShake(),
+    category: useShake(),
+    date: useShake(),
+    note: useShake(),
+  };
 
   // Refs, not state: a second tap in the same frame must already see the first one.
   const busy = useRef(false);
@@ -234,6 +247,7 @@ export function TransactionForm({
       setErrors(result.errors);
       setFailure(null);
       focusField(result.firstInvalid);
+      shakes[result.firstInvalid].shake();
       return;
     }
     setErrors({});
@@ -276,8 +290,7 @@ export function TransactionForm({
 
   return (
     // The sheet around it draws the fill and the header (routes render both).
-    <KeyboardAvoidingView behavior="padding" style={styles.screen}>
-
+    <View style={styles.screen}>
       <ScrollView
         ref={scrollRef}
         keyboardShouldPersistTaps="handled"
@@ -291,6 +304,11 @@ export function TransactionForm({
             { backgroundColor: colors.fieldFill, borderColor: colors.fieldBorder },
           ]}
         >
+          <TypeIndicator
+            index={draft.type === 'expense' ? 0 : 1}
+            inset={TRACK_PADDING}
+            gap={spacing.xxs}
+          />
           {(['expense', 'income'] as const).map((option) => {
             const checked = draft.type === option;
             const label = option === 'expense' ? 'Expense' : 'Income';
@@ -301,10 +319,7 @@ export function TransactionForm({
                 accessibilityLabel={label}
                 accessibilityState={{ checked }}
                 onPress={() => changeType(option)}
-                style={[
-                  styles.segment,
-                  checked && { backgroundColor: colors.segmentIndicator, borderColor: colors.accent },
-                ]}
+                style={styles.segment}
               >
                 <Text
                   style={[
@@ -319,7 +334,10 @@ export function TransactionForm({
           })}
         </View>
 
-        <View style={[styles.amountBlock, amountBlockPadding]}>
+        <Animated.View
+          testID="field-amount"
+          style={[styles.amountBlock, amountBlockPadding, shakes.amount.style]}
+        >
           <Text style={[type.label, { color: colors.textMuted }]}>Amount</Text>
           {/* The whole row is tappable, so the field is easy to hit whatever the amount's width. */}
           <Pressable
@@ -361,10 +379,14 @@ export function TransactionForm({
             ]}
           />
           {amountError && <FieldError message={amountError} />}
-        </View>
+        </Animated.View>
 
         <View style={styles.fields} onLayout={(e) => (fieldsTop.current = e.nativeEvent.layout.y)}>
-          <View onLayout={(e) => (fieldY.current.category = e.nativeEvent.layout.y)}>
+          <Animated.View
+            testID="field-category"
+            style={shakes.category.style}
+            onLayout={(e) => (fieldY.current.category = e.nativeEvent.layout.y)}
+          >
             <Text
               ref={categoryLabelRef}
               accessibilityLabel={fieldLabel('Category', categoryValue, categoryError)}
@@ -391,20 +413,14 @@ export function TransactionForm({
                     style={[
                       styles.chip,
                       // Selecting keeps the 1 dp border, in accent, so the chip never changes
-                      // size; the highlight is only made transparent (design.md).
-                      selected
-                        ? {
-                            backgroundColor: colors.accent,
-                            borderColor: colors.accent,
-                            boxShadow: insetHighlight(colors.glassHighlight),
-                          }
-                        : {
-                            backgroundColor: colors.fieldFill,
-                            borderColor: colors.fieldBorder,
-                            boxShadow: insetHighlight('transparent'),
-                          },
+                      // size (design.md); the accent fill and its highlight fade in on top.
+                      {
+                        backgroundColor: colors.fieldFill,
+                        borderColor: selected ? colors.accent : colors.fieldBorder,
+                      },
                     ]}
                   >
+                    <ChipFill selected={selected} />
                     <Text
                       style={[
                         selected ? type.bodyStrong : type.body,
@@ -418,13 +434,13 @@ export function TransactionForm({
               })}
             </View>
             {categoryError && <FieldError message={categoryError} />}
-          </View>
+          </Animated.View>
 
           <View
             style={[styles.pair, isLargeText && styles.pairStacked]}
             onLayout={(e) => (fieldY.current.date = e.nativeEvent.layout.y)}
           >
-            <View style={!isLargeText && styles.flex}>
+            <Animated.View style={[!isLargeText && styles.flex, shakes.date.style]}>
               <Text
                 ref={dateLabelRef}
                 accessibilityLabel={fieldLabel(
@@ -454,9 +470,9 @@ export function TransactionForm({
                 </Text>
               </ShapePressable>
               {dateError && <FieldError message={dateError} />}
-            </View>
+            </Animated.View>
 
-            <View style={!isLargeText && styles.flex}>
+            <Animated.View style={[!isLargeText && styles.flex, shakes.note.style]}>
               <Text style={[type.label, styles.fieldLabel, { color: colors.textMuted }]}>
                 Note (optional)
               </Text>
@@ -479,16 +495,16 @@ export function TransactionForm({
                 ]}
               />
               {noteError && <FieldError message={noteError} />}
-            </View>
+            </Animated.View>
           </View>
         </View>
+        {/* As much room as the footer rose, so Date and Note scroll above it (contract). */}
+        <Animated.View testID="keyboard-spacer" style={keyboardLift.spacer} />
       </ScrollView>
 
-      <View
-        style={[
-          styles.footer,
-          { paddingBottom: keyboardOpen ? spacing.sm : spacing.xxl + insets.bottom },
-        ]}
+      <Animated.View
+        testID="form-footer"
+        style={[styles.footer, { paddingBottom: spacing.xxl + insets.bottom }, keyboardLift.footer]}
       >
         {failure && <FieldError message={failure} />}
         {onDelete && (
@@ -510,8 +526,8 @@ export function TransactionForm({
         >
           <Text style={[type.button, { color: colors.onAccent }]}>Save</Text>
         </AccentButton>
-      </View>
-    </KeyboardAvoidingView>
+      </Animated.View>
+    </View>
   );
 }
 
@@ -555,6 +571,23 @@ function FieldError({ message }: { message: string }): ReactNode {
   );
 }
 
+/**
+ * The footer follows the keyboard frame by frame on the UI thread and sits 12 dp above it; with
+ * the keyboard closed it rests `restBottom` above the screen's bottom edge (design.md, Keyboard
+ * open). Both translucent flags keep Reanimated from adding its own system bar margins: the app is
+ * edge-to-edge and pads with the safe area insets itself.
+ */
+function useKeyboardLift(restBottom: number) {
+  const keyboard = useAnimatedKeyboard({
+    isStatusBarTranslucentAndroid: true,
+    isNavigationBarTranslucentAndroid: true,
+  });
+  const lift = useDerivedValue(() => Math.max(0, keyboard.height.value + spacing.sm - restBottom));
+  const footer = useAnimatedStyle(() => ({ transform: [{ translateY: -lift.value }] }));
+  const spacer = useAnimatedStyle(() => ({ height: lift.value }));
+  return { footer, spacer };
+}
+
 /** The layout tightens while the keyboard is open, so amount, chips and Save fit (SC-001). */
 function useKeyboardOpen(): boolean {
   const [open, setOpen] = useState(Keyboard.isVisible());
@@ -571,6 +604,8 @@ function useKeyboardOpen(): boolean {
 
 const BORDER = 2;
 const REST_BORDER = 1;
+// The track's padding: 4 dp plus the 1 dp the rest border leaves (design.md, borders).
+const TRACK_PADDING = spacing.xxs + BORDER - REST_BORDER;
 
 /**
  * design.md, "Borders never shift the layout": at rest a 1 dp `fieldBorder` plus 1 dp of extra
@@ -613,7 +648,7 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.md,
     // The 1 dp border plus 1 dp of extra padding, like the fields (design.md).
     borderWidth: REST_BORDER,
-    padding: spacing.xxs + BORDER - REST_BORDER,
+    padding: TRACK_PADDING,
     gap: spacing.xxs,
     borderRadius: radii.segmentTrack,
   },

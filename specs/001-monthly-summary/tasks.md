@@ -831,7 +831,7 @@ labels are built from data, never from animated values; no new dependency beyond
 
 ### Block 8e: keyboard and form motion
 
-- [ ] T068 (SC-001) Keyboard (design.md, "Keyboard open"): replace `KeyboardAvoidingView` in
+- [x] T068 (SC-001) Keyboard (design.md, "Keyboard open"): replace `KeyboardAvoidingView` in
   `TransactionForm` with Reanimated's `useAnimatedKeyboard`, driving the footer (12 dp above the
   keyboard) and the scroll view's bottom padding; the amount block's padding goes from 32/24 to
   16/12. First check `app.config.ts` and Expo's edge-to-edge defaults for
@@ -842,7 +842,10 @@ labels are built from data, never from animated values; no new dependency beyond
   Phone check on a 360 × 640 dp screen (or the developer's phone) at default font: amount, all
   expense chips and Save fit above the keyboard. If they do not, apply design.md's fallback
   (single scrolling chip row), a decision point for the developer.
-- [ ] T072 (FR-009) Form motion: the Type indicator slides with the spring; a picked chip fills
+  Done in code (2026-10-06): `softwareKeyboardLayoutMode` is unset, so Expo's default
+  `adjustResize` applies, and `useAnimatedKeyboard` takes over the insets, so the window does
+  not also resize. **Phone check pending** (the developer's final pass).
+- [x] T072 (FR-009) Form motion: the Type indicator slides with the spring; a picked chip fills
   over 220 ms; on an invalid Save the first invalid field shakes 6 dp three times. Under reduce
   motion the indicator and chip swap and there is no shake. Tests: each animation's reduce-motion
   path; validation focus order (FR-009) unchanged.

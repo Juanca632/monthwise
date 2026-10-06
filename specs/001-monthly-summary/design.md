@@ -510,8 +510,13 @@ There is no native header (`headerShown: false`).
 - **Keyboard open** (SC-001; the target is a 360 × 640 dp screen at the default text size):
   - The footer follows the keyboard with Reanimated's `useAnimatedKeyboard` (no
     `KeyboardAvoidingView`, which would move it twice) and sits right above it with a 12 dp
-    bottom gap; `28 + insets.bottom` applies only when the keyboard is closed. The fields'
-    scroll view gets the keyboard height as bottom padding, so every field stays reachable.
+    bottom gap; `28 + insets.bottom` applies only when the keyboard is closed. It rises by
+    `keyboard + 12 − (28 + insets.bottom)` (never below 0), and the fields' scroll view gets the
+    same amount as bottom room, so every field stays reachable above it. Both of the hook's
+    translucent-bar flags are on, because the app is edge-to-edge and pads with the safe area
+    insets itself. (Reanimated marks the hook deprecated in favor of
+    `react-native-keyboard-controller`; it still works in Reanimated 4.5. Switching would add a
+    dependency, which is the developer's call if the phone check fails.)
   - The amount block's vertical padding drops from 32/24 to 16/12, so the amount, all expense
     chips and Save fit above the keyboard.
   - **Fallback**, if Block 3b shows they still do not fit on the phone: the chips become a single
