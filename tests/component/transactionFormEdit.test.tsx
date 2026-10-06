@@ -35,6 +35,17 @@ jest.mock('@react-native-community/datetimepicker', () => ({
   DateTimePickerAndroid: { open: jest.fn() },
 }));
 
+// One haptic per action, for its result (T069): checked in the save and delete tests below.
+const mockHaptics = {
+  add: jest.fn(),
+  monthChange: jest.fn(),
+  select: jest.fn(),
+  saved: jest.fn(),
+  deleted: jest.fn(),
+  invalid: jest.fn(),
+};
+jest.mock('@/lib/haptics', () => ({ haptics: mockHaptics }));
+beforeEach(() => Object.values(mockHaptics).forEach((m) => m.mockClear()));
 const mockOpen = jest.fn();
 jest.mock('expo-sqlite', () => ({ openDatabaseAsync: (...a: unknown[]) => mockOpen(...a) }));
 
@@ -225,6 +236,7 @@ describe('editing', () => {
     // RNTL turns the no-break space into a plain one before applying a RegExp.
     expect(screen.getByLabelText(/^Expense, Food, 21,50 €/)).toBeTruthy();
     expect(screen.getByLabelText(`Food, ${eur('21,50')}, 4 percent`)).toBeTruthy();
+    expect(mockHaptics.saved).toHaveBeenCalledTimes(1);
   });
 
   it('changing to income clears the category and asks for a new one (FR-012)', async () => {
@@ -316,6 +328,7 @@ describe('save and delete failures (FR-025)', () => {
 
     expect(screen.getByText("Couldn't save. Your changes are still here.")).toBeTruthy();
     expect(amountInput().props.value).toBe('20');
+    expect(mockHaptics.saved).not.toHaveBeenCalled();
   });
 
   it('a storage error on delete shows "Couldn\'t delete." and keeps the content', async () => {
@@ -329,6 +342,7 @@ describe('save and delete failures (FR-025)', () => {
     expect(formOpen()).toBe(true);
     expect(screen.getByText("Couldn't delete.")).toBeTruthy();
     expect(amountInput().props.value).toBe('12,50');
+    expect(mockHaptics.deleted).not.toHaveBeenCalled();
   });
 
   it('deleting a row that is already gone closes the form and the summary reloads', async () => {
@@ -341,6 +355,8 @@ describe('save and delete failures (FR-025)', () => {
 
     expect(formOpen()).toBe(false);
     expect(screen.getByText('No transactions this month yet.')).toBeTruthy();
+    // Nothing was deleted by this tap, so nothing confirms it (no haptic, no toast).
+    expect(mockHaptics.deleted).not.toHaveBeenCalled();
   });
 });
 
@@ -361,6 +377,7 @@ describe('deleting (FR-013)', () => {
     await act(() => new Promise((resolve) => setTimeout(resolve, 250)));
     expect(screen.queryByLabelText(/^Expense, Food/)).toBeNull();
     expect(screen.getByLabelText(`Expenses, ${eur('500,00')}`)).toBeTruthy();
+    expect(mockHaptics.deleted).toHaveBeenCalledTimes(1);
   });
 
   it('Cancel changes nothing', async () => {
@@ -372,6 +389,7 @@ describe('deleting (FR-013)', () => {
 
     expect(formOpen()).toBe(true);
     expect(stored()).toHaveLength(1);
+    expect(mockHaptics.deleted).not.toHaveBeenCalled();
   });
 });
 

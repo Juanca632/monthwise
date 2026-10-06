@@ -7,6 +7,7 @@ import { NotFoundError, StorageError } from '@/data/errors';
 import { monthOf } from '@/domain/month';
 import type { TransactionDraft, TransactionInput } from '@/domain/validation';
 import { formatAmountForInput } from '@/format/money';
+import { useConfirmChange } from '@/hooks/useConfirmChange';
 import { useRegion } from '@/hooks/useRegion';
 import { reportError } from '@/lib/reportError';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
@@ -27,6 +28,7 @@ export default function EditTransactionScreen() {
   const { whenReady } = useDatabase();
   const { setSelected } = useSelectedMonth();
   const notice = useSummaryNotice();
+  const confirmChange = useConfirmChange();
   const [initial, setInitial] = useState<TransactionDraft | null>(null);
 
   useEffect(() => {
@@ -62,7 +64,7 @@ export default function EditTransactionScreen() {
   const save = async (input: TransactionInput): Promise<FormResult> => {
     try {
       await (await whenReady()).update(id, input);
-      notice.recordChange({ kind: 'updated', id });
+      confirmChange({ kind: 'updated', id });
     } catch (e) {
       if (e instanceof NotFoundError) return 'This transaction no longer exists.';
       reportError(e instanceof StorageError ? e.code : 'update');
@@ -76,7 +78,7 @@ export default function EditTransactionScreen() {
   const remove = async (): Promise<FormResult> => {
     try {
       await (await whenReady()).remove(id);
-      notice.recordChange({ kind: 'deleted', id });
+      confirmChange({ kind: 'deleted', id });
     } catch (e) {
       // Already gone: the goal is met, so it closes like a successful delete.
       if (e instanceof NotFoundError) return null;

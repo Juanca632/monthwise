@@ -30,6 +30,9 @@ export const durations = {
   chipFill: 220,
   shake: 300,
   saved: 560,
+  /** The toast's whole life, and its fade in and out. */
+  toast: 1800,
+  toastFade: 240,
   deleted: 280,
   /** The longest fade allowed under reduce motion. */
   reducedFade: 200,

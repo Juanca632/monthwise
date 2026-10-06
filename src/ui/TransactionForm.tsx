@@ -36,6 +36,7 @@ import { formatNumericDate, formatSpokenDate } from '@/format/date';
 import { currencyPosition, formatAmountForInput } from '@/format/money';
 import { getToday } from '@/hooks/useToday';
 import { useRegion } from '@/hooks/useRegion';
+import { haptics } from '@/lib/haptics';
 
 import { ChipFill, TypeIndicator, useShake } from './formMotion';
 import { AccentButton, ShapePressable } from './glass';
@@ -186,6 +187,7 @@ export function TransactionForm({
   const changeType = (next: TransactionType) => {
     if (next === draft.type) return;
     // FR-012: categories belong to a type, so a type change needs a new one.
+    haptics.select();
     setDraft((d) => ({ ...d, type: next, category: null }));
     setErrors(({ category: _, ...rest }) => rest);
   };
@@ -246,6 +248,7 @@ export function TransactionForm({
       setFailure(null);
       focusField(result.firstInvalid);
       shakes[result.firstInvalid].shake();
+      haptics.invalid();
       return;
     }
     setErrors({});
@@ -402,7 +405,10 @@ export function TransactionForm({
                     accessibilityRole="button"
                     accessibilityLabel={c.label}
                     accessibilityState={{ selected }}
-                    onPress={() => update('category', c.key)}
+                    onPress={() => {
+                      if (!selected) haptics.select();
+                      update('category', c.key);
+                    }}
                     overlay={selected ? colors.rippleOnAccent : colors.ripple}
                     style={[
                       styles.chip,

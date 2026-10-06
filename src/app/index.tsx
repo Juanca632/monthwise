@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { YearMonth } from '@/domain/month';
 import { useMonthSummary } from '@/hooks/useMonthSummary';
 import { useRegion } from '@/hooks/useRegion';
+import { haptics } from '@/lib/haptics';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
 import { useSheetProgress } from '@/state/SheetTransitionContext';
 import { useSummaryNotice } from '@/state/SummaryNoticeContext';
@@ -203,7 +204,10 @@ function AddButton({ bottom }: { bottom: number }) {
       <AccentButton
         accessibilityRole="button"
         accessibilityLabel="Add transaction"
-        onPress={() => router.push('/transaction/new')}
+        onPress={() => {
+          haptics.add();
+          router.push('/transaction/new');
+        }}
         style={styles.addButton}
       >
         <Feather name="plus" size={iconSize.button} color={colors.onAccent} />

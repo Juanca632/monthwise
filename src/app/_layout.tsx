@@ -23,8 +23,10 @@ import { logTiming } from '@/lib/devLog';
 import { msSinceStartup } from '@/lib/sinceStartup';
 import { SelectedMonthProvider } from '@/state/SelectedMonthContext';
 import { SheetTransitionProvider } from '@/state/SheetTransitionContext';
+import { ToastProvider } from '@/state/ToastContext';
 import { SummaryNoticeProvider } from '@/state/SummaryNoticeContext';
 import { ShapePressable } from '@/ui/glass';
+import { Toast } from '@/ui/Toast';
 import { minTouch, radii, spacing, useTheme } from '@/ui/theme';
 
 // Keeps the splash up until the fonts settle, so text never flashes in the wrong font. The promise
@@ -138,20 +140,24 @@ export default function RootLayout() {
         <SelectedMonthProvider>
           <SummaryNoticeProvider>
             <SheetTransitionProvider>
-              {fontsSettled && (
-                <ThemeProvider value={navigationTheme}>
-                  <Stack
-                    screenOptions={{
-                      headerShown: false,
-                      contentStyle: { backgroundColor: colors.background },
-                    }}
-                  >
-                    <Stack.Screen name="index" />
-                    <Stack.Screen name="transaction/new" options={FORM_SHEET} />
-                    <Stack.Screen name="transaction/[id]" options={FORM_SHEET} />
-                  </Stack>
-                </ThemeProvider>
-              )}
+              <ToastProvider>
+                {fontsSettled && (
+                  <ThemeProvider value={navigationTheme}>
+                    <Stack
+                      screenOptions={{
+                        headerShown: false,
+                        contentStyle: { backgroundColor: colors.background },
+                      }}
+                    >
+                      <Stack.Screen name="index" />
+                      <Stack.Screen name="transaction/new" options={FORM_SHEET} />
+                      <Stack.Screen name="transaction/[id]" options={FORM_SHEET} />
+                    </Stack>
+                  </ThemeProvider>
+                )}
+                {/* Above the navigator, so it shows over the summary while the sheet closes. */}
+                {fontsSettled && <Toast />}
+              </ToastProvider>
             </SheetTransitionProvider>
             <StatusBar style="auto" />
           </SummaryNoticeProvider>

@@ -5,10 +5,10 @@ import { useDatabase } from '@/data/DatabaseProvider';
 import { StorageError } from '@/data/errors';
 import { defaultFormDate, monthOf } from '@/domain/month';
 import type { TransactionDraft, TransactionInput } from '@/domain/validation';
+import { useConfirmChange } from '@/hooks/useConfirmChange';
 import { getToday } from '@/hooks/useToday';
 import { reportError } from '@/lib/reportError';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
-import { useSummaryNotice } from '@/state/SummaryNoticeContext';
 import { Sheet } from '@/ui/Sheet';
 import { FormHeader, TransactionForm, type FormResult } from '@/ui/TransactionForm';
 
@@ -17,7 +17,7 @@ export default function NewTransactionScreen() {
   const router = useRouter();
   const { whenReady } = useDatabase();
   const { selected, setSelected } = useSelectedMonth();
-  const { recordChange } = useSummaryNotice();
+  const confirmChange = useConfirmChange();
 
   // Computed once when the form opens (FR-003): today on the current month, otherwise the last
   // day of the month on screen.
@@ -35,7 +35,7 @@ export default function NewTransactionScreen() {
       // opening waits for it (at most 10 s).
       const repository = await whenReady();
       const created = await repository.create(input, Date.now());
-      recordChange({ kind: 'created', id: created.id });
+      confirmChange({ kind: 'created', id: created.id });
     } catch (e) {
       reportError(e instanceof StorageError ? e.code : 'create');
       return "Couldn't save. Your changes are still here.";

@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { next, previous } from '@/domain/month';
 import { monthTitle } from '@/format/date';
+import { haptics } from '@/lib/haptics';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
 
 import { PressableScale } from './motion';
@@ -27,7 +28,10 @@ export function MonthHeader({ tone }: Props) {
           label={`Previous month, ${monthTitle(previous(selected))}`}
           icon="chevron-left"
           tone={tone}
-          onPress={goPrevious}
+          onPress={() => {
+            haptics.monthChange();
+            goPrevious();
+          }}
         />
       ) : (
         <View style={styles.slot} />
@@ -40,7 +44,10 @@ export function MonthHeader({ tone }: Props) {
           label={`Next month, ${monthTitle(next(selected))}`}
           icon="chevron-right"
           tone={tone}
-          onPress={goNext}
+          onPress={() => {
+            haptics.monthChange();
+            goNext();
+          }}
         />
       ) : (
         <View style={styles.slot} />

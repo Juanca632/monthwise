@@ -40,6 +40,9 @@ jest.mock('expo-router', () => {
   };
 });
 
+const mockHaptics = { add: jest.fn(), monthChange: jest.fn() };
+jest.mock('@/lib/haptics', () => ({ haptics: mockHaptics }));
+
 const SummaryScreen = require('@/app/index').default;
 
 const expense = (amountCents: number, date: string): TransactionInput => ({
@@ -82,7 +85,10 @@ const wait = (ms: number) => act(() => jest.advanceTimersByTime(ms));
 
 ignoreListBatchingWarnings();
 
-beforeEach(() => jest.useFakeTimers());
+beforeEach(() => {
+  jest.useFakeTimers();
+  jest.clearAllMocks();
+});
 afterEach(() => jest.useRealTimers());
 
 // Twelve rows in October, one in September.
@@ -115,4 +121,13 @@ it('slides the new month in from the side of the button tapped', async () => {
   const fromRight = moving().map(offset).filter((o) => o.opacity === 0);
   expect(fromRight.length).toBeGreaterThanOrEqual(3);
   for (const o of fromRight) expect(o).toEqual({ opacity: 0, x: 18, y: 0 });
+});
+
+it('plays one light haptic for Add and for each month change (design.md, Haptics)', async () => {
+  await renderSummary(OCTOBER);
+  fireEvent.press(screen.getByRole('button', { name: 'Add transaction' }));
+  expect(mockHaptics.add).toHaveBeenCalledTimes(1);
+  fireEvent.press(screen.getByRole('button', { name: 'Previous month, September 2026' }));
+  await flush();
+  expect(mockHaptics.monthChange).toHaveBeenCalledTimes(1);
 });

@@ -852,13 +852,13 @@ labels are built from data, never from animated values; no new dependency beyond
 
 ### Block 8f: haptics and toast
 
-- [ ] T069 Implement `src/lib/haptics.ts` with the mapping in design.md (Haptics), one call per
+- [x] T069 Implement `src/lib/haptics.ts` with the mapping in design.md (Haptics), one call per
   action, and call it from Add, month change, Type, category, a successful save, a successful
   delete (not the Delete tap or its dialog) and an invalid Save. Tests in
   `tests/unit/haptics.test.ts` with `expo-haptics` mocked: each moment calls its haptic exactly
   once (including invalid Save → Error); Save does not also fire a tap haptic; failed saves and
   deletes fire no success haptic.
-- [ ] T070 (FR-032) Confirmation toast (design.md, Toast; contracts/ui-screens.md):
+- [x] T070 (FR-032) Confirmation toast (design.md, Toast; contracts/ui-screens.md):
   `src/state/ToastContext.tsx` (provider) and `src/ui/Toast.tsx`, mounted in the root layout
   above the navigator; "Saved" after a successful save and
   "Deleted" after a successful delete, triggered where `lastChange` is set (T065); its bottom at

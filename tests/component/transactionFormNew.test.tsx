@@ -36,6 +36,17 @@ jest.mock('@react-native-community/datetimepicker', () => ({
   DateTimePickerAndroid: { open: jest.fn() },
 }));
 
+// One haptic per action, for its result (T069): checked in the save and delete tests below.
+const mockHaptics = {
+  add: jest.fn(),
+  monthChange: jest.fn(),
+  select: jest.fn(),
+  saved: jest.fn(),
+  deleted: jest.fn(),
+  invalid: jest.fn(),
+};
+jest.mock('@/lib/haptics', () => ({ haptics: mockHaptics }));
+beforeEach(() => Object.values(mockHaptics).forEach((m) => m.mockClear()));
 const mockOpen = jest.fn();
 jest.mock('expo-sqlite', () => ({ openDatabaseAsync: (...a: unknown[]) => mockOpen(...a) }));
 
@@ -176,6 +187,10 @@ it('records an expense in 4 interactions: open, type, chip, Save (SC-001)', asyn
     }),
   ]);
   expect(mockBack).toHaveBeenCalledTimes(1);
+  // A success haptic, and no tap haptic for Save itself.
+  expect(mockHaptics.saved).toHaveBeenCalledTimes(1);
+  expect(mockHaptics.invalid).not.toHaveBeenCalled();
+  expect(mockHaptics.select).toHaveBeenCalledTimes(1);
 });
 
 it('opens the date picker limited to 2000-01-01..today, and shows the picked date (FR-006)', async () => {
@@ -308,6 +323,7 @@ describe('validation (FR-004, FR-005, FR-008, FR-009)', () => {
     expect(setAccessibilityFocus).toHaveBeenCalledWith(42);
     expect(focus).not.toHaveBeenCalled();
     expect(rows()).toEqual([]);
+    expect(mockHaptics.invalid).toHaveBeenCalledTimes(1);
   });
 
   it('shows every invalid field and focuses the first one', async () => {
@@ -407,6 +423,7 @@ describe('saving', () => {
     expect(screen.getByRole('button', { name: 'Food' }).props.accessibilityState).toEqual({ selected: true });
     expect(screen.getByLabelText(/^Note \(optional\)/).props.value).toBe('lunch');
     expect(mockBack).not.toHaveBeenCalled();
+    expect(mockHaptics.saved).not.toHaveBeenCalled();
   });
 
   it('inserts once on a double tap', async () => {
