@@ -689,6 +689,181 @@ own transactions and totals. Add one from a past month and check that it lands i
   through while a form closes, which was the white flash on the phone. Tests in
   `tests/component/rootLayout.test.tsx`.
 
+
+## Phase 8: Glass and motion revision (design.md, 2026-10-06)
+
+**Goal**: the glass look, motion, haptics and confirmation toast from design.md (sections Glass
+surfaces, Motion, Haptics, Toast, Components) and FR-032. Runs before the APK verification
+(T052–T054), so the APKs show the final design.
+
+**Independent test**: on the phone, in light and dark, with the largest font, TalkBack and
+"Remove animations" each on in turn, the summary and forms look and move as in design.md, every
+existing test stays green, and a 1,000-row month (dev tools seed) still scrolls smoothly.
+
+Rules for this phase: values come from design.md, never from the mockups where they differ; every
+animation has the reduce-motion path from design.md (Motion, "Reduce motion"); accessibility
+labels are built from data, never from animated values; no new dependency beyond plan.md.
+
+### Block 8a: setup and device spike
+
+- [ ] T056 Set up the motion and gesture libraries:
+  - `npx expo install react-native-gesture-handler` (SDK 57's `~2.32.0`), and pin it in
+    `package.json` `overrides` like `react-native-reanimated` (plan.md, Dependencies), so the
+    3.3.0 copy pulled in by `expo-router` is not used. Check with `npm ls react-native-gesture-handler`.
+  - Wrap the root layout in `GestureHandlerRootView` (`flex: 1`, `background`).
+  - Jest: a `tests/setup/motion.ts` in `setupFiles` that requires
+    `react-native-gesture-handler/jestSetup` and calls Reanimated 4's
+    `require('react-native-reanimated').setUpTests()` (check both against their current docs).
+  - Run `npx expo install --check` afterwards: `react-native-reanimated` and the pinned
+    `react-native-worklets` must still match SDK 57.
+  Tests: `tests/component/rootLayout.test.tsx` stays green and checks the root wrapper.
+- [ ] T057 Device spike (design.md, Implementation notes): a temporary `src/app/spike.tsx`
+  shows a radial-gradient glow pair on `background` (light and dark), a `cardGlass` card with an
+  inset highlight, and an accent button with its glow, all through
+  `experimental_backgroundImage` and `boxShadow`. The developer opens it on the phone and
+  checks size, position, banding on dark and the inset highlight. Record the result in
+  `specs/001-monthly-summary/device-checks.md` (section "Glass spike"). If something does not
+  render well, update design.md to its solid fallback first. Delete `spike.tsx` afterwards. No
+  tests (temporary, removed in the same block).
+
+### Block 8b: glass surfaces
+
+- [ ] T058 (FR-030, FR-031) Update `src/ui/theme.ts` with every new token in design.md
+  (Glass surfaces): ambient glows per tone, `glassFill`, `glassFillStrong`, `glassBorder`,
+  `glassBorderStrong`, `glassHighlight`, `glassShadow`, `glassDivider`, `glassAvatar`,
+  `sheetFill`, `fieldFill`, `fieldBorder`, `scrim`, `cardGlass` per tone and the accent-button
+  gradient; the new dark `textMuted` and `cardLabel`; `cardDecor` removed.
+  Tests: `tests/component/theme.test.tsx` updated; new `tests/unit/contrast.test.ts` computes
+  the WCAG ratios in design.md ("Contrast over glass", field borders, accent buttons, selected
+  segment) by alpha-blending the tokens and asserts each is ≥ 4.5:1 (text) or ≥ 3:1 (borders).
+- [ ] T059 Implement `src/ui/glass.tsx`: `GlassCard` (fill, border, highlight, shadow on a
+  non-clipping wrapper), `AccentButton` (gradient, border, highlight, glow; ripple and clipping
+  on the inner pressable) and `AmbientBackground` (the two radial glows, hidden from the screen
+  reader; a tone change crossfades a second layer's opacity in over 600 ms, or swaps under
+  reduce motion). Tests in `tests/component/glass.test.tsx`: the background is hidden from
+  accessibility, a tone change renders the new layer, buttons keep role, label and 48 dp.
+- [ ] T060 (FR-015, FR-031) Apply glass to the summary (design.md, Components table):
+  `src/app/index.tsx` gets `AmbientBackground` and the 96 dp bottom fade; `Totals` uses
+  `cardGlass` (no decorative circle) and glass stat pills; `MonthHeader` buttons, `Breakdown`
+  and `TransactionList` cards, dividers and avatars, and `StateMessage` banner and empty card use
+  their glass tokens; Add becomes an `AccentButton`. When the balance tone changes, the card's
+  `cardGlass` crossfades like the glow (a second gradient layer fading in over 600 ms; a swap
+  under reduce motion). Tests: summary, breakdown, month navigation and accessibility suites
+  stay green (update only style assertions that design.md changed); a tone change renders the
+  new card layer, and under reduce motion it swaps without a fade.
+- [ ] T061 (FR-031) Apply glass to the form and the error screen: `fieldFill` and `fieldBorder`
+  on the close button, segmented track, unselected chips, Date and Note, with the border rule
+  from design.md ("Borders never shift the layout": 1 dp + 1 dp padding at rest, 2 dp on focus or
+  error); the selected chip and segment styles; Save as an `AccentButton`; **Try again** on the
+  error screen. Tests: form suites stay green; a test checks that a field's outer size is the same
+  at rest, focused and invalid.
+
+### Block 8c: summary motion
+
+- [ ] T062 Implement `src/ui/motion.ts`: the curves and durations from design.md (Motion), a
+  `useMotion()` hook that reads Reanimated's `useReducedMotion`, and `PressableScale` (scale to
+  96 % with the spring, dropped under reduce motion). It replaces `Pressable` in: Add, month
+  buttons (`MonthHeader`), list rows (`TransactionList`), Try again (`Totals`, error screen),
+  Dismiss (`StateMessage`), and in the form: close, Type segments, chips, Date box, Delete and
+  Save. Tests in `tests/component/motion.test.tsx`: role, label and ripple still pass through;
+  under reduce motion no scale is applied; the accessibility sweep (T050) stays green.
+- [ ] T063 (FR-015, FR-031) Implement `src/hooks/useCountUp.ts` (design.md, Motion, "Counting
+  amounts"): it animates from the old to the new cents and writes the rounded value to state at
+  most every 50 ms; under reduce motion it jumps. `Totals` uses it for the balance and stat
+  amounts; the amount `Text` is not accessible and the parent keeps the final-value label.
+  Tests in `tests/unit/useCountUp.test.tsx` (fake timers): it ends exactly on the target cents,
+  never shows a float, jumps under reduce motion; the accessibility suite still finds
+  "Balance, minus 150,00 €" right after a change.
+- [ ] T064 (FR-021) Summary entrance and month change: on cold start the balance card, breakdown,
+  the rows in the first screen and Add rise in 80 ms apart; rows mounting later by scrolling never
+  animate. Changing month slides the content 18 dp in from the side of the button tapped and
+  counts the balance. Tests: month navigation suite stays green; under reduce motion no
+  translate is applied.
+
+### Block 8d: the form sheet
+
+- [ ] T066 (FR-010, FR-013, FR-020) Sheet presentation (design.md, Motion, "Sheet", and the
+  Components table):
+  - Look: the form routes use `presentation: 'transparentModal'` with `animation: 'none'` (the
+    app animates, so the native modal animation never doubles it). The sheet sits 36 dp below
+    the top inset on `sheetFill`, radius 28 at the top, top edge `glassBorderStrong`, with a
+    40 × 5 dp grab handle in `textMuted` at 40 %, hidden from the screen reader.
+  - Motion: `src/state/SheetTransitionContext.tsx`, provided in the root layout, holds one shared
+    value (0 closed, 1 open) that drives the sheet's slide, the summary's scale (92 %), offset
+    (6 dp down) and radius (28), and the `scrim`. Opening animates 0 → 1.
+  - Closing: `usePreventRemove` in `TransactionForm` stays on for every removal, not only when
+    the form is dirty. Its callback decides: dirty → the existing "Discard changes?" (the sheet
+    stays open); clean, or after **Discard** → animate the sheet down, then dispatch the
+    blocked `data.action`. So X, Android back and the back gesture all slide down first. Save
+    and Delete (after its confirmation, FR-013) set `finished.current` and call the same
+    animate-then-leave path from `onDone`; when that final navigation reaches the callback,
+    `finished.current` makes it take the clean branch without animating again. No scrim tap. Under reduce motion the sheet and scrim
+    fade (≤ 200 ms).
+  Tests in `tests/component/sheet.test.tsx`: back on a clean form runs the close animation
+  before navigating; back on a dirty form shows "Discard changes?" and does not navigate;
+  Discard animates and navigates; Save and Delete close through the same path, exactly once and
+  with one animation; the handle exists
+  and is hidden from accessibility; existing form suites stay green.
+- [ ] T067 (FR-010) Drag to close: a gesture-handler pan on the grab handle and header only; the
+  sheet follows the finger downward; released past 30 % of its height or with a fast downward
+  fling, it runs the same close path as T066 (discard check included), otherwise it springs
+  back. Tests with gesture-handler's Jest utilities: a short drag springs back; a long drag
+  closes a clean form; a long drag on a dirty form shows "Discard changes?".
+
+- [ ] T065 (FR-019) Row change animations, after the sheet exists so they are seen as the form
+  closes: `SummaryNoticeContext` gains a one-off `lastChange: { kind: 'created' | 'updated' |
+  'deleted', id }`, set by the forms right after a successful save or delete. The summary animates only that row: created rows grow in, updated
+  rows flash, and a deleted row slides out and collapses once the sheet has closed and the
+  reload result no longer contains it (the row is kept for the 280 ms exit, then dropped). If the
+  reload fails, the error state shows as today and nothing animates. Tests in
+  `tests/component/rowChanges.test.tsx`: only the changed row animates; nothing animates under
+  reduce motion; a failed reload shows the error and no animation; a 1,000-row month mounts
+  without per-row animations.
+
+### Block 8e: keyboard and form motion
+
+- [ ] T068 (SC-001) Keyboard (design.md, "Keyboard open"): replace `KeyboardAvoidingView` in
+  `TransactionForm` with Reanimated's `useAnimatedKeyboard`, driving the footer (12 dp above the
+  keyboard) and the scroll view's bottom padding; the amount block's padding goes from 32/24 to
+  16/12. First check `app.config.ts` and Expo's edge-to-edge defaults for
+  `android.softwareKeyboardLayoutMode`: the window must not also resize, or the footer moves
+  twice. The native date dialog and the `Alert`s cover the keyboard and need no handling.
+  Tests (with `useAnimatedKeyboard` mocked): the footer's offset follows the mocked keyboard
+  height; Date and Note stay reachable by scrolling; the SC-001 4-interaction test stays green.
+  Phone check on a 360 × 640 dp screen (or the developer's phone) at default font: amount, all
+  expense chips and Save fit above the keyboard. If they do not, apply design.md's fallback
+  (single scrolling chip row), a decision point for the developer.
+- [ ] T072 (FR-009) Form motion: the Type indicator slides with the spring; a picked chip fills
+  over 220 ms; on an invalid Save the first invalid field shakes 6 dp three times. Under reduce
+  motion the indicator and chip swap and there is no shake. Tests: each animation's reduce-motion
+  path; validation focus order (FR-009) unchanged.
+
+### Block 8f: haptics and toast
+
+- [ ] T069 Implement `src/lib/haptics.ts` with the mapping in design.md (Haptics), one call per
+  action, and call it from Add, month change, Type, category, a successful save, a successful
+  delete (not the Delete tap or its dialog) and an invalid Save. Tests in
+  `tests/unit/haptics.test.ts` with `expo-haptics` mocked: each moment calls its haptic exactly
+  once (including invalid Save → Error); Save does not also fire a tap haptic; failed saves and
+  deletes fire no success haptic.
+- [ ] T070 (FR-032) Confirmation toast (design.md, Toast; contracts/ui-screens.md):
+  `src/state/ToastContext.tsx` (provider) and `src/ui/Toast.tsx`, mounted in the root layout
+  above the navigator; "Saved" after a successful save and
+  "Deleted" after a successful delete, triggered where `lastChange` is set (T065); its bottom at
+  `28 + insets.bottom + 56 + 12`, `pointerEvents="none"`, announced once, about 1.8 s; under
+  reduce motion it fades (≤ 200 ms) without moving; none after a failure or when `remove` throws
+  `NotFoundError`. Tests in `tests/component/toast.test.tsx`: shown and announced after save and
+  delete; not after a failed save, a failed delete, or `NotFoundError` on remove; its bottom
+  offset; no translate under reduce motion; gone after its time.
+- [ ] T071 Check the implemented UI: run the `design-reviewer` agent on `src/ui/`, `src/app/`
+  and `theme.ts` against design.md, and fix or accept its findings as for the docs. Then the
+  developer checks on the phone: light and dark, largest font, TalkBack, "Remove animations",
+  a seeded 1,000-row month scrolling smoothly, SC-001 with the keyboard open at default font, the
+  toast over a closing sheet, whether Android's touch-feedback setting silences the haptics
+  (design.md, Haptics), and a rough cold-start check with the new libraries (the measured SC-004
+  run stays in T052). Record the results in `specs/001-monthly-summary/device-checks.md`
+  (section "Glass and motion").
+
 ---
 
 ## Dependencies & Execution Order
@@ -707,6 +882,8 @@ own transactions and totals. Add one from a past month and check that it lands i
 - **US4 (Phase 6)**: needs US1's summary and header (T035, T037). It is independent of US2 and
   US3.
 - **Polish (Phase 7)**: needs all stories. T051 can run any time after Phase 1.
+- **Glass and motion (Phase 8)**: needs Phases 3–6 and T055. It runs before T052–T054, so the
+  APKs are built from the final design. Its blocks go in order 8a → 8f.
 
 ### Key task dependencies
 
@@ -717,6 +894,9 @@ own transactions and totals. Add one from a past month and check that it lands i
   T039 → T037, T038.
 - T044 → T038, T039. T045 → T030, T032, T044. T047 → T035, T028. T040 → T037. T041 → T039. T048 → T047 (the banner case also needs
   T045; if US4 is done before US3, that case moves to T046).
+- T057 → T056. T058 → T057. T059 → T058. T060, T061 → T059. T062 → T060, T061.
+  T063, T064 → T062. T066 → T056, T062. T065 → T064, T066. T067 → T066. T068 → T062, T066.
+  T072 → T068. T069 → T066, T072. T070 → T065, T066. T071 → T056–T072. T052 → T071.
 
 ### Parallel Opportunities
 
@@ -747,7 +927,14 @@ Task: "T035 [P] [US1] MonthHeader (title) in src/ui/MonthHeader.tsx"
 | 4 | T042–T043 | Breakdown per category |
 | 5 | T044–T046 | Edit and delete |
 | 6 | T047–T048 | Previous months |
-| 7 | T049–T054 | Dev tools, accessibility, APK verification, docs |
+| 7 | T049–T051, T055 | Dev tools, accessibility, docs, white-flash fix |
+| 8a | T056–T057 | Glass spike screen on the phone |
+| 8b | T058–T061 | Glass look on the summary, form and error screen, light and dark |
+| 8c | T062–T064 | Press feedback, entrance, month change, counting totals |
+| 8d | T066, T067, T065 | Form sheet over the summary, close paths, drag to close, discard check, row changes |
+| 8e | T068, T072 | Keyboard and Save above it (SC-001); Type indicator, chips, invalid shake |
+| 8f | T069–T071 | Haptics, toast, design review, full phone check |
+| 9 | T052–T054 | APK verification and final check |
 
 Commits: one or more Conventional Commits per block, proposed to the developer and made only
 when they ask.

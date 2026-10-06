@@ -154,11 +154,14 @@ src/
 │   └── date.ts
 ├── hooks/
 │   ├── useMonthSummary.ts        # loading | error | ready, reload on focus
+│   ├── useCountUp.ts             # animated amounts: throttled state, final value for screen readers
 │   ├── useToday.ts               # today, refreshed on foreground; forms also read it on open and on save
 │   └── useRegion.ts              # locale tag; decimal separator derived from the same Intl formatter
 ├── state/
 │   ├── SelectedMonthContext.tsx
-│   └── SummaryNoticeContext.tsx  # one-off banner messages for the summary (FR-025)
+│   ├── SummaryNoticeContext.tsx  # one-off banner messages for the summary (FR-025), last row change
+│   ├── SheetTransitionContext.tsx # shared value for the form sheet, summary scale and scrim
+│   └── ToastContext.tsx          # "Saved" / "Deleted" confirmation (FR-032)
 ├── ui/                           # presentational components
 │   ├── MonthHeader.tsx
 │   ├── Totals.tsx
@@ -166,6 +169,9 @@ src/
 │   ├── TransactionList.tsx
 │   ├── TransactionForm.tsx
 │   ├── StateMessage.tsx          # empty / error lines with optional action
+│   ├── glass.tsx                 # GlassCard, AccentButton, AmbientBackground (design.md, Glass surfaces)
+│   ├── motion.ts                 # curves, durations, reduce motion, PressableScale
+│   ├── Toast.tsx
 │   └── theme.ts                  # tokens from design.md: palettes, balance-card tones, type, spacing, large text
 ├── dev/
 │   ├── DevTools.tsx              # preview-only dev tools UI: seed button and storage-error switch
@@ -174,6 +180,7 @@ src/
 └── lib/
     ├── variant.ts                # getVariant(): extra.variant, missing = production
     ├── silenceLogs.ts            # preview/production: console no-op, silent global handler
+    ├── haptics.ts                # one haptic per action (design.md, Haptics)
     ├── devLog.ts                 # allow-listed: error codes and timings, preview only
     └── reportError.ts            # codes only, no financial data; dev and preview only
 
