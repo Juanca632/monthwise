@@ -6,7 +6,7 @@ import { labelFor, type CategoryKey } from '@/domain/categories';
 import { formatNumericDate, formatSpokenDate } from '@/format/date';
 import { formatMoney, formatSignedMoney } from '@/format/money';
 
-import { radii, spacing, useTheme } from './theme';
+import { insetHighlight, radii, spacing, useTheme } from './theme';
 
 type Props = {
   rows: readonly Transaction[];
@@ -90,12 +90,16 @@ function TransactionRow({ row, tag, first, last, onPress }: RowProps) {
     <View
       style={[
         styles.rowContent,
-        !last && { borderBottomWidth: 1, borderBottomColor: colors.divider },
+        // Only the color changes: borders are never removed at runtime (design.md).
+        { borderBottomColor: last ? 'transparent' : colors.glassDivider },
       ]}
     >
       <View
         importantForAccessibility="no-hide-descendants"
-        style={[styles.avatar, { backgroundColor: income ? colors.incomeSoft : colors.avatar }]}
+        style={[
+          styles.avatar,
+          { backgroundColor: income ? colors.incomeSoft : colors.glassAvatar },
+        ]}
       >
         <Text style={[type.avatarInitial, { color: income ? colors.income : colors.textMuted }]}>
           {label[0]}
@@ -111,31 +115,48 @@ function TransactionRow({ row, tag, first, last, onPress }: RowProps) {
     </View>
   );
 
-  // The card is drawn row by row, so only the outer rows round their corners.
-  const cardStyle = [
-    styles.row,
-    { backgroundColor: colors.surface },
-    first && styles.firstRow,
-    last && styles.lastRow,
-  ];
+  const rowStyle = [styles.row, first && styles.firstRow, last && styles.lastRow];
 
-  if (!onPress) {
-    return (
-      <View accessible accessibilityLabel={spoken} style={cardStyle}>
-        {content}
-      </View>
-    );
-  }
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={spoken}
-      onPress={() => onPress(row.id)}
-      android_ripple={{ color: colors.ripple }}
-      style={[...cardStyle, styles.clip]}
+    // The glass card is drawn row by row: every row has the fill and a 1 dp border on all sides,
+    // with the top and bottom borders transparent inside the card, so the outer rows only change
+    // a color when rows are added or removed. Only the outer rows round their corners, and this
+    // view clips the row's ripple to them (design.md, Touch feedback).
+    <View
+      style={[
+        styles.card,
+        first && styles.firstCard,
+        last && styles.lastCard,
+        {
+          backgroundColor: colors.glassFill,
+          borderColor: colors.glassBorder,
+          borderTopColor: first ? colors.glassBorder : 'transparent',
+          borderBottomColor: last ? colors.glassBorder : 'transparent',
+        },
+      ]}
     >
-      {content}
-    </Pressable>
+      {first && (
+        <View
+          pointerEvents="none"
+          style={[styles.highlight, { boxShadow: insetHighlight(colors.glassHighlight) }]}
+        />
+      )}
+      {onPress ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={spoken}
+          onPress={() => onPress(row.id)}
+          android_ripple={{ color: colors.ripple }}
+          style={rowStyle}
+        >
+          {content}
+        </Pressable>
+      ) : (
+        <View accessible accessibilityLabel={spoken} style={rowStyle}>
+          {content}
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -145,24 +166,30 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
     paddingHorizontal: spacing.xl,
   },
-  row: { marginHorizontal: spacing.md, paddingHorizontal: spacing.md },
-  firstRow: {
-    borderTopLeftRadius: radii.card,
-    borderTopRightRadius: radii.card,
-    paddingTop: spacing.xxs,
+  // No outer shadow: a shadow per row would show through the translucent rows above it, and a
+  // FlatList has no single view around its rows to carry one (design.md, Components).
+  card: { marginHorizontal: spacing.md, borderWidth: 1, overflow: 'hidden' },
+  firstCard: { borderTopLeftRadius: radii.card, borderTopRightRadius: radii.card },
+  lastCard: { borderBottomLeftRadius: radii.card, borderBottomRightRadius: radii.card },
+  highlight: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    borderTopLeftRadius: radii.card - 1,
+    borderTopRightRadius: radii.card - 1,
   },
-  lastRow: {
-    borderBottomLeftRadius: radii.card,
-    borderBottomRightRadius: radii.card,
-    paddingBottom: spacing.xxs,
-  },
-  clip: { overflow: 'hidden' },
+  row: { paddingHorizontal: spacing.md },
+  firstRow: { paddingTop: spacing.xxs },
+  lastRow: { paddingBottom: spacing.xxs },
   rowContent: {
     minHeight: 64,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
   },
   avatar: {
     width: 40,

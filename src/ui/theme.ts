@@ -24,7 +24,45 @@ export type Palette = {
   underlineIdle: string;
   ripple: string;
   rippleOnAccent: string;
+  // Glass surfaces (design.md). The solid tokens above stay as fallbacks where a gradient cannot
+  // be drawn.
+  ambientBottom: string;
+  glassFill: string;
+  glassFillStrong: string;
+  glassBorder: string;
+  glassBorderStrong: string;
+  glassHighlight: string;
+  /** A `boxShadow` value. */
+  glassShadow: string;
+  glassDivider: string;
+  glassAvatar: string;
+  /** An `experimental_backgroundImage` value; light is a flat white. */
+  sheetFill: string;
+  fieldFill: string;
+  fieldBorder: string;
+  scrim: string;
+  /** The Add and Save fill, an `experimental_backgroundImage` value. */
+  accentGradient: string;
+  accentBorder: string;
+  /** The selected Type segment's fill (Glass surfaces, "Selected segment"). */
+  segmentIndicator: string;
+  /** The banner's tint: `accentSoft`, at 60 % in dark (Components table). */
+  bannerFill: string;
+  /** The 96 dp fade behind Add, an `experimental_backgroundImage` value. */
+  bottomFade: string;
 };
+
+/** `#RRGGBB` at an opacity, written the way design.md gives it ("`#2F5BEA` at 22 %"). */
+export function withAlpha(hex: string, alpha: number): string {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/** The 1 dp inner top highlight of glass surfaces, a `boxShadow` value. */
+export const insetHighlight = (color: string) => `inset 0 1px 0 ${color}`;
+const DARK_GLASS_SHADOW = `0 20px 40px ${withAlpha('#000000', 0.35)}`;
+const verticalGradient = (top: string, bottom: string) =>
+  `linear-gradient(180deg, ${top}, ${bottom})`;
 
 export const palettes: Record<Scheme, Palette> = {
   light: {
@@ -45,8 +83,26 @@ export const palettes: Record<Scheme, Palette> = {
     incomeSoft: '#E3F4EE',
     error: '#B3362A',
     underlineIdle: '#8A93A3',
-    ripple: 'rgba(91, 100, 114, 0.12)', // #5B6472 at 12 %
-    rippleOnAccent: 'rgba(255, 255, 255, 0.20)', // #FFFFFF at 20 %
+    ripple: withAlpha('#5B6472', 0.12),
+    rippleOnAccent: withAlpha('#FFFFFF', 0.2),
+    ambientBottom: withAlpha('#0B6B5E', 0.12),
+    glassFill: withAlpha('#FFFFFF', 0.72),
+    glassFillStrong: withAlpha('#FFFFFF', 0.85),
+    glassBorder: withAlpha('#FFFFFF', 0.95),
+    glassBorderStrong: withAlpha('#0E1116', 0.06),
+    glassHighlight: '#FFFFFF',
+    glassShadow: `0 8px 24px ${withAlpha('#0E1116', 0.05)}`,
+    glassDivider: withAlpha('#0E1116', 0.06),
+    glassAvatar: '#F1F3F6',
+    sheetFill: verticalGradient('#FFFFFF', '#FFFFFF'),
+    fieldFill: withAlpha('#0E1116', 0.06),
+    fieldBorder: '#7D8696',
+    scrim: withAlpha('#000000', 0.45),
+    accentGradient: verticalGradient('#3D66EF', '#2F5BEA'),
+    accentBorder: withAlpha('#FFFFFF', 0.35),
+    segmentIndicator: '#FFFFFF',
+    bannerFill: '#EAF0FF',
+    bottomFade: verticalGradient(withAlpha('#F6F7F9', 0), withAlpha('#F6F7F9', 0.45)),
   },
   dark: {
     background: '#0D0F13',
@@ -58,7 +114,7 @@ export const palettes: Record<Scheme, Palette> = {
     avatar: '#232833',
     divider: '#232833',
     text: '#F2F4F7',
-    textMuted: '#9AA3B2',
+    textMuted: '#B0B8C6',
     accent: '#7D96FF',
     onAccent: '#0D0F13',
     accentSoft: '#1E2640',
@@ -66,8 +122,26 @@ export const palettes: Record<Scheme, Palette> = {
     incomeSoft: '#12332C',
     error: '#FF8A7A',
     underlineIdle: '#626B7C',
-    ripple: 'rgba(154, 163, 178, 0.12)', // #9AA3B2 at 12 %
-    rippleOnAccent: 'rgba(13, 15, 19, 0.20)', // #0D0F13 at 20 %
+    ripple: withAlpha('#9AA3B2', 0.12),
+    rippleOnAccent: withAlpha('#0D0F13', 0.2),
+    ambientBottom: withAlpha('#45D3A8', 0.18),
+    glassFill: withAlpha('#FFFFFF', 0.05),
+    glassFillStrong: withAlpha('#FFFFFF', 0.08),
+    glassBorder: withAlpha('#FFFFFF', 0.1),
+    glassBorderStrong: withAlpha('#FFFFFF', 0.14),
+    glassHighlight: withAlpha('#FFFFFF', 0.1),
+    glassShadow: DARK_GLASS_SHADOW,
+    glassDivider: withAlpha('#FFFFFF', 0.07),
+    glassAvatar: withAlpha('#FFFFFF', 0.07),
+    sheetFill: verticalGradient('#1E222E', '#0E1016'),
+    fieldFill: withAlpha('#FFFFFF', 0.06),
+    fieldBorder: withAlpha('#FFFFFF', 0.38),
+    scrim: withAlpha('#000000', 0.45),
+    accentGradient: verticalGradient('#A0B2FF', '#7089FA'),
+    accentBorder: withAlpha('#FFFFFF', 0.4),
+    segmentIndicator: withAlpha('#FFFFFF', 0.14),
+    bannerFill: withAlpha('#1E2640', 0.6),
+    bottomFade: verticalGradient(withAlpha('#0D0F13', 0), withAlpha('#0D0F13', 0.45)),
   },
 };
 
@@ -81,8 +155,16 @@ export type CardTone = {
   monthButton: string;
   statPill: string;
   expenseIcon: string;
-  cardDecor: string;
+  /** The top ambient glow (Glass surfaces, `ambientTop`). */
+  ambientTop: string;
+  /** The balance card's fill, an `experimental_backgroundImage` value. */
+  cardGlass: string;
+  /** A `boxShadow` value: `glassShadow`, except the light balance card's own blue shadow. */
+  cardShadow: string;
 };
+
+const cardGlass = (from: string, to: string) => `linear-gradient(160deg, ${from}, ${to})`;
+const LIGHT_CARD_SHADOW = `0 18px 40px ${withAlpha('#1D34A6', 0.12)}`;
 
 export const cardTones: Record<Scheme, Record<BalanceTone, CardTone>> = {
   light: {
@@ -94,7 +176,9 @@ export const cardTones: Record<Scheme, Record<BalanceTone, CardTone>> = {
       monthButton: '#FFFFFF',
       statPill: '#FFFFFF',
       expenseIcon: '#ECEEF2',
-      cardDecor: 'rgba(36, 67, 199, 0.06)', // #2443C7 at 6 %
+      ambientTop: withAlpha('#2F5BEA', 0.22),
+      cardGlass: cardGlass(withAlpha('#FFFFFF', 0.78), withAlpha('#E8EDFF', 0.55)),
+      cardShadow: LIGHT_CARD_SHADOW,
     },
     negative: {
       cardBackground: '#FCEAE7',
@@ -104,29 +188,35 @@ export const cardTones: Record<Scheme, Record<BalanceTone, CardTone>> = {
       monthButton: '#FFFFFF',
       statPill: '#FFFFFF',
       expenseIcon: '#F6DCD8',
-      cardDecor: 'rgba(179, 54, 42, 0.06)', // #B3362A at 6 %
+      ambientTop: withAlpha('#B3362A', 0.16),
+      cardGlass: cardGlass(withAlpha('#FFFFFF', 0.78), withAlpha('#FCEAE7', 0.6)),
+      cardShadow: LIGHT_CARD_SHADOW,
     },
   },
   dark: {
     positive: {
       cardBackground: '#161D38',
       cardInk: '#F2F4F7',
-      cardAmount: '#9DB0FF',
-      cardLabel: '#A9B3D6',
+      cardAmount: '#F2F4F7',
+      cardLabel: '#D5DBF0',
       monthButton: '#222A48',
       statPill: '#1E2541',
       expenseIcon: '#2A3150',
-      cardDecor: 'rgba(157, 176, 255, 0.06)', // #9DB0FF at 6 %
+      ambientTop: withAlpha('#7D96FF', 0.3),
+      cardGlass: cardGlass(withAlpha('#9DB0FF', 0.12), withAlpha('#FFFFFF', 0.03)),
+      cardShadow: DARK_GLASS_SHADOW,
     },
     negative: {
       cardBackground: '#2A1A19',
       cardInk: '#F2F4F7',
       cardAmount: '#FF9A8C',
-      cardLabel: '#C9B3AF',
+      cardLabel: '#E6D6D2',
       monthButton: '#3A2523',
       statPill: '#35211F',
       expenseIcon: '#4A2E2B',
-      cardDecor: 'rgba(255, 154, 140, 0.06)', // #FF9A8C at 6 %
+      ambientTop: withAlpha('#FF9A8C', 0.24),
+      cardGlass: cardGlass(withAlpha('#FF9A8C', 0.12), withAlpha('#FF9A8C', 0.04)),
+      cardShadow: DARK_GLASS_SHADOW,
     },
   },
 };

@@ -1,9 +1,10 @@
 import { Feather } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { formatMoney, spokenMoney } from '@/format/money';
 
+import { GlassCard, ShapePressable, ToneCrossfade } from './glass';
 import {
   balanceTone,
   iconSize,
@@ -34,14 +35,32 @@ const AMOUNT_MAX_SCALE = 1.3;
 export function Totals({ header, content, tag }: Props) {
   const { colors, cardTones, type, isLargeText } = useTheme();
   // Loading and error have no balance yet, so they use the positive tone.
-  const tone = cardTones[content.kind === 'values' ? balanceTone(content.balanceCents) : 'positive'];
+  const toneName = content.kind === 'values' ? balanceTone(content.balanceCents) : 'positive';
+  const tone = cardTones[toneName];
 
   return (
-    <View style={[styles.card, { backgroundColor: tone.cardBackground }]}>
-      <View
-        importantForAccessibility="no-hide-descendants"
-        style={[styles.decor, { backgroundColor: tone.cardDecor }]}
-      />
+    <GlassCard
+      radius={radii.balanceCard}
+      border={colors.glassBorderStrong}
+      highlight
+      shadow={tone.cardShadow}
+      style={styles.card}
+      contentStyle={styles.cardContent}
+      background={
+        <ToneCrossfade
+          tone={toneName}
+          testID="card-glass"
+          renderLayer={(t) => (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                { experimental_backgroundImage: cardTones[t].cardGlass },
+              ]}
+            />
+          )}
+        />
+      }
+    >
       {header(tone)}
 
       {content.kind === 'loading' && (
@@ -55,15 +74,17 @@ export function Totals({ header, content, tag }: Props) {
           <Text style={[type.label, styles.centered, { color: tone.cardLabel }]}>
             Couldn&apos;t load your data.
           </Text>
-          <Pressable
+          <ShapePressable
             accessibilityRole="button"
             accessibilityLabel="Try again"
             onPress={content.onRetry}
-            android_ripple={{ color: colors.ripple }}
-            style={[styles.retry, { backgroundColor: tone.monthButton }]}
+            style={[
+              styles.retry,
+              { backgroundColor: colors.glassFillStrong, borderColor: colors.glassBorderStrong },
+            ]}
           >
             <Text style={[type.bodyStrong, { color: tone.cardInk }]}>Try again</Text>
-          </Pressable>
+          </ShapePressable>
         </View>
       )}
 
@@ -107,7 +128,7 @@ export function Totals({ header, content, tag }: Props) {
           </View>
         </>
       )}
-    </View>
+    </GlassCard>
   );
 }
 
@@ -122,13 +143,17 @@ type StatPillProps = {
 };
 
 function StatPill({ label, cents, tag, tone, icon, iconColor, iconBackground }: StatPillProps) {
-  const { type, isLargeText } = useTheme();
+  const { colors, type, isLargeText } = useTheme();
   return (
     <View
       accessible
       accessibilityLabel={`${label}, ${spokenMoney(cents, tag)}`}
       // flex: 1 only side by side: in a stacked column it would collapse the pill's height.
-      style={[styles.pill, !isLargeText && styles.flex, { backgroundColor: tone.statPill }]}
+      style={[
+        styles.pill,
+        !isLargeText && styles.flex,
+        { backgroundColor: colors.glassFillStrong, borderColor: colors.glassBorder },
+      ]}
     >
       <View
         importantForAccessibility="no-hide-descendants"
@@ -151,25 +176,9 @@ function StatPill({ label, cents, tag, tone, icon, iconColor, iconBackground }: 
   );
 }
 
-const DECOR_SIZE = 260;
-
 const styles = StyleSheet.create({
-  card: {
-    marginHorizontal: spacing.sm,
-    borderRadius: radii.balanceCard,
-    padding: spacing.sm,
-    paddingBottom: spacing.md,
-    // Clips the decorative circle.
-    overflow: 'hidden',
-  },
-  decor: {
-    position: 'absolute',
-    width: DECOR_SIZE,
-    height: DECOR_SIZE,
-    borderRadius: DECOR_SIZE / 2,
-    right: -90,
-    top: -110,
-  },
+  card: { marginHorizontal: spacing.sm },
+  cardContent: { padding: spacing.sm, paddingBottom: spacing.md },
   centered: { textAlign: 'center' },
   loading: { height: 120, alignItems: 'center', justifyContent: 'center' },
   error: {
@@ -182,9 +191,9 @@ const styles = StyleSheet.create({
     minHeight: minTouch,
     paddingHorizontal: spacing.xl,
     borderRadius: radii.full,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
   },
   balance: {
     paddingTop: spacing.xxl,
@@ -203,6 +212,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: radii.statPill,
+    borderWidth: 1,
   },
   iconCircle: {
     width: 32,

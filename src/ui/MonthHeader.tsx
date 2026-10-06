@@ -62,8 +62,14 @@ function MonthButton({ label, icon, tone, onPress }: MonthButtonProps) {
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      android_ripple={{ color: colors.ripple }}
-      style={[styles.slot, styles.button, { backgroundColor: tone.monthButton }]}
+      // A rounded view does not clip its own ripple; a borderless one draws a circle instead
+      // (design.md, Touch feedback).
+      android_ripple={{ color: colors.ripple, borderless: true, radius: minTouch / 2 }}
+      style={[
+        styles.slot,
+        styles.button,
+        { backgroundColor: colors.glassFillStrong, borderColor: colors.glassBorderStrong },
+      ]}
     >
       <Feather name={icon} size={iconSize.button} color={tone.cardInk} />
     </Pressable>
@@ -75,10 +81,9 @@ const styles = StyleSheet.create({
   slot: { width: minTouch, height: minTouch },
   button: {
     borderRadius: radii.full,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    // Clips the ripple to the circle (design.md, Touch feedback).
-    overflow: 'hidden',
   },
   title: { flex: 1, textAlign: 'center' },
 });

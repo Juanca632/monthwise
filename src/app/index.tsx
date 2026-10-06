@@ -1,21 +1,23 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useMonthSummary } from '@/hooks/useMonthSummary';
 import { useRegion } from '@/hooks/useRegion';
 import { useSummaryNotice } from '@/state/SummaryNoticeContext';
 import { Breakdown } from '@/ui/Breakdown';
+import { AccentButton, AmbientBackground } from '@/ui/glass';
 import { MonthHeader } from '@/ui/MonthHeader';
 import { StateMessage } from '@/ui/StateMessage';
-import { iconSize, radii, spacing, useTheme } from '@/ui/theme';
+import { balanceTone, iconSize, spacing, useTheme } from '@/ui/theme';
 import { Totals, type TotalsContent } from '@/ui/Totals';
 import { TransactionList } from '@/ui/TransactionList';
 
 const ADD_HEIGHT = 56;
 const ADD_GAP = spacing.xxl;
+const BOTTOM_FADE_HEIGHT = 96;
 const OPEN_FAILED = "Couldn't open this transaction.";
 
 // Expo inlines EXPO_PUBLIC_* at build time, so production bundles drop this branch and, with it,
@@ -62,6 +64,10 @@ export default function SummaryScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
+      {/* Same rule as the balance card: loading and error use the positive tone. */}
+      <AmbientBackground
+        tone={content.kind === 'values' ? balanceTone(content.balanceCents) : 'positive'}
+      />
       <TransactionList
         rows={rows}
         tag={tag}
@@ -101,6 +107,13 @@ export default function SummaryScreen() {
         onPressItem={openTransaction}
         bottomPadding={ADD_HEIGHT + ADD_GAP + spacing.md + insets.bottom}
       />
+      {/* Lets the list pass softly under Add; a gradient, not a blur (design.md). */}
+      <View
+        testID="bottom-fade"
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        style={[styles.bottomFade, { experimental_backgroundImage: colors.bottomFade }]}
+      />
       <AddButton bottom={ADD_GAP + insets.bottom} />
     </View>
   );
@@ -108,43 +121,32 @@ export default function SummaryScreen() {
 
 /** Always visible, whatever the summary's state (FR-002). */
 function AddButton({ bottom }: { bottom: number }) {
-  const { colors, type, scheme } = useTheme();
+  const { colors, type } = useTheme();
   const router = useRouter();
   return (
-    // The shadow sits on a wrapper that does not clip; the button clips its ripple (design.md).
-    <View
-      pointerEvents="box-none"
-      style={[styles.addWrapper, { bottom }, scheme === 'light' && styles.addShadow]}
-    >
-      <Pressable
+    <View pointerEvents="box-none" style={[styles.addWrapper, { bottom }]}>
+      <AccentButton
         accessibilityRole="button"
         accessibilityLabel="Add transaction"
         onPress={() => router.push('/transaction/new')}
-        android_ripple={{ color: colors.rippleOnAccent }}
-        style={[styles.addButton, { backgroundColor: colors.accent }]}
+        style={styles.addButton}
       >
         <Feather name="plus" size={iconSize.button} color={colors.onAccent} />
         <Text style={[type.button, { color: colors.onAccent }]}>Add</Text>
-      </Pressable>
+      </AccentButton>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  addWrapper: {
+  addWrapper: { position: 'absolute', alignSelf: 'center' },
+  addButton: { minHeight: ADD_HEIGHT, paddingHorizontal: spacing.xxl },
+  bottomFade: {
     position: 'absolute',
-    alignSelf: 'center',
-    borderRadius: radii.full,
-  },
-  addShadow: { boxShadow: '0 6px 20px rgba(47,91,234,0.28)' },
-  addButton: {
-    minHeight: ADD_HEIGHT,
-    paddingHorizontal: spacing.xxl,
-    borderRadius: radii.full,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    overflow: 'hidden',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: BOTTOM_FADE_HEIGHT,
   },
 });

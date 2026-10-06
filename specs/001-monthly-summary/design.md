@@ -258,8 +258,9 @@ invisible in light, so it stays out; 2026-10-06.)
   (invisible on the `accent` fill), so selecting never adds or removes a border or shifts the
   layout.
 - **Selected segment**: one indicator that slides between the two options (Motion). Light:
-  `segmentSelected`; dark: `#FFFFFF` at 16 % on the track. Both with a 1.5 dp full `accent`
-  border (dark ≥ 3.0:1 against the fill around it, 5.0:1 against the track).
+  `segmentSelected`; dark: `#FFFFFF` at 14 % on the track. Both with a 1.5 dp full `accent`
+  border (dark 3.1:1 against its own fill and 4.9:1 against the track, at the sheet's lightest
+  stop; at 16 % the fill gave 2.9:1, so it was lowered in T058, 2026-10-06).
 - Cards and the toast put their outer shadow on an outer wrapper that does not clip; the fill,
   gradient and content go on an inner view that clips with `overflow: 'hidden'`. Pressables with
   their own shape clip their gradient and pressed overlay the same way (see Touch feedback).
@@ -366,7 +367,7 @@ cannot be drawn.
 | Balance card | `cardGlass` | `glassBorderStrong` | highlight, shadow |
 | Month buttons | `glassFillStrong` | `glassBorderStrong` | — |
 | Stat pills | `glassFillStrong` | `glassBorder` | — |
-| Breakdown and list cards | `glassFill` | `glassBorder` | highlight, `glassShadow`; rows separated by `glassDivider` |
+| Breakdown and list cards | `glassFill` | `glassBorder` | highlight, `glassShadow` (breakdown only, see below); rows separated by `glassDivider` |
 | List avatars | `glassAvatar` (income: `incomeSoft`) | — | — |
 | Banner, empty-state card | `glassFill` (banner keeps `accentSoft` tint at 100 % in light, 60 % in dark) | `glassBorder` | — |
 | Add, Save | accent button | 1 dp white border (Glass surfaces) | highlight |
@@ -375,6 +376,12 @@ cannot be drawn.
 | Selected chip, selected segment | as in Glass surfaces | chip: 1 dp `accent`, same width as at rest; segment: 1.5 dp `accent` | — |
 | Toast | `sheetFill` | `glassBorderStrong` | highlight, `glassShadow` |
 | Error screen **Try again** | `fieldFill` | `fieldBorder` | — |
+
+The transaction list card has no outer shadow (T060, 2026-10-06): the list is a `FlatList`
+that draws the card row by row, so there is no single view to carry the shadow, and a shadow on
+each row would show through the translucent rows around it. Each row draws its part of the card
+(fill, a 1 dp border whose top and bottom are transparent inside the card, and the outer rows'
+corners), so a row that becomes first or last only changes a color.
 
 ### Summary screen
 

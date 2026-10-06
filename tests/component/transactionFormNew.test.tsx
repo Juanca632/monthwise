@@ -210,6 +210,42 @@ describe('accessibility and layout', () => {
     expect(ReactNative.StyleSheet.flatten(header.props.style).paddingTop).toBe(8 + INSETS.top);
   });
 
+  it('keeps a field\'s outer size at rest, focused and invalid (design.md, borders)', async () => {
+    renderForm();
+    await flush();
+    // Border plus padding on each side; the rest of the box (minHeight, radius) never changes.
+    const edges = (node: ReturnType<typeof dateBox>) => {
+      const style: ReactNative.ViewStyle = ReactNative.StyleSheet.flatten(node.props.style);
+      const border = Number(style.borderWidth);
+      return {
+        horizontal: border + Number(style.paddingHorizontal),
+        vertical: border + Number(style.paddingVertical),
+        minHeight: style.minHeight,
+      };
+    };
+    const note = () => screen.getByTestId('note-input');
+
+    const dateAtRest = edges(dateBox());
+    const noteAtRest = edges(note());
+    expect(ReactNative.StyleSheet.flatten(note().props.style).borderWidth).toBe(1);
+
+    fireEvent(note(), 'focus');
+    expect(ReactNative.StyleSheet.flatten(note().props.style).borderWidth).toBe(2);
+    expect(edges(note())).toEqual(noteAtRest);
+    fireEvent(note(), 'blur');
+
+    // A date after today is invalid on Save.
+    fireEvent.press(dateBox());
+    const params = jest.mocked(DateTimePickerAndroid.open).mock.calls[0][0];
+    act(() => params.onValueChange!({ nativeEvent: { timestamp: 0, utcOffset: 0 } }, new Date(2026, 9, 20)));
+    typeAmount('5');
+    pressButton('Food');
+    await save();
+    expect(screen.getByText('Pick a date up to today.')).toBeTruthy();
+    expect(ReactNative.StyleSheet.flatten(dateBox().props.style).borderWidth).toBe(2);
+    expect(edges(dateBox())).toEqual(dateAtRest);
+  });
+
   it.each([
     ['es-ES', 'ES', 'after'],
     ['en-IE', 'IE', 'before'],

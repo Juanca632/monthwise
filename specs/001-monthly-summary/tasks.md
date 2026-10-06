@@ -728,7 +728,7 @@ labels are built from data, never from animated values; no new dependency beyond
 
 ### Block 8b: glass surfaces
 
-- [ ] T058 (FR-030, FR-031) Update `src/ui/theme.ts` with every new token in design.md
+- [x] T058 (FR-030, FR-031) Update `src/ui/theme.ts` with every new token in design.md
   (Glass surfaces): ambient glows per tone, `glassFill`, `glassFillStrong`, `glassBorder`,
   `glassBorderStrong`, `glassHighlight`, `glassShadow`, `glassDivider`, `glassAvatar`,
   `sheetFill`, `fieldFill`, `fieldBorder`, `scrim`, `cardGlass` per tone and the accent-button
@@ -736,13 +736,13 @@ labels are built from data, never from animated values; no new dependency beyond
   Tests: `tests/component/theme.test.tsx` updated; new `tests/unit/contrast.test.ts` computes
   the WCAG ratios in design.md ("Contrast over glass", field borders, accent buttons, selected
   segment) by alpha-blending the tokens and asserts each is ≥ 4.5:1 (text) or ≥ 3:1 (borders).
-- [ ] T059 Implement `src/ui/glass.tsx`: `GlassCard` (fill, border, highlight, shadow on a
+- [x] T059 Implement `src/ui/glass.tsx`: `GlassCard` (fill, border, highlight, shadow on a
   non-clipping wrapper), `AccentButton` (gradient, border and highlight, no glow; the pressed
   overlay in `rippleOnAccent` and the clipping on the inner pressable, design.md Touch feedback) and `AmbientBackground` (the two radial glows, hidden from the screen
   reader; a tone change crossfades a second layer's opacity in over 600 ms, or swaps under
   reduce motion). Tests in `tests/component/glass.test.tsx`: the background is hidden from
   accessibility, a tone change renders the new layer, buttons keep role, label and 48 dp.
-- [ ] T060 (FR-015, FR-031) Apply glass to the summary (design.md, Components table):
+- [x] T060 (FR-015, FR-031) Apply glass to the summary (design.md, Components table):
   `src/app/index.tsx` gets `AmbientBackground` and the 96 dp bottom fade; `Totals` uses
   `cardGlass` (no decorative circle) and glass stat pills; `MonthHeader` buttons (with the
   borderless ripple from design.md, Touch feedback, which fixes the square ripple; **Try again**
@@ -755,7 +755,7 @@ labels are built from data, never from animated values; no new dependency beyond
   under reduce motion). Tests: summary, breakdown, month navigation and accessibility suites
   stay green (update only style assertions that design.md changed); a tone change renders the
   new card layer, and under reduce motion it swaps without a fade.
-- [ ] T061 (FR-031) Apply glass to the form and the error screen: `fieldFill` and `fieldBorder`
+- [x] T061 (FR-031) Apply glass to the form and the error screen: `fieldFill` and `fieldBorder`
   on the close button, segmented track, unselected chips, Date and Note, with the border rule
   from design.md ("Borders never shift the layout": 1 dp + 1 dp padding at rest, 2 dp on focus or
   error); the selected chip and segment styles; Save as an `AccentButton`; **Try again** on the
@@ -767,7 +767,8 @@ labels are built from data, never from animated values; no new dependency beyond
 
 ### Block 8c: summary motion
 
-- [ ] T062 Implement `src/ui/motion.ts`: the curves and durations from design.md (Motion), a
+- [ ] T062 Complete `src/ui/motion.ts` (T059 started it with `easeOut`, the tone-change duration
+  and `useReduceMotion`): the rest of the curves and durations from design.md (Motion), a
   `useMotion()` hook that reads Reanimated's `useReducedMotion`, and `PressableScale` (scale to
   96 % with the spring, dropped under reduce motion). It replaces `Pressable` in: Add, month
   buttons (`MonthHeader`), list rows (`TransactionList`), Try again (`Totals`, error screen),

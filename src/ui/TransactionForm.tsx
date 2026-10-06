@@ -34,7 +34,8 @@ import { currencyPosition, formatAmountForInput } from '@/format/money';
 import { getToday } from '@/hooks/useToday';
 import { useRegion } from '@/hooks/useRegion';
 
-import { iconSize, minTouch, radii, spacing, useTheme } from './theme';
+import { AccentButton, ShapePressable } from './glass';
+import { iconSize, insetHighlight, minTouch, radii, spacing, useTheme, type Palette } from './theme';
 
 /** `null` means the operation succeeded; a string is the form-level failure message to show. */
 export type FormResult = string | null;
@@ -289,22 +290,24 @@ export function TransactionForm({
         <View
           accessibilityRole="radiogroup"
           accessibilityLabel="Type"
-          style={[styles.segmentTrack, { backgroundColor: colors.segmentTrack }]}
+          style={[
+            styles.segmentTrack,
+            { backgroundColor: colors.fieldFill, borderColor: colors.fieldBorder },
+          ]}
         >
           {(['expense', 'income'] as const).map((option) => {
             const checked = draft.type === option;
             const label = option === 'expense' ? 'Expense' : 'Income';
             return (
-              <Pressable
+              <ShapePressable
                 key={option}
                 accessibilityRole="radio"
                 accessibilityLabel={label}
                 accessibilityState={{ checked }}
                 onPress={() => changeType(option)}
-                android_ripple={{ color: colors.ripple }}
                 style={[
                   styles.segment,
-                  checked && { backgroundColor: colors.segmentSelected, borderColor: colors.accent },
+                  checked && { backgroundColor: colors.segmentIndicator, borderColor: colors.accent },
                 ]}
               >
                 <Text
@@ -315,7 +318,7 @@ export function TransactionForm({
                 >
                   {label}
                 </Text>
-              </Pressable>
+              </ShapePressable>
             );
           })}
         </View>
@@ -382,16 +385,28 @@ export function TransactionForm({
               {categoriesFor(draft.type).map((c) => {
                 const selected = draft.category === c.key;
                 return (
-                  <Pressable
+                  <ShapePressable
                     key={c.key}
                     accessibilityRole="button"
                     accessibilityLabel={c.label}
                     accessibilityState={{ selected }}
                     onPress={() => update('category', c.key)}
-                    android_ripple={{ color: selected ? colors.rippleOnAccent : colors.ripple }}
+                    overlay={selected ? colors.rippleOnAccent : colors.ripple}
                     style={[
                       styles.chip,
-                      { backgroundColor: selected ? colors.accent : colors.surfaceMuted },
+                      // Selecting keeps the 1 dp border, in accent, so the chip never changes
+                      // size; the highlight is only made transparent (design.md).
+                      selected
+                        ? {
+                            backgroundColor: colors.accent,
+                            borderColor: colors.accent,
+                            boxShadow: insetHighlight(colors.glassHighlight),
+                          }
+                        : {
+                            backgroundColor: colors.fieldFill,
+                            borderColor: colors.fieldBorder,
+                            boxShadow: insetHighlight('transparent'),
+                          },
                     ]}
                   >
                     <Text
@@ -402,7 +417,7 @@ export function TransactionForm({
                     >
                       {c.label}
                     </Text>
-                  </Pressable>
+                  </ShapePressable>
                 );
               })}
             </View>
@@ -425,25 +440,23 @@ export function TransactionForm({
               >
                 Date
               </Text>
-              <Pressable
+              <ShapePressable
+                testID="date-box"
                 accessibilityRole="button"
                 accessibilityLabel={fieldLabel('Date', formatSpokenDate(draft.date), dateError)}
                 onPress={openDatePicker}
-                android_ripple={{ color: colors.ripple }}
                 style={[
                   styles.box,
                   styles.dateBox,
-                  {
-                    backgroundColor: colors.surfaceMuted,
-                    borderColor: dateError ? colors.error : 'transparent',
-                  },
+                  { backgroundColor: colors.fieldFill },
+                  fieldBorderStyle(colors, { invalid: !!dateError }),
                 ]}
               >
                 <Feather name="calendar" size={iconSize.button} color={colors.textMuted} />
                 <Text style={[type.body, { color: colors.text }]}>
                   {formatNumericDate(draft.date, tag)}
                 </Text>
-              </Pressable>
+              </ShapePressable>
               {dateError && <FieldError message={dateError} />}
             </View>
 
@@ -453,6 +466,7 @@ export function TransactionForm({
               </Text>
               <TextInput
                 ref={noteRef}
+                testID="note-input"
                 accessibilityLabel={fieldLabel('Note (optional)', draft.note, noteError)}
                 value={draft.note}
                 // Cut by visible characters, not maxLength, which counts UTF-16 units (FR-007).
@@ -464,16 +478,8 @@ export function TransactionForm({
                 style={[
                   type.body,
                   styles.box,
-                  {
-                    color: colors.text,
-                    backgroundColor: colors.surfaceMuted,
-                    // When focused and invalid, the error border wins (design.md).
-                    borderColor: noteError
-                      ? colors.error
-                      : noteFocused
-                        ? colors.accent
-                        : 'transparent',
-                  },
+                  { color: colors.text, backgroundColor: colors.fieldFill },
+                  fieldBorderStyle(colors, { invalid: !!noteError, focused: noteFocused }),
                 ]}
               />
               {noteError && <FieldError message={noteError} />}
@@ -500,15 +506,14 @@ export function TransactionForm({
             <Text style={[type.labelStrong, { color: colors.error }]}>Delete</Text>
           </Pressable>
         )}
-        <Pressable
+        <AccentButton
           accessibilityRole="button"
           accessibilityLabel="Save"
           onPress={save}
-          android_ripple={{ color: colors.rippleOnAccent }}
-          style={[styles.saveButton, { backgroundColor: colors.accent }]}
+          style={styles.saveButton}
         >
           <Text style={[type.button, { color: colors.onAccent }]}>Save</Text>
-        </Pressable>
+        </AccentButton>
       </View>
     </KeyboardAvoidingView>
   );
@@ -524,8 +529,13 @@ export function FormHeader({ title, onClose }: { title: string; onClose(): void 
         accessibilityRole="button"
         accessibilityLabel="Close"
         onPress={onClose}
-        android_ripple={{ color: colors.ripple }}
-        style={[styles.roundButton, { backgroundColor: colors.surfaceMuted }]}
+        // A rounded view does not clip its own ripple; a borderless one draws a circle instead
+        // (design.md, Touch feedback).
+        android_ripple={{ color: colors.ripple, borderless: true, radius: minTouch / 2 }}
+        style={[
+          styles.roundButton,
+          { backgroundColor: colors.fieldFill, borderColor: colors.fieldBorder },
+        ]}
       >
         <Feather name="x" size={iconSize.button} color={colors.text} />
       </Pressable>
@@ -564,6 +574,23 @@ function useKeyboardOpen(): boolean {
 }
 
 const BORDER = 2;
+const REST_BORDER = 1;
+
+/**
+ * design.md, "Borders never shift the layout": at rest a 1 dp `fieldBorder` plus 1 dp of extra
+ * padding; focused or invalid, a 2 dp border without it, so the field keeps its size. When a field
+ * is both, the error wins.
+ */
+function fieldBorderStyle(colors: Palette, { invalid = false, focused = false }) {
+  const active = invalid || focused;
+  const extra = active ? 0 : BORDER - REST_BORDER;
+  return {
+    borderWidth: active ? BORDER : REST_BORDER,
+    borderColor: invalid ? colors.error : focused ? colors.accent : colors.fieldBorder,
+    paddingHorizontal: spacing.md + extra,
+    paddingVertical: extra,
+  };
+}
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
@@ -580,15 +607,17 @@ const styles = StyleSheet.create({
     width: minTouch,
     height: minTouch,
     borderRadius: radii.full,
+    borderWidth: REST_BORDER,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
   },
   scrollContent: { paddingTop: spacing.sm, paddingBottom: spacing.md },
   segmentTrack: {
     flexDirection: 'row',
     marginHorizontal: spacing.md,
-    padding: spacing.xxs,
+    // The 1 dp border plus 1 dp of extra padding, like the fields (design.md).
+    borderWidth: REST_BORDER,
+    padding: spacing.xxs + BORDER - REST_BORDER,
     gap: spacing.xxs,
     borderRadius: radii.segmentTrack,
   },
@@ -601,7 +630,6 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
   },
   amountBlock: { paddingHorizontal: spacing.xl, alignItems: 'center', gap: spacing.xs },
   amountRow: {
@@ -628,21 +656,18 @@ const styles = StyleSheet.create({
   },
   chip: {
     minHeight: minTouch,
-    paddingHorizontal: spacing.md,
+    borderWidth: REST_BORDER,
+    paddingHorizontal: spacing.md + BORDER - REST_BORDER,
+    paddingVertical: BORDER - REST_BORDER,
     borderRadius: radii.full,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
   },
   pair: { flexDirection: 'row', gap: spacing.sm },
   pairStacked: { flexDirection: 'column', gap: spacing.lg },
-  box: {
-    minHeight: 52,
-    borderRadius: radii.input,
-    paddingHorizontal: spacing.md,
-    borderWidth: BORDER,
-  },
-  dateBox: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, overflow: 'hidden' },
+  // Border and padding come from fieldBorderStyle().
+  box: { minHeight: 52, borderRadius: radii.input },
+  dateBox: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   error: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs },
   footer: { paddingHorizontal: spacing.md, paddingTop: spacing.md, gap: spacing.xs },
   textButton: {
@@ -654,11 +679,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  saveButton: {
-    minHeight: 56,
-    borderRadius: radii.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
+  saveButton: { minHeight: 56 },
 });

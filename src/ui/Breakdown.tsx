@@ -4,6 +4,7 @@ import { labelFor } from '@/domain/categories';
 import type { BreakdownItem } from '@/domain/summary';
 import { formatMoney } from '@/format/money';
 
+import { GlassCard } from './glass';
 import { StateMessage } from './StateMessage';
 import { radii, spacing, useTheme } from './theme';
 
@@ -17,7 +18,15 @@ export function Breakdown({ items, tag }: Props) {
       <Text style={[type.section, styles.sectionTitle, { color: colors.text }]}>
         Spending by category
       </Text>
-      <View style={[styles.card, { backgroundColor: colors.surface }]}>
+      <GlassCard
+        radius={radii.card}
+        fill={colors.glassFill}
+        border={colors.glassBorder}
+        highlight
+        shadow={colors.glassShadow}
+        style={styles.card}
+        contentStyle={styles.cardContent}
+      >
         {items.length === 0 ? (
           <StateMessage variant="inline" message="No expenses this month." />
         ) : (
@@ -30,7 +39,7 @@ export function Breakdown({ items, tag }: Props) {
             />
           ))
         )}
-      </View>
+      </GlassCard>
     </>
   );
 }
@@ -50,7 +59,9 @@ function BreakdownRow({ item, tag, last }: { item: BreakdownItem; tag: string; l
       style={[
         styles.row,
         isLargeText && styles.rowStacked,
-        !last && { borderBottomWidth: 1, borderBottomColor: colors.divider },
+        // The divider's width never changes, only its color: borders are never removed at
+        // runtime (design.md, Glass surfaces).
+        { borderBottomColor: last ? 'transparent' : colors.glassDivider },
       ]}
     >
       <Text style={[type.body, isLargeText ? undefined : styles.flex, { color: colors.text }]}>
@@ -74,18 +85,15 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
     paddingHorizontal: spacing.xl,
   },
-  card: {
-    marginHorizontal: spacing.md,
-    borderRadius: radii.card,
-    paddingVertical: spacing.xxs,
-    paddingHorizontal: spacing.md,
-  },
+  card: { marginHorizontal: spacing.md },
+  cardContent: { paddingVertical: spacing.xxs, paddingHorizontal: spacing.md },
   row: {
     minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
     paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
   },
   rowStacked: { flexDirection: 'column', alignItems: 'flex-start' },
   values: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },

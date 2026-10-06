@@ -14,7 +14,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -23,6 +23,7 @@ import { logTiming } from '@/lib/devLog';
 import { msSinceStartup } from '@/lib/sinceStartup';
 import { SelectedMonthProvider } from '@/state/SelectedMonthContext';
 import { SummaryNoticeProvider } from '@/state/SummaryNoticeContext';
+import { ShapePressable } from '@/ui/glass';
 import { minTouch, radii, spacing, useTheme } from '@/ui/theme';
 
 // Keeps the splash up until the fonts settle, so text never flashes in the wrong font. The promise
@@ -64,15 +65,17 @@ function GenericErrorScreen({ onRetry }: { onRetry: () => void }) {
       <Text style={[type.body, { color: colors.text, textAlign: 'center' }]}>
         Something went wrong.
       </Text>
-      <Pressable
+      <ShapePressable
         accessibilityRole="button"
         accessibilityLabel="Try again"
         onPress={onRetry}
-        android_ripple={{ color: colors.ripple }}
-        style={[styles.retryButton, { backgroundColor: colors.surfaceMuted }]}
+        style={[
+          styles.retryButton,
+          { backgroundColor: colors.fieldFill, borderColor: colors.fieldBorder },
+        ]}
       >
         <Text style={[type.bodyStrong, { color: colors.text }]}>Try again</Text>
-      </Pressable>
+      </ShapePressable>
     </View>
   );
 }
@@ -167,9 +170,8 @@ const styles = StyleSheet.create({
     minHeight: minTouch,
     paddingHorizontal: spacing.xl,
     borderRadius: radii.full,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    // Clips the ripple to the rounded shape (design.md, Touch feedback).
-    overflow: 'hidden',
   },
 });
