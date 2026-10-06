@@ -345,7 +345,8 @@ nothing moves, scales or slides. Every change above becomes an instant swap or a
 back still close it), rows fade in and out, the entrance and month-slide content
 appears at once, the indicator and chips swap, the toast
 fades, counts jump to the final value, and the shake and press scale are dropped. The one
-exception is the footer following the keyboard, which the system itself moves.
+exception is the footer following the keyboard, and the amount block's padding that tracks it,
+because the system itself moves the keyboard.
 
 Motion never blocks input: a tap during an animation acts right away. The one exception is a
 second way out (X, back, a drag) while the sheet already slides down: it is dropped, because the
@@ -517,7 +518,7 @@ There is no native header (`headerShown: false`).
     insets itself. (Reanimated marks the hook deprecated in favor of
     `react-native-keyboard-controller`; it still works in Reanimated 4.5. Switching would add a
     dependency, which is the developer's call if the phone check fails.)
-  - The amount block's vertical padding drops from 32/24 to 16/12, so the amount, all expense
+  - The amount block's vertical padding drops from 32/24 to 16/12 over the keyboard's first 120 dp, so the amount, all expense
     chips and Save fit above the keyboard.
   - **Fallback**, if Block 3b shows they still do not fit on the phone: the chips become a single
     horizontally scrolling row, 48 dp tall. Each chip is still one tap, so SC-001's 4 interactions
