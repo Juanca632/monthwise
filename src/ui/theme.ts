@@ -9,8 +9,6 @@ export type Palette = {
   surface: string;
   formBackground: string;
   surfaceMuted: string;
-  segmentTrack: string;
-  segmentSelected: string;
   avatar: string;
   divider: string;
   text: string;
@@ -70,8 +68,6 @@ export const palettes: Record<Scheme, Palette> = {
     surface: '#FFFFFF',
     formBackground: '#FFFFFF',
     surfaceMuted: '#F1F3F6',
-    segmentTrack: '#F1F3F6',
-    segmentSelected: '#FFFFFF',
     avatar: '#F1F3F6',
     divider: '#EEF0F3',
     text: '#0E1116',
@@ -109,8 +105,6 @@ export const palettes: Record<Scheme, Palette> = {
     surface: '#171A21',
     formBackground: '#0D0F13',
     surfaceMuted: '#1A1E26',
-    segmentTrack: '#171A21',
-    segmentSelected: '#262B35',
     avatar: '#232833',
     divider: '#232833',
     text: '#F2F4F7',

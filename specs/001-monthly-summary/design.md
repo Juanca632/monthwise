@@ -109,9 +109,7 @@ Chosen by `useColorScheme()` (FR-030). Measured contrast:
 | `surface` | `#FFFFFF` | `#171A21` | Cards |
 | `formBackground` | `#FFFFFF` | `#0D0F13` | Form screen background |
 | `surfaceMuted` | `#F1F3F6` | `#1A1E26` | Solid fallback for `fieldFill` and `glassFillStrong` (Components) |
-| `segmentTrack` | `#F1F3F6` | `#171A21` | Solid fallback for the segmented track (Components) |
-| `segmentSelected` | `#FFFFFF` | `#262B35` | Selected segment fill (plus a 1.5 dp `accent` border) |
-| `avatar` | `#F1F3F6` | `#232833` | Category initial circle in list items |
+| `avatar` | `#F1F3F6` | `#232833` | Solid fallback for `glassAvatar` |
 | `divider` | `#EEF0F3` | `#232833` | Row separators |
 | `text` | `#0E1116` | `#F2F4F7` | Primary text, chevron and close icons, expense arrow |
 | `textMuted` | `#5B6472` | `#B0B8C6` | Labels, captions, placeholders, unselected segment |
@@ -165,7 +163,7 @@ decorative circle) is dropped: the ambient glow replaces it.
   centers its content inside all insets. The Add button and the form's Save footer sit `28 + insets.bottom` above the
   bottom edge. The list's bottom padding is `56 + 28 + 16 + insets.bottom`. Status bar icons
   follow the theme (`expo-status-bar`, `style="auto"`).
-- **Radii**: balance card 28; cards 20; stat pills 16; inputs, date field and segmented track 16;
+- **Radii**: balance card 28; cards 20; stat pills 16; banner, inputs, date field and segmented track 16;
   segments 12; percent pill 8; chips, buttons and icon circles fully rounded.
 - **Touch targets**: every tappable element is at least **48 × 48 dp** (FR-031). Text buttons
   (Delete, Dismiss) have `minHeight` 48 and horizontal padding 16. The filled **Try again** button
@@ -181,15 +179,17 @@ decorative circle) is dropped: the ambient glow replaces it.
     `ripple`, or `rippleOnAccent` on accent buttons, from press-in until release, with no fade;
     the press scale (Motion) comes with it. Under reduce motion the overlay stays and the scale
     goes.
-  - **List rows and the banner's Dismiss** keep `android_ripple` with `ripple`: their card clips
-    it, because the card's inner view has `overflow: 'hidden'` and its shadow sits on an outer
-    wrapper (Glass surfaces). The spike only showed that a view does not clip its own ripple, so
-    this is checked on the phone in T060 (first and last row, Dismiss): if the card's corners
+  - **List rows and the banner's Dismiss** keep `android_ripple` with `ripple`, clipped by a
+    parent view with `overflow: 'hidden'`: the banner's inner view for Dismiss, and for each list
+    row the view that draws its part of the list card (rounded on the first and last rows; see
+    Components). The spike only showed that a view does not clip its own ripple, so
+    this is checked on the phone (first and last row, Dismiss): if the card's corners
     show a square ripple, they switch to the pressed overlay. **Delete** in the form footer has
     no card around it, so its ripple is its 48 dp-high rectangle, which is accepted.
   - Stat pills and breakdown rows are not pressable: no feedback and no button role.
-- **Elevation**: see Glass surfaces. Cards get a soft outer shadow and a 1 dp inner top
-  highlight. Accent buttons and the selected chip have no outer glow: on the phone it drew a white
+- **Elevation**: see Glass surfaces. The balance and breakdown cards get a soft outer shadow and
+  a 1 dp inner top highlight; the transaction list card gets only the highlight, and the banner
+  and empty-state card get neither (Components). Accent buttons and the selected chip have no outer glow: on the phone it drew a white
   rectangle around the button (glass spike, 2026-10-06). Where `boxShadow` is not supported (outer
   shadows need Android 9, inset ones Android 10), there is no shadow, and that is acceptable.
 - **Icons**: Feather from `@expo/vector-icons`: `chevron-left`, `chevron-right`, `plus`, `x`,
@@ -236,20 +236,27 @@ invisible in light, so it stays out; 2026-10-06.)
 | `glassBorder` | `#FFFFFF` at 95 % | `#FFFFFF` at 10 % | 1 dp border of summary cards and stat pills |
 | `glassBorderStrong` | `#0E1116` at 6 % | `#FFFFFF` at 14 % | 1 dp border of the balance card and month buttons; top edge of the sheet |
 | `glassHighlight` | `#FFFFFF` | `#FFFFFF` at 10 % | `inset 0 1px 0` top highlight |
-| `glassShadow` | `0 8px 24px` `#0E1116` at 5 % | `0 20px 40px` `#000000` at 35 % | Summary cards (balance card in light: `0 18px 40px` `#1D34A6` at 12 %) |
+| `glassShadow` | `0 8px 24px` `#0E1116` at 5 % | `0 20px 40px` `#000000` at 35 % | Balance and breakdown cards (balance card in light: `0 18px 40px` `#1D34A6` at 12 %, the `cardShadow` token); not the list card (Components) |
 | `glassDivider` | `#0E1116` at 6 % | `#FFFFFF` at 7 % | Row separators on glass cards (replaces `divider` there) |
 | `glassAvatar` | `#F1F3F6` | `#FFFFFF` at 7 % | Expense avatar circle (income keeps `incomeSoft`) |
 | `sheetFill` | `#FFFFFF` | gradient `#1E222E` → `#0E1016` | Form sheet |
 | `fieldFill` | `#0E1116` at 6 % | `#FFFFFF` at 6 % | Date and Note boxes, unselected chips, segmented track and close button, on the sheet |
 | `fieldBorder` | `#7D8696` | `#FFFFFF` at 38 % | 1 dp resting border of those form controls (3.7:1 light, 3.5:1 dark against the sheet) |
 | `scrim` | `#000000` at 45 % | `#000000` at 45 % | Dims the summary behind the sheet |
+| `segmentIndicator` | `#FFFFFF` | `#FFFFFF` at 14 % | Selected Type segment fill (see "Selected segment") |
+| `bannerFill` | `#EAF0FF` | `#1E2640` at 60 % | The banner (`accentSoft` tint, Components) |
+| `accentGradient` | `#3D66EF` → `#2F5BEA` | `#A0B2FF` → `#7089FA` | Add and Save fill (see "Accent buttons") |
+| `accentBorder` | `#FFFFFF` at 35 % | `#FFFFFF` at 40 % | 1 dp border of Add and Save |
+| `bottomFade` | `background` at 0 → 45 % | `background` at 0 → 45 % | The 96 dp fade behind Add |
+
+The balance-tone tokens `ambientTop` (above), `cardGlass` and `cardShadow` (below) live with the
+other per-tone tokens in `theme.ts` (`cardTones`).
 
 - **`cardGlass`** (balance card): a 160° linear gradient. Dark positive: `#9DB0FF` at 12 % →
   `#FFFFFF` at 3 %; dark negative: `#FF9A8C` at 12 % → 4 %. Light positive: `#FFFFFF` at 78 % →
   `#E8EDFF` at 55 %; light negative: `#FFFFFF` at 78 % → `#FCEAE7` at 60 %. Border
   `glassBorderStrong`, highlight `glassHighlight`, shadow as in `glassShadow`.
-- **Accent buttons** (Add, Save): a vertical gradient (dark `#A0B2FF` → `#7089FA`; light
-  `#3D66EF` → `#2F5BEA`), a 1 dp border of `#FFFFFF` at 40 % (light 35 %) and the inner
+- **Accent buttons** (Add, Save): `accentGradient`, a 1 dp `accentBorder` and the inner
   highlight; no glow. Text and icon in `onAccent` (dark ≥ 6.0:1, light ≥ 4.8:1 at every stop).
   The fill stays opaque: a translucent accent drops `onAccent` text below 4.5:1 (light 3.8:1 even
   at 85 %), and the developer preferred this look over clear glass on the phone.
@@ -257,8 +264,8 @@ invisible in light, so it stays out; 2026-10-06.)
   It keeps the unselected chip's 1 dp border and 1 dp extra padding, with the border in `accent`
   (invisible on the `accent` fill), so selecting never adds or removes a border or shifts the
   layout.
-- **Selected segment**: one indicator that slides between the two options (Motion). Light:
-  `segmentSelected`; dark: `#FFFFFF` at 14 % on the track. Both with a 1.5 dp full `accent`
+- **Selected segment**: one indicator that slides between the two options (Motion). Its fill is
+  `segmentIndicator`, on the track. Both schemes use a 1.5 dp full `accent`
   border (dark 3.1:1 against its own fill and 4.9:1 against the track, at the sheet's lightest
   stop; at 16 % the fill gave 2.9:1, so it was lowered in T058, 2026-10-06).
 - Cards and the toast put their outer shadow on an outer wrapper that does not clip; the fill,
@@ -357,7 +364,7 @@ successful save ("Saved") or delete ("Deleted"); never after a failure (contract
 
 With the glass revision, components use the tokens in Glass surfaces as follows; every size,
 padding and radius below stays as written. Old tokens that this table replaces (`surface`,
-`surfaceMuted`, `formBackground`, `segmentTrack`, `avatar`, `divider`, and the tone table's
+`surfaceMuted`, `formBackground`, `avatar`, `divider`, and the tone table's
 `cardBackground`, `monthButton`, `statPill`) remain only as solid fallbacks where a gradient
 cannot be drawn.
 
@@ -369,19 +376,21 @@ cannot be drawn.
 | Stat pills | `glassFillStrong` | `glassBorder` | — |
 | Breakdown and list cards | `glassFill` | `glassBorder` | highlight, `glassShadow` (breakdown only, see below); rows separated by `glassDivider` |
 | List avatars | `glassAvatar` (income: `incomeSoft`) | — | — |
-| Banner, empty-state card | `glassFill` (banner keeps `accentSoft` tint at 100 % in light, 60 % in dark) | `glassBorder` | — |
+| Banner, empty-state card | empty-state: `glassFill`; banner: `bannerFill` (`accentSoft` at 100 % in light, 60 % in dark) | `glassBorder` | — |
 | Add, Save | accent button | 1 dp white border (Glass surfaces) | highlight |
 | Form sheet | `sheetFill` | top edge `glassBorderStrong` | grab handle 40 × 5 dp, `textMuted` at 40 % |
 | Close button, segmented track, unselected chips, Date, Note | `fieldFill` | `fieldBorder` (focus `accent`, error `error`; see "Borders never shift the layout") | — |
 | Selected chip, selected segment | as in Glass surfaces | chip: 1 dp `accent`, same width as at rest; segment: 1.5 dp `accent` | — |
 | Toast | `sheetFill` | `glassBorderStrong` | highlight, `glassShadow` |
+| Balance card **Try again** | `glassFillStrong` | `glassBorderStrong` | — |
 | Error screen **Try again** | `fieldFill` | `fieldBorder` | — |
 
 The transaction list card has no outer shadow (T060, 2026-10-06): the list is a `FlatList`
 that draws the card row by row, so there is no single view to carry the shadow, and a shadow on
 each row would show through the translucent rows around it. Each row draws its part of the card
 (fill, a 1 dp border whose top and bottom are transparent inside the card, and the outer rows'
-corners), so a row that becomes first or last only changes a color.
+corners), so a row that becomes first or last changes only colors, its corner radii and its
+4 dp of top or bottom padding; it never adds or removes a border.
 
 ### Summary screen
 
@@ -390,13 +399,13 @@ There is no native header (`headerShown: false`); the balance card holds the mon
 1. **Balance card**: margin `12 + insets.top` top and 12 at the sides; padding 12, with 16 at
    the bottom; radius 28; a glass card in the balance tone (`cardGlass`, Glass surfaces). Its
    shadow sits on an outer wrapper and the inner view clips with `overflow: 'hidden'`.
-   - Header row: the previous-month button (48 dp circle, `monthButton`, `chevron-left` in
+   - Header row: the previous-month button (48 dp circle, `glassFillStrong`, `chevron-left` in
      `cardInk`), the month title (`monthTitle`, `cardInk`) centered, then the next-month button or
      an empty 48 dp slot (FR-021). On January 2000 the previous button is likewise replaced by an
      empty 48 dp slot, so the title stays centered.
    - Body: "Balance" (`label`, `cardLabel`) above the amount (`display`, `cardAmount`), centered,
      with 28 dp above and 24 dp below.
-   - Two stat pills in a 2-column grid (gap 8; one column when `isLargeText`), each `statPill`,
+   - Two stat pills in a 2-column grid (gap 8; one column when `isLargeText`), each `glassFillStrong`,
      with padding 12 × 16 and radius 16. A pill holds:
      - a 32 dp icon circle: `incomeSoft` with `arrow-up` in `income`, or `expenseIcon` with
        `arrow-down` in `text`;
@@ -405,18 +414,18 @@ There is no native header (`headerShown: false`); the balance card holds the mon
    - **Loading**: header row, then a centered `ActivityIndicator` in `accent` (120 dp tall area).
      No amount and no pills.
    - **Error**: header row, then "Couldn't load your data." (`label`, `cardLabel`) and a
-     **Try again** button (`monthButton` background, `bodyStrong`, `cardInk`, fully rounded,
+     **Try again** button (`glassFillStrong` with `glassBorderStrong`, `bodyStrong`, `cardInk`, fully rounded,
      minHeight 48), centered.
 2. **Spending by category** (ready state only): a section title (`section`, 24 dp side padding),
    then a card with padding 4 × 16 and its rows:
    - Each row is at least 48 dp tall: the label (`body`) on the left; the amount (`bodyStrong`)
      and the percent pill (`pill` in `accent` on `accentSoft`, padding 4 × 8, radius 8, min width
      32) on the right.
-   - Rows are separated by `divider`. Numbers only, no bars (charts are feature 002).
+   - Rows are separated by `glassDivider`. Numbers only, no bars (charts are feature 002).
    - With expenses at 0: "No expenses this month." (`body`, `textMuted`) inside the card, with
      padding 16.
 3. **Transactions**: a section title, then a card with rows at least 64 dp tall:
-   - A 40 dp avatar with the category initial (`avatar` with `textMuted`; income uses
+   - A 40 dp avatar with the category initial (`glassAvatar` with `textMuted`; income uses
      `incomeSoft` with `income`).
    - The avatar initial uses `avatarInitial`.
    - The category label (`bodyStrong`, `text`) above the note (if any) and the numeric date,
@@ -431,7 +440,7 @@ There is no native header (`headerShown: false`); the balance card holds the mon
    "Transactions" title): a 56 dp
    icon circle (`accentSoft`, `credit-card` in `accent`), "No transactions this month yet."
    (`bodyStrong`) and the contract's helper line (`label`, `textMuted`). No breakdown section.
-6. **Banner** ("Couldn't open this transaction."): a card on `accentSoft`, radius 16, padding 16,
+6. **Banner** ("Couldn't open this transaction."): a card on `bannerFill` with a `glassBorder`, radius 16, padding 16,
    placed right under the balance card (above the breakdown). It holds the `alert-circle` icon
    and the message, both in `text` (`label`), and a **Dismiss** text button (`labelStrong`,
    `accent`).
