@@ -1,17 +1,21 @@
 // The glass look from design.md (Glass surfaces): translucent cards, accent buttons and the
 // ambient background, all drawn with gradients and shadows that every supported Android renders.
 import { useEffect, type ReactNode } from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  View,
-  type PressableProps,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import Animated, {
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { durations, easeOut, useReduceMotion } from './motion';
+import {
+  durations,
+  easeOut,
+  PressableScale,
+  useReduceMotion,
+  type PressableScaleProps,
+} from './motion';
 import { insetHighlight, minTouch, radii, spacing, useTheme, type BalanceTone } from './theme';
 
 type GlassCardProps = {
@@ -75,8 +79,7 @@ export function GlassCard({
   );
 }
 
-type ShapePressableProps = Omit<PressableProps, 'children' | 'style'> & {
-  style?: StyleProp<ViewStyle>;
+type ShapePressableProps = Omit<PressableScaleProps, 'children'> & {
   /** The pressed overlay's color; `ripple` by default. */
   overlay?: string;
   children?: ReactNode;
@@ -90,7 +93,7 @@ type ShapePressableProps = Omit<PressableProps, 'children' | 'style'> & {
 export function ShapePressable({ style, overlay, children, ...props }: ShapePressableProps) {
   const { colors } = useTheme();
   return (
-    <Pressable {...props} style={[styles.shape, style]}>
+    <PressableScale {...props} style={[styles.shape, style]}>
       {({ pressed }) => (
         <>
           {children}
@@ -103,7 +106,7 @@ export function ShapePressable({ style, overlay, children, ...props }: ShapePres
           )}
         </>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -162,9 +165,9 @@ function ToneLayer({ testID, active, children }: { testID: string; active: boole
 
   useEffect(() => {
     const target = active ? 1 : 0;
-    opacity.value = reduceMotion
-      ? target
-      : withTiming(target, { duration: durations.toneChange, easing: easeOut });
+    opacity.set(
+      reduceMotion ? target : withTiming(target, { duration: durations.toneChange, easing: easeOut, reduceMotion: ReduceMotion.Never }),
+    );
   }, [active, reduceMotion, opacity]);
 
   const animated = useAnimatedStyle(() => ({ opacity: opacity.value }));

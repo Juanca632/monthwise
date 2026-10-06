@@ -35,6 +35,7 @@ import { getToday } from '@/hooks/useToday';
 import { useRegion } from '@/hooks/useRegion';
 
 import { AccentButton, ShapePressable } from './glass';
+import { PressableScale } from './motion';
 import { iconSize, insetHighlight, minTouch, radii, spacing, useTheme, type Palette } from './theme';
 
 /** `null` means the operation succeeded; a string is the form-level failure message to show. */
@@ -496,7 +497,7 @@ export function TransactionForm({
       >
         {failure && <FieldError message={failure} />}
         {onDelete && (
-          <Pressable
+          <PressableScale
             accessibilityRole="button"
             accessibilityLabel="Delete"
             onPress={() => confirmDelete(onDelete)}
@@ -504,7 +505,7 @@ export function TransactionForm({
             style={styles.textButton}
           >
             <Text style={[type.labelStrong, { color: colors.error }]}>Delete</Text>
-          </Pressable>
+          </PressableScale>
         )}
         <AccentButton
           accessibilityRole="button"
@@ -525,7 +526,7 @@ export function FormHeader({ title, onClose }: { title: string; onClose(): void 
   const insets = useSafeAreaInsets();
   return (
     <View testID="form-header" style={[styles.header, { paddingTop: spacing.xs + insets.top }]}>
-      <Pressable
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel="Close"
         onPress={onClose}
@@ -538,7 +539,7 @@ export function FormHeader({ title, onClose }: { title: string; onClose(): void 
         ]}
       >
         <Feather name="x" size={iconSize.button} color={colors.text} />
-      </Pressable>
+      </PressableScale>
       <Text accessibilityRole="header" style={[type.title, styles.title, { color: colors.text }]}>
         {title}
       </Text>

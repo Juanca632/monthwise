@@ -1,10 +1,11 @@
 import { Feather } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { next, previous } from '@/domain/month';
 import { monthTitle } from '@/format/date';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
 
+import { PressableScale } from './motion';
 import { iconSize, minTouch, radii, useTheme, type CardTone } from './theme';
 
 type Props = { tone: CardTone };
@@ -58,7 +59,7 @@ type MonthButtonProps = {
 function MonthButton({ label, icon, tone, onPress }: MonthButtonProps) {
   const { colors } = useTheme();
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
@@ -72,7 +73,7 @@ function MonthButton({ label, icon, tone, onPress }: MonthButtonProps) {
       ]}
     >
       <Feather name={icon} size={iconSize.button} color={tone.cardInk} />
-    </Pressable>
+    </PressableScale>
   );
 }
 

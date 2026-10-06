@@ -1,12 +1,15 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import type { YearMonth } from '@/domain/month';
 import { useMonthSummary } from '@/hooks/useMonthSummary';
 import { useRegion } from '@/hooks/useRegion';
+import { useSelectedMonth } from '@/state/SelectedMonthContext';
 import { useSummaryNotice } from '@/state/SummaryNoticeContext';
+import { Appear, SummaryMotionProvider, type SummaryMotion } from '@/ui/Appear';
 import { Breakdown } from '@/ui/Breakdown';
 import { AccentButton, AmbientBackground } from '@/ui/glass';
 import { MonthHeader } from '@/ui/MonthHeader';
@@ -28,6 +31,27 @@ if (process.env.EXPO_PUBLIC_DEV_TOOLS === '1') {
   DevTools = require('@/dev/DevTools').DevTools;
 }
 
+const monthIndex = (m: YearMonth) => m.year * 12 + m.month;
+
+/** The clock the summary's entrance and month-change motion run on (ui/Appear.tsx). */
+function useSummaryMotion(): SummaryMotion {
+  const { selected } = useSelectedMonth();
+  // The summary stays mounted under the forms, so its mount is the cold start.
+  const [entranceStart] = useState(() => Date.now());
+  const [monthChange, setMonthChange] = useState<SummaryMotion['monthChange']>(null);
+  const shown = useRef(selected);
+  useEffect(() => {
+    const from = shown.current;
+    shown.current = selected;
+    if (from === selected) return;
+    // Recorded right after the render that changes the month, which shows it loading; the new
+    // month's content mounts later, when its query returns, and reads this. An earlier month
+    // means the left (previous) button, so its content comes in from the left.
+    setMonthChange({ at: Date.now(), from: monthIndex(selected) < monthIndex(from) ? 'left' : 'right' });
+  }, [selected]);
+  return useMemo(() => ({ entranceStart, monthChange }), [entranceStart, monthChange]);
+}
+
 /** The monthly summary (contracts/ui-screens.md, Summary screen). */
 export default function SummaryScreen() {
   const { colors } = useTheme();
@@ -36,6 +60,7 @@ export default function SummaryScreen() {
   const { status, rows, summary, retry } = useMonthSummary();
   const router = useRouter();
   const notice = useSummaryNotice();
+  const motion = useSummaryMotion();
 
   // Announced once when it appears; it stays on screen until dismissed (contract, FR-025).
   useEffect(() => {
@@ -63,59 +88,67 @@ export default function SummaryScreen() {
           };
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.background }]}>
-      {/* Same rule as the balance card: loading and error use the positive tone. */}
-      <AmbientBackground
-        tone={content.kind === 'values' ? balanceTone(content.balanceCents) : 'positive'}
-      />
-      <TransactionList
-        rows={rows}
-        tag={tag}
-        header={
-          <View style={{ paddingTop: spacing.sm + insets.top }}>
-            <Totals
-              tag={tag}
-              content={content}
-              header={(tone) => <MonthHeader tone={tone} />}
-            />
-            {notice.notice === 'open_failed' && (
-              <StateMessage
-                variant="banner"
-                message={OPEN_FAILED}
-                action={{ label: 'Dismiss', onPress: notice.dismiss }}
-              />
-            )}
-            {/* Ready months only: an empty month shows its own line instead (FR-022). */}
-            {status === 'ready' && rows.length > 0 && (
-              <Breakdown items={summary.breakdown} tag={tag} />
-            )}
-          </View>
-        }
-        // Loading and error show only the card; an empty month gets its own line (FR-022).
-        empty={
-          status === 'ready' ? (
-            <StateMessage
-              variant="card"
-              icon="credit-card"
-              message="No transactions this month yet."
-              helper="Tap Add to record an income or expense."
-            />
-          ) : null
-        }
-        // Shown in every state, so the simulated storage error can be turned off again.
-        footer={DevTools ? <DevTools onChanged={retry} /> : null}
-        onPressItem={openTransaction}
-        bottomPadding={ADD_HEIGHT + ADD_GAP + spacing.md + insets.bottom}
-      />
-      {/* Lets the list pass softly under Add; a gradient, not a blur (design.md). */}
-      <View
-        testID="bottom-fade"
-        importantForAccessibility="no-hide-descendants"
-        pointerEvents="none"
-        style={[styles.bottomFade, { experimental_backgroundImage: colors.bottomFade }]}
-      />
-      <AddButton bottom={ADD_GAP + insets.bottom} />
-    </View>
+    <SummaryMotionProvider value={motion}>
+      <View style={[styles.screen, { backgroundColor: colors.background }]}>
+        {/* Same rule as the balance card: loading and error use the positive tone. */}
+        <AmbientBackground
+          tone={content.kind === 'values' ? balanceTone(content.balanceCents) : 'positive'}
+        />
+        <TransactionList
+          rows={rows}
+          tag={tag}
+          header={
+            <View style={{ paddingTop: spacing.sm + insets.top }}>
+              <Appear on={['entrance']} slot={0}>
+                <Totals
+                  tag={tag}
+                  content={content}
+                  header={(tone) => <MonthHeader tone={tone} />}
+                />
+              </Appear>
+              {notice.notice === 'open_failed' && (
+                <StateMessage
+                  variant="banner"
+                  message={OPEN_FAILED}
+                  action={{ label: 'Dismiss', onPress: notice.dismiss }}
+                />
+              )}
+              {/* Ready months only: an empty month shows its own line instead (FR-022). */}
+              {status === 'ready' && rows.length > 0 && (
+                <Appear on={['entrance', 'month']} slot={1}>
+                  <Breakdown items={summary.breakdown} tag={tag} />
+                </Appear>
+              )}
+            </View>
+          }
+          // Loading and error show only the card; an empty month gets its own line (FR-022).
+          empty={
+            status === 'ready' ? (
+              <Appear on={['entrance', 'month']} slot={1}>
+                <StateMessage
+                  variant="card"
+                  icon="credit-card"
+                  message="No transactions this month yet."
+                  helper="Tap Add to record an income or expense."
+                />
+              </Appear>
+            ) : null
+          }
+          // Shown in every state, so the simulated storage error can be turned off again.
+          footer={DevTools ? <DevTools onChanged={retry} /> : null}
+          onPressItem={openTransaction}
+          bottomPadding={ADD_HEIGHT + ADD_GAP + spacing.md + insets.bottom}
+        />
+        {/* Lets the list pass softly under Add; a gradient, not a blur (design.md). */}
+        <View
+          testID="bottom-fade"
+          importantForAccessibility="no-hide-descendants"
+          pointerEvents="none"
+          style={[styles.bottomFade, { experimental_backgroundImage: colors.bottomFade }]}
+        />
+        <AddButton bottom={ADD_GAP + insets.bottom} />
+      </View>
+    </SummaryMotionProvider>
   );
 }
 
@@ -124,7 +157,7 @@ function AddButton({ bottom }: { bottom: number }) {
   const { colors, type } = useTheme();
   const router = useRouter();
   return (
-    <View pointerEvents="box-none" style={[styles.addWrapper, { bottom }]}>
+    <Appear on={['entrance']} slot={2} style={[styles.addWrapper, { bottom }]}>
       <AccentButton
         accessibilityRole="button"
         accessibilityLabel="Add transaction"
@@ -134,7 +167,7 @@ function AddButton({ bottom }: { bottom: number }) {
         <Feather name="plus" size={iconSize.button} color={colors.onAccent} />
         <Text style={[type.button, { color: colors.onAccent }]}>Add</Text>
       </AccentButton>
-    </View>
+    </Appear>
   );
 }
 

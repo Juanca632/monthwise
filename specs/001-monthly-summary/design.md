@@ -289,11 +289,11 @@ where things come from and confirms what happened. Curves: **ease-out** `(0.2, 0
 
 | Moment | What moves | Time | Curve |
 | --- | --- | --- | --- |
-| Summary appears (cold start) | Balance card, breakdown, the rows visible in the first screen and Add rise 14 dp and fade in, 80 ms apart. Rows that appear later by scrolling never animate | 520 ms | ease-out |
+| Summary appears (cold start) | Balance card, breakdown, then Add with the first row, then the other rows of the first screen (up to 8) rise 14 dp and fade in, 80 ms apart. Rows that appear later by scrolling never animate | 520 ms | ease-out |
 | Open a form | The sheet slides up from the bottom; behind it the summary scales to 92 %, moves down 6 dp and rounds to radius 28, and the `scrim` fades in over it | 440 ms | sheet |
 | Close a form | The sheet slides down; the summary and scrim return | 300 ms | ease-in |
 | Drag the sheet | It follows the finger downward (never above its resting place); the summary and scrim follow in proportion. Released past 30 % of its height or with a fast downward fling, it closes; otherwise it springs back | follows the finger | spring |
-| Change month | The month's content slides 18 dp in from the side of the button tapped and fades in; the balance counts from the old to the new value | 340 ms; count 520 ms | ease-out |
+| Change month | The month's content (the card's numbers, not its header row; the breakdown or empty card; the first 8 rows) slides 18 dp in from the side of the button tapped and fades in; the balance counts from the old to the new value | 340 ms; count 520 ms | ease-out |
 | Press | Any button, chip or row scales to 96 % and springs back | ~140 ms | spring |
 | Type switch | The selected segment indicator slides to the other option | 360 ms | spring |
 | Pick a category | The chip fills with accent | 220 ms | ease-out |
@@ -317,9 +317,10 @@ How each is built:
   own flow (Delete after its confirmation, FR-013). There is no scrim tap to close. The drag
   uses `react-native-gesture-handler`, on the grab handle and header only, so it never fights
   the form's scroll.
-- **Counting amounts**: a Reanimated value animates from the old to the new cents; a throttled
-  reaction (every 50 ms or so) writes the rounded value into React state, and a normal `Text`
-  shows it, so `numberOfLines={1}`, `adjustsFontSizeToFit` and `maxFontSizeMultiplier` (Large
+- **Counting amounts**: a timer on the JS thread moves the value from the old to the new cents
+  along the ease-out curve and writes the rounded value into React state every 50 ms (T063: the
+  value only ever reaches the screen through React state, so a Reanimated value would add a
+  thread hop and nothing else), and a normal `Text` shows it, so `numberOfLines={1}`, `adjustsFontSizeToFit` and `maxFontSizeMultiplier` (Large
   text) keep working. The amount `Text` is not accessible on its own; its parent element keeps
   the label built from the final data ("Balance, minus 150,00 €"), so TalkBack never reads a
   number in between.

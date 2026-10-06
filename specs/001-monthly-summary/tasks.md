@@ -767,23 +767,23 @@ labels are built from data, never from animated values; no new dependency beyond
 
 ### Block 8c: summary motion
 
-- [ ] T062 Complete `src/ui/motion.ts` (T059 started it with `easeOut`, the tone-change duration
+- [x] T062 Complete `src/ui/motion.tsx` (T059 started it with `easeOut`, the tone-change duration
   and `useReduceMotion`): the rest of the curves and durations from design.md (Motion), a
-  `useMotion()` hook that reads Reanimated's `useReducedMotion`, and `PressableScale` (scale to
+  `useReduceMotion()` hook that reads Reanimated's `useReducedMotion`, and `PressableScale` (scale to
   96 % with the spring, dropped under reduce motion). It replaces `Pressable` in: Add, month
   buttons (`MonthHeader`), list rows (`TransactionList`), Try again (`Totals`, error screen),
   Dismiss (`StateMessage`), and in the form: close, Type segments, chips, Date box, Delete and
   Save. Tests in `tests/component/motion.test.tsx`: role, label and press feedback (ripple or
   pressed overlay, design.md Touch feedback) still pass through;
   under reduce motion no scale is applied; the accessibility sweep (T050) stays green.
-- [ ] T063 (FR-015, FR-031) Implement `src/hooks/useCountUp.ts` (design.md, Motion, "Counting
+- [x] T063 (FR-015, FR-031) Implement `src/hooks/useCountUp.ts` (design.md, Motion, "Counting
   amounts"): it animates from the old to the new cents and writes the rounded value to state at
   most every 50 ms; under reduce motion it jumps. `Totals` uses it for the balance and stat
   amounts; the amount `Text` is not accessible and the parent keeps the final-value label.
   Tests in `tests/unit/useCountUp.test.tsx` (fake timers): it ends exactly on the target cents,
   never shows a float, jumps under reduce motion; the accessibility suite still finds
   "Balance, minus 150,00 €" right after a change.
-- [ ] T064 (FR-021) Summary entrance and month change: on cold start the balance card, breakdown,
+- [x] T064 (FR-021) Summary entrance and month change: on cold start the balance card, breakdown,
   the rows in the first screen and Add rise in 80 ms apart; rows mounting later by scrolling never
   animate. Changing month slides the content 18 dp in from the side of the button tapped and
   counts the balance. Tests: month navigation suite stays green; under reduce motion no

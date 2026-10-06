@@ -1,8 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { GlassCard } from './glass';
+import { PressableScale } from './motion';
 import { iconSize, minTouch, radii, spacing, useTheme } from './theme';
 
 type Action = { label: string; onPress(): void };
@@ -45,7 +46,7 @@ export function StateMessage(props: Props) {
           </View>
           <Text style={[type.label, styles.flex, { color: colors.text }]}>{props.message}</Text>
         </View>
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel={props.action.label}
           onPress={props.action.onPress}
@@ -54,7 +55,7 @@ export function StateMessage(props: Props) {
           style={styles.textButton}
         >
           <Text style={[type.labelStrong, { color: colors.accent }]}>{props.action.label}</Text>
-        </Pressable>
+        </PressableScale>
       </GlassCard>
     );
   }

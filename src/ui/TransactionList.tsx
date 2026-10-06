@@ -1,11 +1,13 @@
 import type { ReactElement } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 import type { Transaction } from '@/data/transactionRepository';
 import { labelFor, type CategoryKey } from '@/domain/categories';
 import { formatNumericDate, formatSpokenDate } from '@/format/date';
 import { formatMoney, formatSignedMoney } from '@/format/money';
 
+import { Appear, MAX_ANIMATED_ROWS } from './Appear';
+import { PressableScale } from './motion';
 import { insetHighlight, radii, spacing, useTheme } from './theme';
 
 type Props = {
@@ -45,15 +47,25 @@ export function TransactionList({ rows, tag, header, empty, footer, onPressItem,
       ListEmptyComponent={empty}
       ListFooterComponent={footer}
       contentContainerStyle={{ paddingBottom: bottomPadding }}
-      renderItem={({ item, index }) => (
-        <TransactionRow
-          row={item}
-          tag={tag}
-          first={index === 0}
-          last={index === rows.length - 1}
-          onPress={onPressItem}
-        />
-      )}
+      renderItem={({ item, index }) => {
+        const row = (
+          <TransactionRow
+            row={item}
+            tag={tag}
+            first={index === 0}
+            last={index === rows.length - 1}
+            onPress={onPressItem}
+          />
+        );
+        // Only the first screen's rows can animate; the rest never pay for it (SC-004).
+        return index < MAX_ANIMATED_ROWS ? (
+          <Appear on={['entrance', 'month']} slot={2 + index}>
+            {row}
+          </Appear>
+        ) : (
+          row
+        );
+      }}
     />
   );
 }
@@ -142,7 +154,7 @@ function TransactionRow({ row, tag, first, last, onPress }: RowProps) {
         />
       )}
       {onPress ? (
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel={spoken}
           onPress={() => onPress(row.id)}
@@ -150,7 +162,7 @@ function TransactionRow({ row, tag, first, last, onPress }: RowProps) {
           style={rowStyle}
         >
           {content}
-        </Pressable>
+        </PressableScale>
       ) : (
         <View accessible accessibilityLabel={spoken} style={rowStyle}>
           {content}

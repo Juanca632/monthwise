@@ -274,3 +274,14 @@ describe('back in the foreground in a new month', () => {
     expect(nextButton()!.props.accessibilityLabel).toBe('Next month, October 2026');
   });
 });
+
+describe('motion under reduce motion (design.md, Motion; Jest runs with it on)', () => {
+  it('shows the new month without sliding it in', async () => {
+    await renderApp([expense(1000, '2026-10-02'), expense(2000, '2026-09-03')]);
+    await goPrevious();
+    expect(header('September 2026')).toBeTruthy();
+    // Content that animates is wrapped in an Animated.View with this testID; nothing is.
+    expect(screen.queryAllByTestId('appearing')).toHaveLength(0);
+    expect(screen.getByLabelText('Balance, minus 20,00 €')).toBeTruthy();
+  });
+});

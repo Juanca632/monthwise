@@ -3,8 +3,11 @@ import type { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { formatMoney, spokenMoney } from '@/format/money';
+import { useCountUp } from '@/hooks/useCountUp';
 
+import { Appear } from './Appear';
 import { GlassCard, ShapePressable, ToneCrossfade } from './glass';
+import { durations, easeOutFn, useReduceMotion } from './motion';
 import {
   balanceTone,
   iconSize,
@@ -37,6 +40,13 @@ export function Totals({ header, content, tag }: Props) {
   // Loading and error have no balance yet, so they use the positive tone.
   const toneName = content.kind === 'values' ? balanceTone(content.balanceCents) : 'positive';
   const tone = cardTones[toneName];
+  const values = content.kind === 'values' ? content : null;
+  // 520 ms ease-out, or a jump under reduce motion. The counters live here, not in the values
+  // block: it unmounts while a month loads, and the next month counts from the last amounts shown.
+  const counting = { animate: !useReduceMotion(), duration: durations.count, easing: easeOutFn };
+  const balance = useCountUp(values?.balanceCents ?? null, counting);
+  const income = useCountUp(values?.incomeCents ?? null, counting);
+  const expenses = useCountUp(values?.expenseCents ?? null, counting);
 
   return (
     <GlassCard
@@ -88,8 +98,9 @@ export function Totals({ header, content, tag }: Props) {
         </View>
       )}
 
+      {/* The month's numbers slide in on a month change; the header row stays put. */}
       {content.kind === 'values' && (
-        <>
+        <Appear on={['month']}>
           {/* "Balance" and the amount are read as one element: "Balance, minus 150,00 €". */}
           <View
             accessible
@@ -103,13 +114,14 @@ export function Totals({ header, content, tag }: Props) {
               maxFontSizeMultiplier={AMOUNT_MAX_SCALE}
               style={[type.display, { color: tone.cardAmount }]}
             >
-              {formatMoney(content.balanceCents, tag)}
+              {formatMoney(balance ?? content.balanceCents, tag)}
             </Text>
           </View>
           <View style={[styles.stats, isLargeText && styles.statsStacked]}>
             <StatPill
               label="Income"
               cents={content.incomeCents}
+              shownCents={income ?? content.incomeCents}
               tag={tag}
               tone={tone}
               icon="arrow-up"
@@ -119,6 +131,7 @@ export function Totals({ header, content, tag }: Props) {
             <StatPill
               label="Expenses"
               cents={content.expenseCents}
+              shownCents={expenses ?? content.expenseCents}
               tag={tag}
               tone={tone}
               icon="arrow-down"
@@ -126,7 +139,7 @@ export function Totals({ header, content, tag }: Props) {
               iconBackground={tone.expenseIcon}
             />
           </View>
-        </>
+        </Appear>
       )}
     </GlassCard>
   );
@@ -134,7 +147,10 @@ export function Totals({ header, content, tag }: Props) {
 
 type StatPillProps = {
   label: string;
+  /** The final amount, for the screen reader. */
   cents: number;
+  /** The amount drawn, which counts toward `cents`. */
+  shownCents: number;
   tag: string;
   tone: CardTone;
   icon: 'arrow-up' | 'arrow-down';
@@ -142,7 +158,7 @@ type StatPillProps = {
   iconBackground: string;
 };
 
-function StatPill({ label, cents, tag, tone, icon, iconColor, iconBackground }: StatPillProps) {
+function StatPill({ label, cents, shownCents, tag, tone, icon, iconColor, iconBackground }: StatPillProps) {
   const { colors, type, isLargeText } = useTheme();
   return (
     <View
@@ -169,7 +185,7 @@ function StatPill({ label, cents, tag, tone, icon, iconColor, iconBackground }: 
           maxFontSizeMultiplier={AMOUNT_MAX_SCALE}
           style={[type.statAmount, { color: tone.cardInk }]}
         >
-          {formatMoney(cents, tag)}
+          {formatMoney(shownCents, tag)}
         </Text>
       </View>
     </View>
