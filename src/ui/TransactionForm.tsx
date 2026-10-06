@@ -35,6 +35,7 @@ import { getToday } from '@/hooks/useToday';
 import { useRegion } from '@/hooks/useRegion';
 
 import { AccentButton, ShapePressable } from './glass';
+import { useSheet } from './Sheet';
 import { PressableScale } from './motion';
 import { iconSize, insetHighlight, minTouch, radii, spacing, useTheme, type Palette } from './theme';
 
@@ -42,17 +43,17 @@ import { iconSize, insetHighlight, minTouch, radii, spacing, useTheme, type Pale
 export type FormResult = string | null;
 
 type Props = {
-  title: string;
   initial: TransactionDraft;
   /** New form only: the amount is focused so typing can start right away (SC-001). */
   autoFocusAmount?: boolean;
   onSave(input: TransactionInput): Promise<FormResult>;
   /** Edit form only: shows Delete. */
   onDelete?(): Promise<FormResult>;
-  /** Leaves the form after a successful save or delete; the discard guard is already off. */
+  /**
+   * Leaves the form after a successful save or delete, once the sheet has slid down; the discard
+   * guard lets that navigation through.
+   */
   onDone(): void;
-  /** The close button. Leaving with changes still asks "Discard changes?". */
-  onClose(): void;
 };
 
 type Errors = Partial<Record<DraftField, DraftError>>;
@@ -95,25 +96,24 @@ const localDate = (iso: IsoDate): Date => {
   return new Date(y, m - 1, d);
 };
 
-/** The add and edit form (design.md, Transaction form; contracts/ui-screens.md). */
+/** The add and edit form's body, inside the route's sheet (design.md, Transaction form; contracts/ui-screens.md). */
 export function TransactionForm({
-  title,
   initial,
   autoFocusAmount = false,
   onSave,
   onDelete,
   onDone,
-  onClose,
 }: Props) {
   const { colors, type, isLargeText } = useTheme();
   const { tag } = useRegion();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const sheet = useSheet();
+  const closeSheet = (then: () => void) => (sheet ? sheet.close(then) : then());
 
   const [draft, setDraft] = useState<TransactionDraft>(initial);
   const [errors, setErrors] = useState<Errors>({});
   const [failure, setFailure] = useState<string | null>(null);
-  const [working, setWorking] = useState(false);
   const [amountFocused, setAmountFocused] = useState(false);
   const [noteFocused, setNoteFocused] = useState(false);
   const keyboardOpen = useKeyboardOpen();
@@ -148,11 +148,14 @@ export function TransactionForm({
     ]);
   };
 
-  // Covers the close button, Android's back button and gestures. While an operation runs, leaving
-  // waits for it (contract, Form states).
-  usePreventRemove(dirty || working, ({ data }) => {
-    const leave = () => navigation.dispatch(data.action);
-    if (finished.current) return leave();
+  // Every way out (the close button, Android's back button and gestures, dragging the sheet
+  // down) is held here, so the sheet can slide down first: a clean form or a Discard animates,
+  // then navigates; changes ask first. While an operation runs, leaving waits for it (contract,
+  // Form states). After a save or delete the sheet has already closed, so it just navigates.
+  usePreventRemove(true, ({ data }) => {
+    const navigate = () => navigation.dispatch(data.action);
+    if (finished.current) return navigate();
+    const leave = () => closeSheet(navigate);
     if (busy.current) {
       pendingLeave.current = leave;
       return;
@@ -202,19 +205,17 @@ export function TransactionForm({
   const run = async (operation: () => Promise<FormResult>) => {
     if (busy.current) return;
     busy.current = true;
-    setWorking(true);
     setFailure(null);
     let result: FormResult;
     try {
       result = await operation();
     } finally {
       busy.current = false;
-      setWorking(false);
     }
     if (result === null) {
       finished.current = true;
       pendingLeave.current = null;
-      onDone();
+      closeSheet(onDone);
       return;
     }
     setFailure(result);
@@ -235,11 +236,6 @@ export function TransactionForm({
     }
     setErrors({});
     void run(() => onSave(result.input));
-  };
-
-  const close = () => {
-    if (busy.current) return;
-    onClose();
   };
 
   // FR-013: deletion cannot be undone, so it is confirmed first; Cancel changes nothing.
@@ -277,11 +273,8 @@ export function TransactionForm({
     : { paddingTop: spacing.xxxl, paddingBottom: spacing.xl };
 
   return (
-    <KeyboardAvoidingView
-      behavior="padding"
-      style={[styles.screen, { backgroundColor: colors.formBackground }]}
-    >
-      <FormHeader title={title} onClose={close} />
+    // The sheet around it draws the fill and the header (routes render both).
+    <KeyboardAvoidingView behavior="padding" style={styles.screen}>
 
       <ScrollView
         ref={scrollRef}
@@ -523,9 +516,9 @@ export function TransactionForm({
 /** The form's header: close button and centered title. Also used by the edit form while loading. */
 export function FormHeader({ title, onClose }: { title: string; onClose(): void }) {
   const { colors, type } = useTheme();
-  const insets = useSafeAreaInsets();
   return (
-    <View testID="form-header" style={[styles.header, { paddingTop: spacing.xs + insets.top }]}>
+    // The sheet already sits below the status bar, under its grab handle.
+    <View testID="form-header" style={[styles.header, { paddingTop: spacing.xs }]}>
       <PressableScale
         accessibilityRole="button"
         accessibilityLabel="Close"

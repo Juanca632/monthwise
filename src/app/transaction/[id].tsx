@@ -11,6 +11,7 @@ import { useRegion } from '@/hooks/useRegion';
 import { reportError } from '@/lib/reportError';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
 import { useSummaryNotice } from '@/state/SummaryNoticeContext';
+import { Sheet } from '@/ui/Sheet';
 import { useTheme } from '@/ui/theme';
 import { FormHeader, TransactionForm, type FormResult } from '@/ui/TransactionForm';
 
@@ -58,21 +59,10 @@ export default function EditTransactionScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  if (!initial) {
-    // Nothing to lose yet, so closing never asks.
-    return (
-      <View style={[styles.screen, { backgroundColor: colors.formBackground }]}>
-        <FormHeader title={TITLE} onClose={() => router.back()} />
-        <View style={styles.loading}>
-          <ActivityIndicator accessibilityLabel="Loading" color={colors.accent} size="large" />
-        </View>
-      </View>
-    );
-  }
-
   const save = async (input: TransactionInput): Promise<FormResult> => {
     try {
       await (await whenReady()).update(id, input);
+      notice.recordChange({ kind: 'updated', id });
     } catch (e) {
       if (e instanceof NotFoundError) return 'This transaction no longer exists.';
       reportError(e instanceof StorageError ? e.code : 'update');
@@ -86,6 +76,7 @@ export default function EditTransactionScreen() {
   const remove = async (): Promise<FormResult> => {
     try {
       await (await whenReady()).remove(id);
+      notice.recordChange({ kind: 'deleted', id });
     } catch (e) {
       // Already gone: the goal is met, so it closes like a successful delete.
       if (e instanceof NotFoundError) return null;
@@ -95,19 +86,22 @@ export default function EditTransactionScreen() {
     return null;
   };
 
+  // One sheet for both states, so it does not close and reopen when the transaction loads. The
+  // close button goes back like Android's back button: while loading there is nothing to lose
+  // and no discard check, so the sheet just goes; once loaded, the form's check runs.
   return (
-    <TransactionForm
-      title={TITLE}
-      initial={initial}
-      onSave={save}
-      onDelete={remove}
-      onDone={() => router.back()}
-      onClose={() => router.back()}
-    />
+    <Sheet header={<FormHeader title={TITLE} onClose={() => router.back()} />}>
+      {initial ? (
+        <TransactionForm initial={initial} onSave={save} onDelete={remove} onDone={() => router.back()} />
+      ) : (
+        <View style={styles.loading}>
+          <ActivityIndicator accessibilityLabel="Loading" color={colors.accent} size="large" />
+        </View>
+      )}
+    </Sheet>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });

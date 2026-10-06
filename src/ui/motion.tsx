@@ -25,12 +25,23 @@ export const durations = {
   monthChange: 340,
   count: 520,
   toneChange: 600,
+  saved: 560,
+  deleted: 280,
+  /** The longest fade allowed under reduce motion. */
+  reducedFade: 200,
 } as const;
 
 export const distances = {
   entranceRise: 14,
   monthSlide: 18,
+  deleteSlide: 24,
 } as const;
+
+/** A new row grows in from this scale (Motion, "Saved"). */
+export const createdRowScale = 0.97;
+
+/** The summary behind an open sheet (design.md, Motion, "Open a form"). */
+export const behindSheet = { scale: 0.92, offset: 6, radius: 28 } as const;
 
 /** Android's "Remove animations": every change becomes an instant swap (design.md, Reduce motion). */
 export function useReduceMotion(): boolean {

@@ -48,6 +48,8 @@ export type Palette = {
   bannerFill: string;
   /** The 96 dp fade behind Add, an `experimental_backgroundImage` value. */
   bottomFade: string;
+  /** An edited row's flash: `accent` at 22 % (Motion, "Saved"). */
+  rowFlash: string;
 };
 
 /** `#RRGGBB` at an opacity, written the way design.md gives it ("`#2F5BEA` at 22 %"). */
@@ -99,6 +101,7 @@ export const palettes: Record<Scheme, Palette> = {
     segmentIndicator: '#FFFFFF',
     bannerFill: '#EAF0FF',
     bottomFade: verticalGradient(withAlpha('#F6F7F9', 0), withAlpha('#F6F7F9', 0.45)),
+    rowFlash: withAlpha('#2F5BEA', 0.22),
   },
   dark: {
     background: '#0D0F13',
@@ -136,6 +139,7 @@ export const palettes: Record<Scheme, Palette> = {
     segmentIndicator: withAlpha('#FFFFFF', 0.14),
     bannerFill: withAlpha('#1E2640', 0.6),
     bottomFade: verticalGradient(withAlpha('#0D0F13', 0), withAlpha('#0D0F13', 0.45)),
+    rowFlash: withAlpha('#7D96FF', 0.22),
   },
 };
 
@@ -287,6 +291,7 @@ export const spacing = {
 
 export const radii = {
   balanceCard: 28,
+  sheet: 28,
   card: 20,
   statPill: 16,
   input: 16,

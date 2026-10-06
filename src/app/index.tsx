@@ -2,17 +2,21 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, StyleSheet, Text, View } from 'react-native';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { YearMonth } from '@/domain/month';
 import { useMonthSummary } from '@/hooks/useMonthSummary';
 import { useRegion } from '@/hooks/useRegion';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
+import { useSheetProgress } from '@/state/SheetTransitionContext';
 import { useSummaryNotice } from '@/state/SummaryNoticeContext';
 import { Appear, SummaryMotionProvider, type SummaryMotion } from '@/ui/Appear';
 import { Breakdown } from '@/ui/Breakdown';
 import { AccentButton, AmbientBackground } from '@/ui/glass';
 import { MonthHeader } from '@/ui/MonthHeader';
+import { useRowChanges } from '@/ui/RowMotion';
+import { behindSheet, useReduceMotion } from '@/ui/motion';
 import { StateMessage } from '@/ui/StateMessage';
 import { balanceTone, iconSize, spacing, useTheme } from '@/ui/theme';
 import { Totals, type TotalsContent } from '@/ui/Totals';
@@ -52,6 +56,28 @@ function useSummaryMotion(): SummaryMotion {
   return useMemo(() => ({ entranceStart, monthChange }), [entranceStart, monthChange]);
 }
 
+/**
+ * While a form's sheet is open the summary scales back, moves down and rounds its corners, and a
+ * scrim dims it, all following the sheet. Under reduce motion only the scrim fades.
+ */
+function useBehindSheet() {
+  const progress = useSheetProgress();
+  const reduceMotion = useReduceMotion();
+  const summary = useAnimatedStyle(() => {
+    if (reduceMotion) return {};
+    const p = progress.value;
+    return {
+      borderRadius: behindSheet.radius * p,
+      transform: [
+        { translateY: behindSheet.offset * p },
+        { scale: 1 - (1 - behindSheet.scale) * p },
+      ],
+    };
+  });
+  const scrim = useAnimatedStyle(() => ({ opacity: progress.value }));
+  return { summary, scrim };
+}
+
 /** The monthly summary (contracts/ui-screens.md, Summary screen). */
 export default function SummaryScreen() {
   const { colors } = useTheme();
@@ -61,6 +87,9 @@ export default function SummaryScreen() {
   const router = useRouter();
   const notice = useSummaryNotice();
   const motion = useSummaryMotion();
+  const behind = useBehindSheet();
+  // The totals come from the stored rows; the list may still show a deleted row leaving.
+  const changes = useRowChanges(rows, status === 'ready', notice.lastChange);
 
   // Announced once when it appears; it stays on screen until dismissed (contract, FR-025).
   useEffect(() => {
@@ -90,63 +119,76 @@ export default function SummaryScreen() {
   return (
     <SummaryMotionProvider value={motion}>
       <View style={[styles.screen, { backgroundColor: colors.background }]}>
-        {/* Same rule as the balance card: loading and error use the positive tone. */}
-        <AmbientBackground
-          tone={content.kind === 'values' ? balanceTone(content.balanceCents) : 'positive'}
-        />
-        <TransactionList
-          rows={rows}
-          tag={tag}
-          header={
-            <View style={{ paddingTop: spacing.sm + insets.top }}>
-              <Appear on={['entrance']} slot={0}>
-                <Totals
-                  tag={tag}
-                  content={content}
-                  header={(tone) => <MonthHeader tone={tone} />}
-                />
-              </Appear>
-              {notice.notice === 'open_failed' && (
-                <StateMessage
-                  variant="banner"
-                  message={OPEN_FAILED}
-                  action={{ label: 'Dismiss', onPress: notice.dismiss }}
-                />
-              )}
-              {/* Ready months only: an empty month shows its own line instead (FR-022). */}
-              {status === 'ready' && rows.length > 0 && (
-                <Appear on={['entrance', 'month']} slot={1}>
-                  <Breakdown items={summary.breakdown} tag={tag} />
+        <Animated.View
+          testID="summary-content"
+          style={[styles.screen, styles.clip, { backgroundColor: colors.background }, behind.summary]}
+        >
+          {/* Same rule as the balance card: loading and error use the positive tone. */}
+          <AmbientBackground
+            tone={content.kind === 'values' ? balanceTone(content.balanceCents) : 'positive'}
+          />
+          <TransactionList
+            rows={changes.rows}
+            changeFor={changes.changeFor}
+            tag={tag}
+            header={
+              <View style={{ paddingTop: spacing.sm + insets.top }}>
+                <Appear on={['entrance']} slot={0}>
+                  <Totals
+                    tag={tag}
+                    content={content}
+                    header={(tone) => <MonthHeader tone={tone} />}
+                  />
                 </Appear>
-              )}
-            </View>
-          }
-          // Loading and error show only the card; an empty month gets its own line (FR-022).
-          empty={
-            status === 'ready' ? (
-              <Appear on={['entrance', 'month']} slot={1}>
-                <StateMessage
-                  variant="card"
-                  icon="credit-card"
-                  message="No transactions this month yet."
-                  helper="Tap Add to record an income or expense."
-                />
-              </Appear>
-            ) : null
-          }
-          // Shown in every state, so the simulated storage error can be turned off again.
-          footer={DevTools ? <DevTools onChanged={retry} /> : null}
-          onPressItem={openTransaction}
-          bottomPadding={ADD_HEIGHT + ADD_GAP + spacing.md + insets.bottom}
-        />
-        {/* Lets the list pass softly under Add; a gradient, not a blur (design.md). */}
-        <View
-          testID="bottom-fade"
+                {notice.notice === 'open_failed' && (
+                  <StateMessage
+                    variant="banner"
+                    message={OPEN_FAILED}
+                    action={{ label: 'Dismiss', onPress: notice.dismiss }}
+                  />
+                )}
+                {/* Ready months only: an empty month shows its own line instead (FR-022). */}
+                {status === 'ready' && rows.length > 0 && (
+                  <Appear on={['entrance', 'month']} slot={1}>
+                    <Breakdown items={summary.breakdown} tag={tag} />
+                  </Appear>
+                )}
+              </View>
+            }
+            // Loading and error show only the card; an empty month gets its own line (FR-022).
+            empty={
+              status === 'ready' ? (
+                <Appear on={['entrance', 'month']} slot={1}>
+                  <StateMessage
+                    variant="card"
+                    icon="credit-card"
+                    message="No transactions this month yet."
+                    helper="Tap Add to record an income or expense."
+                  />
+                </Appear>
+              ) : null
+            }
+            // Shown in every state, so the simulated storage error can be turned off again.
+            footer={DevTools ? <DevTools onChanged={retry} /> : null}
+            onPressItem={openTransaction}
+            bottomPadding={ADD_HEIGHT + ADD_GAP + spacing.md + insets.bottom}
+          />
+          {/* Lets the list pass softly under Add; a gradient, not a blur (design.md). */}
+          <View
+            testID="bottom-fade"
+            importantForAccessibility="no-hide-descendants"
+            pointerEvents="none"
+            style={[styles.bottomFade, { experimental_backgroundImage: colors.bottomFade }]}
+          />
+          <AddButton bottom={ADD_GAP + insets.bottom} />
+        </Animated.View>
+        {/* Dims the summary behind a form's sheet; touches go to the sheet's screen above. */}
+        <Animated.View
+          testID="scrim"
           importantForAccessibility="no-hide-descendants"
           pointerEvents="none"
-          style={[styles.bottomFade, { experimental_backgroundImage: colors.bottomFade }]}
+          style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }, behind.scrim]}
         />
-        <AddButton bottom={ADD_GAP + insets.bottom} />
       </View>
     </SummaryMotionProvider>
   );
@@ -173,6 +215,7 @@ function AddButton({ bottom }: { bottom: number }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  clip: { overflow: 'hidden' },
   addWrapper: { position: 'absolute', alignSelf: 'center' },
   addButton: { minHeight: ADD_HEIGHT, paddingHorizontal: spacing.xxl },
   bottomFade: {

@@ -8,13 +8,16 @@ import type { TransactionDraft, TransactionInput } from '@/domain/validation';
 import { getToday } from '@/hooks/useToday';
 import { reportError } from '@/lib/reportError';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
-import { TransactionForm, type FormResult } from '@/ui/TransactionForm';
+import { useSummaryNotice } from '@/state/SummaryNoticeContext';
+import { Sheet } from '@/ui/Sheet';
+import { FormHeader, TransactionForm, type FormResult } from '@/ui/TransactionForm';
 
 /** The add form (contracts/ui-screens.md, Transaction form). */
 export default function NewTransactionScreen() {
   const router = useRouter();
   const { whenReady } = useDatabase();
   const { selected, setSelected } = useSelectedMonth();
+  const { recordChange } = useSummaryNotice();
 
   // Computed once when the form opens (FR-003): today on the current month, otherwise the last
   // day of the month on screen.
@@ -31,7 +34,8 @@ export default function NewTransactionScreen() {
       // whenReady, not a repository captured at render: a Save tapped while the database is still
       // opening waits for it (at most 10 s).
       const repository = await whenReady();
-      await repository.create(input, Date.now());
+      const created = await repository.create(input, Date.now());
+      recordChange({ kind: 'created', id: created.id });
     } catch (e) {
       reportError(e instanceof StorageError ? e.code : 'create');
       return "Couldn't save. Your changes are still here.";
@@ -41,14 +45,15 @@ export default function NewTransactionScreen() {
     return null;
   };
 
+  // The close button goes back like Android's back button, so the form's discard check runs.
   return (
-    <TransactionForm
-      title="Add transaction"
-      initial={initial}
-      autoFocusAmount
-      onSave={save}
-      onDone={() => router.back()}
-      onClose={() => router.back()}
-    />
+    <Sheet header={<FormHeader title="Add transaction" onClose={() => router.back()} />}>
+      <TransactionForm
+        initial={initial}
+        autoFocusAmount
+        onSave={save}
+        onDone={() => router.back()}
+      />
+    </Sheet>
   );
 }

@@ -268,7 +268,9 @@ describe('editing', () => {
   it('closing without changes does not ask, though the amount was pre-formatted (FR-010)', async () => {
     await renderApp([lunch]);
     await openRow('Expense, Food');
-    expect(mockGuard.prevent).toBe(false);
+    act(() => mockGuard.callback!({ data: { action: BACK } }));
+    expect(Alert.alert).not.toHaveBeenCalled();
+    expect(mockDispatch).toHaveBeenCalledWith(BACK);
 
     fireEvent.changeText(amountInput(), '13');
     act(() => mockGuard.callback!({ data: { action: BACK } }));
@@ -355,6 +357,8 @@ describe('deleting (FR-013)', () => {
 
     expect(formOpen()).toBe(false);
     expect(stored()).toHaveLength(1);
+    // The deleted row stays for its exit (200 ms under reduce motion), then goes.
+    await act(() => new Promise((resolve) => setTimeout(resolve, 250)));
     expect(screen.queryByLabelText(/^Expense, Food/)).toBeNull();
     expect(screen.getByLabelText(`Expenses, ${eur('500,00')}`)).toBeTruthy();
   });

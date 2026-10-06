@@ -8,7 +8,8 @@ import { createTransactionRepository } from '@/data/transactionRepository';
 import type { TransactionInput } from '@/domain/validation';
 import { SelectedMonthProvider } from '@/state/SelectedMonthContext';
 import { SummaryNoticeProvider } from '@/state/SummaryNoticeContext';
-import { TransactionForm } from '@/ui/TransactionForm';
+import { Sheet } from '@/ui/Sheet';
+import { FormHeader, TransactionForm } from '@/ui/TransactionForm';
 
 import { openTestDatabase } from '../helpers/betterSqliteAdapter';
 import { ignoreListBatchingWarnings } from '../helpers/listWarnings';
@@ -90,15 +91,16 @@ async function renderSummary() {
   await act(async () => {});
 }
 
+/** The add form as its route draws it: the sheet, its header and the form. */
 function renderForm() {
   render(
-    <TransactionForm
-      title="Add transaction"
-      initial={{ type: 'expense', amountText: '', date: '2026-10-15', category: null, note: '' }}
-      onSave={async () => null}
-      onDone={jest.fn()}
-      onClose={jest.fn()}
-    />,
+    <Sheet header={<FormHeader title="Add transaction" onClose={jest.fn()} />}>
+      <TransactionForm
+        initial={{ type: 'expense', amountText: '', date: '2026-10-15', category: null, note: '' }}
+        onSave={async () => null}
+        onDone={jest.fn()}
+      />
+    </Sheet>,
   );
 }
 

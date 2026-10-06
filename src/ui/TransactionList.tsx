@@ -8,6 +8,7 @@ import { formatMoney, formatSignedMoney } from '@/format/money';
 
 import { Appear, MAX_ANIMATED_ROWS } from './Appear';
 import { PressableScale } from './motion';
+import { RowMotion, type RowChange } from './RowMotion';
 import { insetHighlight, radii, spacing, useTheme } from './theme';
 
 type Props = {
@@ -20,6 +21,8 @@ type Props = {
   /** Below the last row; also shown when there are no rows. */
   footer?: ReactElement | null;
   onPressItem?(id: number): void;
+  /** The one row a save or delete changed, to animate it. */
+  changeFor?(id: number): RowChange | null;
   /** Room under the last row so the floating Add button never covers it. */
   bottomPadding: number;
 };
@@ -28,7 +31,16 @@ type Props = {
  * The month's transactions (design.md, Summary screen item 3). A FlatList draws only the visible
  * rows, which keeps a 1,000-transaction month fast (SC-004); the header scrolls with it.
  */
-export function TransactionList({ rows, tag, header, empty, footer, onPressItem, bottomPadding }: Props) {
+export function TransactionList({
+  rows,
+  tag,
+  header,
+  empty,
+  footer,
+  onPressItem,
+  changeFor,
+  bottomPadding,
+}: Props) {
   const { colors, type } = useTheme();
   return (
     <FlatList
@@ -52,13 +64,15 @@ export function TransactionList({ rows, tag, header, empty, footer, onPressItem,
         // so one crossing index 8 after a delete is not remounted.
         return (
           <Appear on={['entrance', 'month']} slot={2 + index} enabled={index < MAX_ANIMATED_ROWS}>
-            <TransactionRow
-              row={item}
-              tag={tag}
-              first={index === 0}
-              last={index === rows.length - 1}
-              onPress={onPressItem}
-            />
+            <RowMotion change={changeFor?.(item.id) ?? null}>
+              <TransactionRow
+                row={item}
+                tag={tag}
+                first={index === 0}
+                last={index === rows.length - 1}
+                onPress={onPressItem}
+              />
+            </RowMotion>
           </Appear>
         );
       }}

@@ -22,6 +22,7 @@ import { DatabaseProvider } from '@/data/DatabaseProvider';
 import { logTiming } from '@/lib/devLog';
 import { msSinceStartup } from '@/lib/sinceStartup';
 import { SelectedMonthProvider } from '@/state/SelectedMonthContext';
+import { SheetTransitionProvider } from '@/state/SheetTransitionContext';
 import { SummaryNoticeProvider } from '@/state/SummaryNoticeContext';
 import { ShapePressable } from '@/ui/glass';
 import { minTouch, radii, spacing, useTheme } from '@/ui/theme';
@@ -136,20 +137,22 @@ export default function RootLayout() {
       <DatabaseProvider>
         <SelectedMonthProvider>
           <SummaryNoticeProvider>
-            {fontsSettled && (
-              <ThemeProvider value={navigationTheme}>
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: colors.background },
-                  }}
-                >
-                  <Stack.Screen name="index" />
-                  <Stack.Screen name="transaction/new" options={{ presentation: 'modal' }} />
-                  <Stack.Screen name="transaction/[id]" options={{ presentation: 'modal' }} />
-                </Stack>
-              </ThemeProvider>
-            )}
+            <SheetTransitionProvider>
+              {fontsSettled && (
+                <ThemeProvider value={navigationTheme}>
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                      contentStyle: { backgroundColor: colors.background },
+                    }}
+                  >
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="transaction/new" options={FORM_SHEET} />
+                    <Stack.Screen name="transaction/[id]" options={FORM_SHEET} />
+                  </Stack>
+                </ThemeProvider>
+              )}
+            </SheetTransitionProvider>
             <StatusBar style="auto" />
           </SummaryNoticeProvider>
         </SelectedMonthProvider>
@@ -157,6 +160,14 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+// The forms draw their own sheet over the summary, which stays drawn behind; the app animates it,
+// so the native modal animation would only double it (design.md, Motion, "Sheet").
+const FORM_SHEET = {
+  presentation: 'transparentModal',
+  animation: 'none',
+  contentStyle: { backgroundColor: 'transparent' },
+} as const;
 
 const styles = StyleSheet.create({
   root: { flex: 1 },

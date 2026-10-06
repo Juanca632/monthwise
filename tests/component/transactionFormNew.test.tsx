@@ -203,11 +203,12 @@ describe('accessibility and layout', () => {
     expect(screen.getByLabelText('Type').props.accessibilityRole).toBe('radiogroup');
   });
 
-  it('applies the top inset to the header', async () => {
+  it('places the sheet 36 dp below the top inset, with the header under its handle', async () => {
     renderForm();
     await flush();
+    expect(ReactNative.StyleSheet.flatten(screen.getByTestId('sheet').props.style).top).toBe(INSETS.top + 36);
     const header = screen.getByTestId('form-header');
-    expect(ReactNative.StyleSheet.flatten(header.props.style).paddingTop).toBe(8 + INSETS.top);
+    expect(ReactNative.StyleSheet.flatten(header.props.style).paddingTop).toBe(8);
   });
 
   it('keeps a field\'s outer size at rest, focused and invalid (design.md, borders)', async () => {
@@ -362,7 +363,9 @@ describe('"Discard changes?" (FR-010)', () => {
     await flush();
     await leave();
     expect(Alert.alert).not.toHaveBeenCalled();
-    expect(mockLeftWithoutPrompt).toHaveBeenCalled();
+    // Every removal is held so the sheet can slide down first; a clean form then just goes.
+    expect(mockGuard.prevent).toBe(true);
+    expect(mockDispatch).toHaveBeenCalledWith(BACK);
   });
 
   it('does not ask once a typed change is undone', async () => {
