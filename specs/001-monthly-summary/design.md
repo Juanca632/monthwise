@@ -347,7 +347,9 @@ appears at once, the indicator and chips swap, the toast
 fades, counts jump to the final value, and the shake and press scale are dropped. The one
 exception is the footer following the keyboard, which the system itself moves.
 
-Motion never blocks input: a tap during an animation acts right away.
+Motion never blocks input: a tap during an animation acts right away. The one exception is a
+second way out (X, back, a drag) while the sheet already slides down: it is dropped, because the
+navigation is already on its way.
 
 ## Haptics
 
