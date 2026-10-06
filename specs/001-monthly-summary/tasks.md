@@ -892,7 +892,7 @@ Spec clarifications (Session 2026-10-06), FR-017, FR-029, contracts/ui-screens.m
   R7). Tests in `tests/unit/money.test.ts`: `es-US` gives `€1,234.00` and `-€1,234.00`;
   `es-ES`, `en-*` and `ar-EG` outputs are unchanged; zero-euro negatives (`-€0.50`) and spoken
   labels ("minus €1,234.00") use the sign too; the form's `€` position is unchanged.
-- [ ] T075 (FR-017) Day groups: `domain/summary.ts` (or a new `domain/days.ts`) groups the
+- [x] T075 (FR-017) Day groups: `domain/summary.ts` (or a new `domain/days.ts`) groups the
   month's rows by date, newest first, with each day's net in cents; `format/date.ts` names a day
   ("Today", "Yesterday", "Mon 5 Oct") and speaks it ("Monday 5 October"); `TransactionList`
   draws a header per day and each day's rows as their own card (first/last per day), with row

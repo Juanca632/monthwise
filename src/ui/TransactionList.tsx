@@ -1,10 +1,13 @@
-import type { ReactElement } from 'react';
+import { useMemo, type ReactElement } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 import type { Transaction } from '@/data/transactionRepository';
 import { labelFor, type CategoryKey } from '@/domain/categories';
-import { formatNumericDate, formatSpokenDate } from '@/format/date';
-import { formatMoney, formatSignedMoney } from '@/format/money';
+import { groupByDay } from '@/domain/days';
+import type { IsoDate } from '@/domain/month';
+import { dayName, formatSpokenDate, spokenDayName } from '@/format/date';
+import { formatMoney, formatSignedMoney, spokenMoney } from '@/format/money';
+import { useSelectedMonth } from '@/state/SelectedMonthContext';
 
 import { Appear, MAX_ANIMATED_ROWS } from './Appear';
 import { PressableScale } from './motion';
@@ -27,9 +30,32 @@ type Props = {
   bottomPadding: number;
 };
 
+/** One line of the list: a day's header, or a row in its day's card. */
+type Item =
+  | { kind: 'day'; key: string; date: IsoDate; netCents: number; first: boolean }
+  | { kind: 'row'; key: string; row: Transaction; first: boolean; last: boolean };
+
+/** Rows grouped by day (FR-017), flattened so one FlatList still draws only what is visible. */
+function itemsOf(rows: readonly Transaction[]): Item[] {
+  const items: Item[] = [];
+  groupByDay(rows).forEach((day, d) => {
+    items.push({ kind: 'day', key: `day-${day.date}`, date: day.date, netCents: day.netCents, first: d === 0 });
+    day.rows.forEach((row, i) =>
+      items.push({
+        kind: 'row',
+        key: String(row.id),
+        row,
+        first: i === 0,
+        last: i === day.rows.length - 1,
+      }),
+    );
+  });
+  return items;
+}
+
 /**
- * The month's transactions (design.md, Summary screen item 3). A FlatList draws only the visible
- * rows, which keeps a 1,000-transaction month fast (SC-004); the header scrolls with it.
+ * The month's transactions by day (design.md, Summary screen item 3). A FlatList draws only the
+ * visible items, which keeps a 1,000-transaction month fast (SC-004); the header scrolls with it.
  */
 export function TransactionList({
   rows,
@@ -42,10 +68,11 @@ export function TransactionList({
   bottomPadding,
 }: Props) {
   const { colors, type } = useTheme();
+  const items = useMemo(() => itemsOf(rows), [rows]);
   return (
     <FlatList
-      data={rows}
-      keyExtractor={(row) => String(row.id)}
+      data={items}
+      keyExtractor={(item) => item.key}
       ListHeaderComponent={
         <>
           {header}
@@ -59,31 +86,53 @@ export function TransactionList({
       ListEmptyComponent={empty}
       ListFooterComponent={footer}
       contentContainerStyle={{ paddingBottom: bottomPadding }}
-      renderItem={({ item, index }) => {
-        // Only the first screen's rows can animate (SC-004). Every row keeps the same wrapper,
+      renderItem={({ item, index }) => (
+        // Only the first screen's items can animate (SC-004). Every item keeps the same wrapper,
         // so one crossing index 8 after a delete is not remounted.
-        return (
-          <Appear on={['entrance', 'month']} slot={2 + index} enabled={index < MAX_ANIMATED_ROWS}>
+        <Appear on={['entrance', 'month']} slot={2 + index} enabled={index < MAX_ANIMATED_ROWS}>
+          {item.kind === 'day' ? (
+            <DayHeader date={item.date} netCents={item.netCents} first={item.first} tag={tag} />
+          ) : (
             <RowMotion
-              change={changeFor?.(item.id) ?? null}
-              flashShape={[
-                styles.flashShape,
-                index === 0 && styles.firstCard,
-                index === rows.length - 1 && styles.lastCard,
-              ]}
+              change={changeFor?.(item.row.id) ?? null}
+              flashShape={[styles.flashShape, item.first && styles.firstCard, item.last && styles.lastCard]}
             >
               <TransactionRow
-                row={item}
+                row={item.row}
                 tag={tag}
-                first={index === 0}
-                last={index === rows.length - 1}
+                first={item.first}
+                last={item.last}
                 onPress={onPressItem}
               />
             </RowMotion>
-          </Appear>
-        );
-      }}
+          )}
+        </Appear>
+      )}
     />
+  );
+}
+
+/** A day's header: its name and net (design.md, Summary screen item 3). */
+function DayHeader({ date, netCents, first, tag }: { date: IsoDate; netCents: number; first: boolean; tag: string }) {
+  const { colors, type, isLargeText } = useTheme();
+  const { today } = useSelectedMonth();
+  // `+` above zero, minus below, no sign at zero (FR-017).
+  const net =
+    netCents === 0
+      ? formatMoney(0, tag)
+      : formatSignedMoney(Math.abs(netCents), netCents > 0 ? 'income' : 'expense', tag);
+  return (
+    <View
+      accessible
+      accessibilityRole="header"
+      accessibilityLabel={`${spokenDayName(date, today)}, net ${spokenMoney(netCents, tag)}`}
+      style={[styles.dayHeader, first && styles.firstDayHeader, isLargeText && styles.dayHeaderStacked]}
+    >
+      <Text style={[type.label, { color: colors.textMuted }]}>{dayName(date, today)}</Text>
+      <Text style={[type.labelStrong, { color: netCents > 0 ? colors.income : colors.textMuted }]}>
+        {net}
+      </Text>
+    </View>
   );
 }
 
@@ -100,7 +149,6 @@ function TransactionRow({ row, tag, first, last, onPress }: RowProps) {
   // Stored categories always match their type (database CHECK).
   const label = labelFor(row.type, row.category as CategoryKey);
   const income = row.type === 'income';
-  const caption = [row.note, formatNumericDate(row.date, tag)].filter(Boolean).join(' · ');
   const spoken = [
     income ? 'Income' : 'Expense',
     label,
@@ -136,7 +184,8 @@ function TransactionRow({ row, tag, first, last, onPress }: RowProps) {
       </View>
       <View style={styles.text}>
         <Text style={[type.bodyStrong, { color: colors.text }]}>{label}</Text>
-        <Text style={[type.caption, { color: colors.textMuted }]}>{caption}</Text>
+        {/* The date is the day header's; only the note shows here. */}
+        {row.note ? <Text style={[type.caption, { color: colors.textMuted }]}>{row.note}</Text> : null}
         {/* Large text: the amount moves under the label, left-aligned (design.md). */}
         {isLargeText && amount}
       </View>
@@ -200,6 +249,19 @@ const styles = StyleSheet.create({
   card: { marginHorizontal: spacing.md, borderWidth: 1, overflow: 'hidden' },
   // The row's card, for the edited-row flash drawn over it.
   flashShape: { left: spacing.md, right: spacing.md },
+  // Like section titles; the first day sits right under the "Transactions" title.
+  dayHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.xs,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xs,
+    paddingHorizontal: spacing.xl,
+  },
+  firstDayHeader: { paddingTop: 0 },
+  // Large text: the net moves under the day, left-aligned (design.md).
+  dayHeaderStacked: { flexDirection: 'column', alignItems: 'flex-start' },
   firstCard: { borderTopLeftRadius: radii.card, borderTopRightRadius: radii.card },
   lastCard: { borderBottomLeftRadius: radii.card, borderBottomRightRadius: radii.card },
   highlight: {

@@ -137,6 +137,7 @@ src/
 │       └── [id].tsx              # edit/delete form (modal)
 ├── domain/                       # pure TypeScript, no React or SQLite
 │   ├── categories.ts             # fixed category lists and labels
+│   ├── days.ts                   # the month's rows grouped by day, with each day's net (FR-017)
 │   ├── amount.ts                 # parse typed text → cents
 │   ├── month.ts                  # YearMonth helpers, ranges, limits, last day
 │   ├── note.ts                   # countGraphemes, cut at 100, trim rule
@@ -150,8 +151,8 @@ src/
 │   └── transactionRepository.ts  # contracts/transaction-repository.md
 ├── format/                       # UI edge: cents → "12,50 €", dates, spoken labels
 │   ├── locale.ts                 # one formatting tag (research R7)
-│   ├── money.ts
-│   └── date.ts
+│   ├── money.ts                  # always the € sign (research R7)
+│   └── date.ts                   # numeric (form), spoken, month and day names (FR-017, FR-029)
 ├── hooks/
 │   ├── useMonthSummary.ts        # loading | error | ready, reload on focus
 │   ├── useCountUp.ts             # animated amounts: throttled state, final value for screen readers

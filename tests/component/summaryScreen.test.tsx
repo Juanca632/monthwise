@@ -179,7 +179,34 @@ it('shows totals, a negative balance read as "minus", and the list newest first 
     `Expense, Housing, ${eur('2.000,00')}, 3 October 2026`,
     `Income, Salary, ${eur('2.000,00')}, 1 October 2026`,
   ]);
-  expect(screen.getByText('lunch · 05/10/2026')).toBeTruthy();
+  // The row shows only its note; its date is its day's header (FR-017).
+  expect(screen.getByText('lunch')).toBeTruthy();
+  expect(screen.queryByText(/05\/10\/2026/)).toBeNull();
+});
+
+it('groups the list by day, newest first, with each day\'s net (FR-017, FR-031)', async () => {
+  await databaseWith([
+    income(200000, '2026-10-15', 'salary'),
+    expense(3000, '2026-10-15', 'food'),
+    expense(1200, '2026-10-14', 'food'),
+    income(500, '2026-10-05', 'other'),
+    expense(500, '2026-10-05', 'food'),
+  ]);
+  renderSummary();
+  await flush();
+
+  const headers = screen.getAllByRole('header').filter((h) => /, net /.test(h.props.accessibilityLabel));
+  expect(headers.map((h) => h.props.accessibilityLabel)).toEqual([
+    `Today, net ${eur('1.970,00')}`,
+    `Yesterday, net minus ${eur('12,00')}`,
+    `Monday 5 October, net ${eur('0,00')}`,
+  ]);
+  // Shown: + above zero, minus below, no sign at zero.
+  expect(within(headers[0]).getByText('Today')).toBeTruthy();
+  expect(within(headers[0]).getByText(`+${eur('1.970,00')}`)).toBeTruthy();
+  expect(within(headers[1]).getByText(`-${eur('12,00')}`)).toBeTruthy();
+  expect(within(headers[2]).getByText('Mon 5 Oct')).toBeTruthy();
+  expect(within(headers[2]).getByText(eur('0,00'))).toBeTruthy();
 });
 
 it('updates on focus after a change without showing the loading state (FR-019, FR-023)', async () => {

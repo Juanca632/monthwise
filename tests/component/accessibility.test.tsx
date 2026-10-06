@@ -238,6 +238,9 @@ describe('large text (fontScale 1.3, design.md)', () => {
 
     expect(direction(screen.getByLabelText(/^Food, .* percent$/))).toBe('column');
 
+    // A day header's net moves under the day (design.md, Summary screen item 3).
+    expect(direction(screen.getAllByLabelText(/, net /)[0])).toBe('column');
+
     // The amount sits in the text column, under the label, instead of beside it.
     const row = screen.getByRole('button', { name: /^Expense, Food, / });
     const label = row.findAll((n) => isHost(n) && n.props.children === 'Food')[0];
