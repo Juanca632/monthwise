@@ -9,10 +9,11 @@ import {
 } from '@expo-google-fonts/manrope';
 import { Feather } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
-import { Stack, type ErrorBoundaryProps } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import * as SystemUI from 'expo-system-ui';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -84,7 +85,20 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(FONTS);
   const fontsSettled = fontsLoaded || fontError !== null;
   const [fatal, setFatal] = useState(false);
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
+
+  // The navigator paints its own background during transitions; its default theme is light, so
+  // without this a dark app flashes white when a screen closes.
+  const navigationTheme = useMemo(() => {
+    const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
+    return { ...base, colors: { ...base.colors, background: colors.background, card: colors.background } };
+  }, [scheme, colors.background]);
+
+  // The native root view sits under every screen and shows through while one closes. Its default
+  // is white, so it follows the palette, including when the system switches light/dark.
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(colors.background).catch(() => {});
+  }, [colors.background]);
 
   useEffect(() => {
     logSinceStartup('bundle-ready');
@@ -108,16 +122,18 @@ export default function RootLayout() {
       <SelectedMonthProvider>
         <SummaryNoticeProvider>
           {fontsSettled && (
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: colors.background },
-              }}
-            >
-              <Stack.Screen name="index" />
-              <Stack.Screen name="transaction/new" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="transaction/[id]" options={{ presentation: 'modal' }} />
-            </Stack>
+            <ThemeProvider value={navigationTheme}>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: colors.background },
+                }}
+              >
+                <Stack.Screen name="index" />
+                <Stack.Screen name="transaction/new" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="transaction/[id]" options={{ presentation: 'modal' }} />
+              </Stack>
+            </ThemeProvider>
           )}
           <StatusBar style="auto" />
         </SummaryNoticeProvider>

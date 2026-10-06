@@ -680,6 +680,15 @@ own transactions and totals. Add one from a past month and check that it lands i
   checkbox in this file done; open the PR from `001-monthly-summary` to `develop` (only when the
   developer asks) and wait for green CI.
 
+### Fixes from the developer's phone review
+
+- [X] T055 Wrap the root `Stack` in Expo Router's `ThemeProvider`, with the theme's `background`
+  and `card` set to the palette's `background` for the current scheme. The navigator's default
+  theme is light. Also paint the native root view with `SystemUI.setBackgroundColorAsync`
+  (palette `background`, updated when the scheme changes): its default is white and it shows
+  through while a form closes, which was the white flash on the phone. Tests in
+  `tests/component/rootLayout.test.tsx`.
+
 ---
 
 ## Dependencies & Execution Order

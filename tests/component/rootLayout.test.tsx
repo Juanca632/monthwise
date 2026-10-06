@@ -1,7 +1,11 @@
 import { act, render, screen, waitFor } from '@testing-library/react-native';
 import * as SplashScreen from 'expo-splash-screen';
+import * as SystemUI from 'expo-system-ui';
+
+import * as RN from 'react-native';
 
 import { logTiming } from '@/lib/devLog';
+import { palettes } from '@/ui/theme';
 
 // Development leaves the console and the global error handler alone.
 jest.mock('@/lib/variant', () => ({ getVariant: () => 'development' }));
@@ -18,15 +22,26 @@ jest.mock('expo-splash-screen', () => ({
   hideAsync: jest.fn(() => Promise.resolve()),
 }));
 
+jest.mock('expo-system-ui', () => ({ setBackgroundColorAsync: jest.fn(() => Promise.resolve()) }));
+
 const mockOpen = jest.fn();
 jest.mock('expo-sqlite', () => ({ openDatabaseAsync: (...a: unknown[]) => mockOpen(...a) }));
 
 // The real Stack needs a navigation container; here it only shows that the screens rendered.
+// ThemeProvider records the theme it gets, so the test can check the navigator's background.
+const mockNavigationTheme: { current: { dark: boolean; colors: Record<string, string> } | null } = {
+  current: null,
+};
 jest.mock('expo-router', () => {
   const { Text: RNText } = require('react-native');
   const Stack = () => <RNText>app screens</RNText>;
   Stack.Screen = () => null;
-  return { Stack };
+  const ThemeProvider = ({ value, children }: { value: typeof mockNavigationTheme.current; children: unknown }) => {
+    mockNavigationTheme.current = value;
+    return children;
+  };
+  const theme = (dark: boolean) => ({ dark, colors: { background: dark ? '#000' : '#FFF', text: 'x' } });
+  return { Stack, ThemeProvider, DarkTheme: theme(true), DefaultTheme: theme(false) };
 });
 
 jest.mock('react-native-safe-area-context', () =>
@@ -87,4 +102,31 @@ it('starts opening the database before the fonts finish', async () => {
   await act(async () => {});
   expect(screen.getByText('app screens')).toBeTruthy();
   expect(mockOpen).toHaveBeenCalledTimes(1);
+});
+
+it('gives the navigator the app background, so closing a screen never flashes white', async () => {
+  mockFonts = [true, null];
+  const scheme = jest.spyOn(RN, 'useColorScheme').mockReturnValue('dark');
+  render(<RootLayout />);
+  await act(async () => {});
+
+  expect(mockNavigationTheme.current).toMatchObject({
+    dark: true,
+    colors: { background: palettes.dark.background, card: palettes.dark.background, text: 'x' },
+  });
+  scheme.mockRestore();
+});
+
+it('paints the native root view in the app background, which shows while a screen closes', async () => {
+  mockFonts = [true, null];
+  const scheme = jest.spyOn(RN, 'useColorScheme').mockReturnValue('dark');
+  const { rerender } = render(<RootLayout />);
+  await act(async () => {});
+  expect(SystemUI.setBackgroundColorAsync).toHaveBeenLastCalledWith(palettes.dark.background);
+
+  scheme.mockReturnValue('light');
+  rerender(<RootLayout />);
+  await act(async () => {});
+  expect(SystemUI.setBackgroundColorAsync).toHaveBeenLastCalledWith(palettes.light.background);
+  scheme.mockRestore();
 });
