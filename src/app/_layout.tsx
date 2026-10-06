@@ -64,6 +64,7 @@ function GenericErrorScreen({ onRetry }: { onRetry: () => void }) {
       </Text>
       <Pressable
         accessibilityRole="button"
+        accessibilityLabel="Try again"
         onPress={onRetry}
         android_ripple={{ color: colors.ripple }}
         style={[styles.retryButton, { backgroundColor: colors.surfaceMuted }]}

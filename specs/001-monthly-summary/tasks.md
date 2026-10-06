@@ -642,7 +642,7 @@ own transactions and totals. Add one from a past month and check that it lands i
   Tests in `tests/unit/seed.test.ts`: 1,000 rows, all dates within range, all valid, and a failure
   rolls back. `tests/component/devTools.test.tsx` covers the button, the switch and the
   conditional load; `summaryScreen.test.tsx` checks the tools are absent without the flag.
-- [ ] T050 (FR-031) Accessibility pass across `src/ui/` and `src/app/`:
+- [X] T050 (FR-031) Accessibility pass across `src/ui/` and `src/app/`:
   - Every tappable element has `accessibilityRole`, `accessibilityLabel`, ≥ 48 × 48 dp and
     `android_ripple` (design.md).
   - Decorative elements are hidden from the screen reader, and each row and pill is one accessible
