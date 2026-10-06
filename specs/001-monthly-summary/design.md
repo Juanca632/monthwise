@@ -175,12 +175,19 @@ decorative circle) is dropped: the ambient glow replaces it.
   depends on the shape:
   - **Circular icon buttons** (month arrows, the form's close button): `android_ripple` with
     `ripple`, `borderless: true` and `radius` = half the button (24), which draws a circle.
-  - **Other pressables with their own rounded shape** (Add, Save, chips, segments, **Try
-    again**): no `android_ripple`. While pressed, an overlay inside the shape (clipped by
-    `overflow: 'hidden'`, which does clip children) shows `ripple`, or `rippleOnAccent` on accent
-    buttons, together with the press scale (Motion).
-  - **Rows and text buttons** without a rounded fill of their own keep `android_ripple` with
-    `ripple`; the rounded card around them clips it.
+  - **Other pressables with their own rounded shape** (Add, Save, chips, Type segments, the
+    Date box, **Try again** on the balance card and on the error screen): no `android_ripple`.
+    An overlay inside the shape (clipped by `overflow: 'hidden'`, which does clip children) shows
+    `ripple`, or `rippleOnAccent` on accent buttons, from press-in until release, with no fade;
+    the press scale (Motion) comes with it. Under reduce motion the overlay stays and the scale
+    goes.
+  - **List rows and the banner's Dismiss** keep `android_ripple` with `ripple`: their card clips
+    it, because the card's inner view has `overflow: 'hidden'` and its shadow sits on an outer
+    wrapper (Glass surfaces). The spike only showed that a view does not clip its own ripple, so
+    this is checked on the phone in T060 (first and last row, Dismiss): if the card's corners
+    show a square ripple, they switch to the pressed overlay. **Delete** in the form footer has
+    no card around it, so its ripple is its 48 dp-high rectangle, which is accepted.
+  - Stat pills and breakdown rows are not pressable: no feedback and no button role.
 - **Elevation**: see Glass surfaces. Cards get a soft outer shadow and a 1 dp inner top
   highlight. Accent buttons and the selected chip have no outer glow: on the phone it drew a white
   rectangle around the button (glass spike, 2026-10-06). Where `boxShadow` is not supported (outer
@@ -247,13 +254,18 @@ invisible in light, so it stays out; 2026-10-06.)
   The fill stays opaque: a translucent accent drops `onAccent` text below 4.5:1 (light 3.8:1 even
   at 85 %), and the developer preferred this look over clear glass on the phone.
 - **Selected chip**: `accent` with `bodyStrong` in `onAccent` and the inner highlight; no glow.
+  It keeps the unselected chip's 1 dp border and 1 dp extra padding, with the border in `accent`
+  (invisible on the `accent` fill), so selecting never adds or removes a border or shifts the
+  layout.
 - **Selected segment**: one indicator that slides between the two options (Motion). Light:
   `segmentSelected`; dark: `#FFFFFF` at 16 % on the track. Both with a 1.5 dp full `accent`
   border (dark ≥ 3.0:1 against the fill around it, 5.0:1 against the track).
-- Outer shadows go on an outer wrapper that does not clip; the gradient and the pressed overlay
-  go on the inner pressable, which clips with `overflow: 'hidden'` (see Touch feedback).
-- A border is never added or removed while the app runs; only its color changes (removing one
-  from a view with a gradient closed Expo Go in the spike).
+- Cards and the toast put their outer shadow on an outer wrapper that does not clip; the fill,
+  gradient and content go on an inner view that clips with `overflow: 'hidden'`. Pressables with
+  their own shape clip their gradient and pressed overlay the same way (see Touch feedback).
+- A border is never added or removed while the app runs (removing one from a view with a gradient
+  closed Expo Go in the spike). Its color can change, and on form fields its width too, as
+  "Borders never shift the layout" describes.
 
 **Contrast over glass** (WCAG ratios computed by blending each layer at the glow's peak, the
 worst case; 2026-10-06): dark `cardLabel` positive `#D5DBF0` 6.6:1, negative `#E6D6D2` 6.8:1;
@@ -360,7 +372,7 @@ cannot be drawn.
 | Add, Save | accent button | 1 dp white border (Glass surfaces) | highlight |
 | Form sheet | `sheetFill` | top edge `glassBorderStrong` | grab handle 40 × 5 dp, `textMuted` at 40 % |
 | Close button, segmented track, unselected chips, Date, Note | `fieldFill` | `fieldBorder` (focus `accent`, error `error`; see "Borders never shift the layout") | — |
-| Selected chip, selected segment | as in Glass surfaces | — | — |
+| Selected chip, selected segment | as in Glass surfaces | chip: 1 dp `accent`, same width as at rest; segment: 1.5 dp `accent` | — |
 | Toast | `sheetFill` | `glassBorderStrong` | highlight, `glassShadow` |
 | Error screen **Try again** | `fieldFill` | `fieldBorder` | — |
 
@@ -369,8 +381,8 @@ cannot be drawn.
 There is no native header (`headerShown: false`); the balance card holds the month controls.
 
 1. **Balance card**: margin `12 + insets.top` top and 12 at the sides; padding 12, with 16 at
-   the bottom; radius 28; `overflow: 'hidden'`; a glass card in the balance tone (`cardGlass`,
-   Glass surfaces).
+   the bottom; radius 28; a glass card in the balance tone (`cardGlass`, Glass surfaces). Its
+   shadow sits on an outer wrapper and the inner view clips with `overflow: 'hidden'`.
    - Header row: the previous-month button (48 dp circle, `monthButton`, `chevron-left` in
      `cardInk`), the month title (`monthTitle`, `cardInk`) centered, then the next-month button or
      an empty 48 dp slot (FR-021). On January 2000 the previous button is likewise replaced by an
@@ -444,7 +456,8 @@ There is no native header (`headerShown: false`).
     otherwise, `error` when invalid.
 - **Category**: a label, then wrapping chips with gap 8. Each chip has minHeight 48, padding 0 ×
   16, and is fully rounded.
-  - Selected: `accent` with `bodyStrong` text in `onAccent`.
+  - Selected: `accent` with `bodyStrong` text in `onAccent`, keeping a 1 dp border in `accent`
+    (Glass surfaces).
   - Unselected: `fieldFill` with `fieldBorder` and `body` text in `text`.
 - **Date** and **Note**: side by side in 2 columns with gap 12 (one column when `isLargeText`).
   Each field has a label above it, then a box on `fieldFill` with minHeight 52, radius 16 and

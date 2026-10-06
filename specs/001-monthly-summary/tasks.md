@@ -745,7 +745,10 @@ labels are built from data, never from animated values; no new dependency beyond
 - [ ] T060 (FR-015, FR-031) Apply glass to the summary (design.md, Components table):
   `src/app/index.tsx` gets `AmbientBackground` and the 96 dp bottom fade; `Totals` uses
   `cardGlass` (no decorative circle) and glass stat pills; `MonthHeader` buttons (with the
-  borderless ripple from design.md, Touch feedback, which fixes the square ripple), `Breakdown`
+  borderless ripple from design.md, Touch feedback, which fixes the square ripple; **Try again**
+  on the card gets the pressed overlay; rows and Dismiss keep `android_ripple`, clipped by their
+  card's inner view; on the phone, check the first and last row and Dismiss, and switch them to
+  the pressed overlay if the corners show a square ripple), `Breakdown`
   and `TransactionList` cards, dividers and avatars, and `StateMessage` banner and empty card use
   their glass tokens; Add becomes an `AccentButton`. When the balance tone changes, the card's
   `cardGlass` crossfades like the glow (a second gradient layer fading in over 600 ms; a swap
@@ -757,7 +760,8 @@ labels are built from data, never from animated values; no new dependency beyond
   from design.md ("Borders never shift the layout": 1 dp + 1 dp padding at rest, 2 dp on focus or
   error); the selected chip and segment styles; Save as an `AccentButton`; **Try again** on the
   error screen. Touch feedback by shape (design.md): the close button gets the borderless
-  ripple; chips, segments and **Try again** get the pressed overlay instead of `android_ripple`.
+  ripple; chips, segments, the Date box and **Try again** get the pressed overlay instead of
+  `android_ripple`; the selected chip keeps its 1 dp border, in `accent`.
   Tests: form suites stay green; a test checks that a field's outer size is the same at rest,
   focused and invalid.
 
