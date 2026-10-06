@@ -38,6 +38,11 @@ network calls.
   tweak that changes a requirement, the data, or adds a library follows the full flow above
   (constitution, principle I).
 
+Monthwise is a portfolio project, built step by step; it is not going to Google Play soon. Do not
+plan store listings, release signing, Play policies or launch work in feature plans or tasks
+unless asked. Verification builds are APKs installed on the developer's phone. Keep things that
+become permanent once published (such as the package name) correct.
+
 Roadmap (one feature at a time):
 
 1. `001` Record income and expenses, see the monthly summary
@@ -55,7 +60,9 @@ Needs Node 22 and the Expo Go app on an Android phone.
 ```bash
 npm install                          # install dependencies
 npm start                            # dev server; scan the QR code with Expo Go
-npm start -- --tunnel                # same, when the phone cannot reach the computer (e.g. WSL2)
+npm start -- --tunnel                # same, when the phone cannot reach the computer (e.g. WSL2);
+                                     # Expo's shared ngrok tunnel is rate-limited and often fails
+                                     # ("reading 'body'"): prefer WSL2 networkingMode=mirrored
 EXPO_PUBLIC_DEV_TOOLS=1 npm start    # also show the dev tools (seed data, simulated storage error)
 npx eas-cli build --platform android --profile preview      # installable APK with dev tools
 npx eas-cli build --platform android --profile production   # installable APK, no logs or dev tools

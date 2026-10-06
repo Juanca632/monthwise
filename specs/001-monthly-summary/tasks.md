@@ -912,6 +912,49 @@ Spec clarifications (Session 2026-10-06), FR-017, FR-029, contracts/ui-screens.m
   and the track; `textMuted` on `background` at the glow's peak for the day headers); form
   suites stay green, including the field size test.
 
+### Block 8h: Add next to "Transactions" and See all (developer, 2026-10-06)
+
+Spec clarification (Session 2026-10-06), FR-002, FR-017, contracts/ui-screens.md ("Summary
+screen", "All transactions") and design.md (Summary screen item 4, "All transactions", Toast,
+insets) were updated first.
+
+- [x] T077 (FR-002) **Add** moves from the floating button to the right of the "Transactions"
+  title, which shows in every state; the bottom fade goes; lists end with `28 + insets.bottom`;
+  the toast's bottom moves to `28 + insets.bottom`. Tests: the summary, accessibility and
+  devTools suites find **Add** in loading, error, empty and ready states; the SC-001 test still
+  takes 4 interactions; the toast offset test is updated.
+- [x] T078 (FR-017) The summary lists the 5 most recent transactions (grouped by day) and shows
+  **See all** when there are more; **See all** opens `src/app/transactions.tsx` (stack screen,
+  header with Back and the month), which lists every transaction of the month with the same
+  grouping, row changes, banner and sheet scale-back, using `useMonthSummary`. Tests: the summary
+  shows 5 of 7 and **See all**, with a cut day's header still netting the whole day; it shows no
+  **See all** at 5 or fewer; the new screen lists all 7 by day, opens an item, reloads on
+  focus, shows loading, error and empty, and its 1,000-row month renders only the first window.
+
+### Fine-tuning batch in progress (developer's phone review, 2026-10-06)
+
+Code changes made in fine-tuning mode (AGENTS.md), tested but **not yet in design.md nor
+reviewed**; the developer approves the batch on the phone first, then design.md is updated once
+and reviewed in one round before the batch's final commit:
+
+- Balance card: a deep "metal" hue with a diagonal sheen (navy positive, maroon negative), white
+  text, dark tinted glass controls; `theme.ts` keeps a `sober` alternative behind `CARD_STYLE`.
+  Card body keeps its height while a month loads. Balance amount 62, "Balance" label 16, stat
+  labels 14 and amounts 19.
+- Background: plain (no ambient glows); dark `#07080A` with lighter `#1B1D24` sections; light
+  `#F2F3F7` with white sections. Section titles use a new `heading` token (22 Bold).
+- Spending by category: horizontal tiles with each category's icon and color
+  (`ui/categoryLook.ts`, `categoryColors` in `theme.ts`); small tile shadow in light, none in dark.
+- Transactions: solid cards (content is not glass), category icons instead of initials.
+- Add: a plain glass pill with a soft shadow next to "Transactions"; the See all page uses the
+  `ios_from_right` stack animation.
+- Form: amount green for income; category tiles (four per row, steady label weight, long words
+  shrink); Date and Note in one list card; Save in the balance card's deep blue; the Type
+  selector's indicator is a glass drop that stretches while it slides.
+- Open item: entering and leaving See all may stutter in Expo Go's dev mode; check with
+  `npm start -- --no-dev --minify` before changing code (defer the summary's focus reload if it
+  persists).
+
 ---
 
 ## Dependencies & Execution Order
@@ -983,6 +1026,7 @@ Task: "T035 [P] [US1] MonthHeader (title) in src/ui/MonthHeader.tsx"
 | 8e | T068, T072 | Keyboard and Save above it (SC-001); Type indicator, chips, invalid shake |
 | 8f | T069–T071 | Haptics, toast, design review, full phone check |
 | 8g | T073–T076 | Developer's phone review: month change without counting, € sign, day groups (FR-017, FR-029), flat form look (design only) |
+| 8h | T077–T078 | Add next to Transactions; 5 latest on the summary and See all (FR-002, FR-017) |
 | 9 | T052–T054 | APK verification and final check |
 
 Commits: one or more Conventional Commits per block, proposed to the developer and made only
