@@ -99,7 +99,7 @@ imports nothing from React, Expo or SQLite.
 - Every behavior change ships with tests; money calculations are unit-tested.
 - Tests never hit the network.
 - `npm test` (Jest), `npm run lint` (ESLint) and `npm run typecheck` (TypeScript). CI runs all
-  three on pull requests into `develop` and `main` and on pushes to them.
+  three, plus `npm audit --audit-level=critical`, only on pull requests into `develop` and `main`.
 
 ## Code style
 

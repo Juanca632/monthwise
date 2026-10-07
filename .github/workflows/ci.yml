@@ -1,11 +1,9 @@
 name: CI
 
-# Every PR into develop or main is checked before it can be merged. Pushes are checked only on
-# those two branches: a push to a feature branch with an open PR would otherwise run twice.
+# Runs on every pull request into develop or main, before it can be merged. Pushes are not
+# checked on their own: everything reaches develop and main through a pull request.
 on:
   pull_request:
-    branches: [main, develop]
-  push:
     branches: [main, develop]
 
 permissions:
@@ -21,6 +19,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Critical only: the high findings are all inside Expo and React Native's own packages and
+      # only an SDK upgrade fixes them.
+      - name: Audit dependencies
+        run: npm audit --audit-level=critical
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
