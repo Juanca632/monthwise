@@ -57,9 +57,21 @@ explainable in an interview.
   completable in a single short form.
 - Every screen MUST define clear empty, loading and error states.
 - The UI language is English.
+- The app MUST feel smooth. Performance wins over any visual effect: an effect that costs frames
+  is simplified or dropped.
+  - Motion MUST run on the UI thread (transforms, opacity, layout transitions). It MUST NOT do
+    layout work on every frame (animating a size, padding or margin, or a corner radius on a view
+    that clips).
+  - JS work (reloads, re-renders, toasts) MUST NOT run during a screen transition; it waits until
+    the transition ends.
+  - Data already on screen MUST be handed to the next screen instead of being loaded again while
+    it animates in.
+- Smoothness is judged on a release-like build (a preview APK or `--no-dev --minify`), not in
+  Expo Go's development mode. Each feature's `design.md` holds its detailed performance rules
+  (001: "Performance rules").
 
 Rationale: if logging an expense is slow, the user stops logging, and the monthly numbers become
-meaningless.
+meaningless. An app that stutters feels unfinished, however good it looks.
 
 ## Platform & Technical Constraints
 
@@ -89,4 +101,4 @@ meaningless.
   plan's complexity tracking section.
 - Day-to-day development guidance for humans and AI agents lives in `AGENTS.md` and `CLAUDE.md`.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-04 | **Last Amended**: 2026-10-04
+**Version**: 1.1.0 | **Ratified**: 2026-10-04 | **Last Amended**: 2026-10-07
