@@ -931,29 +931,76 @@ insets) were updated first.
   **See all** at 5 or fewer; the new screen lists all 7 by day, opens an item, reloads on
   focus, shows loading, error and empty, and its 1,000-row month renders only the first window.
 
-### Fine-tuning batch in progress (developer's phone review, 2026-10-06)
+### Block 8i: the new form opens without the keyboard (developer, 2026-10-07)
 
-Code changes made in fine-tuning mode (AGENTS.md), tested but **not yet in design.md nor
-reviewed**; the developer approves the batch on the phone first, then design.md is updated once
-and reviewed in one round before the batch's final commit:
+Spec clarification (Session 2026-10-07), FR-003, SC-001, plan.md, contracts/ui-screens.md
+("Layout with the keyboard open", "Form states"), design.md (keyboard fallback) and
+quickstart.md (form defaults, scenario 12) were updated first. This supersedes "autofocused on
+new" in T038 and the 4 interactions in Phase 3's goal, T041, T068 and T077.
 
-- Balance card: a deep "metal" hue with a diagonal sheen (navy positive, maroon negative), white
-  text, dark tinted glass controls; `theme.ts` keeps a `sober` alternative behind `CARD_STYLE`.
-  Card body keeps its height while a month loads. Balance amount 62, "Balance" label 16, stat
-  labels 14 and amounts 19.
-- Background: plain (no ambient glows); dark `#07080A` with lighter `#1B1D24` sections; light
-  `#F2F3F7` with white sections. Section titles use a new `heading` token (22 Bold).
-- Spending by category: horizontal tiles with each category's icon and color
-  (`ui/categoryLook.ts`, `categoryColors` in `theme.ts`); small tile shadow in light, none in dark.
-- Transactions: solid cards (content is not glass), category icons instead of initials.
-- Add: a plain glass pill with a soft shadow next to "Transactions"; the See all page uses the
-  `ios_from_right` stack animation.
-- Form: amount green for income; category tiles (four per row, steady label weight, long words
-  shrink); Date and Note in one list card; Save in the balance card's deep blue; the Type
-  selector's indicator is a glass drop that stretches while it slides.
-- Open item: entering and leaving See all may stutter in Expo Go's dev mode; check with
-  `npm start -- --no-dev --minify` before changing code (defer the summary's focus reload if it
-  persists).
+- [x] T079 (FR-003, SC-001) `src/app/transaction/new.tsx` stops passing `autoFocusAmount`, and
+  `TransactionForm` drops the prop (no screen uses it). The amount row's `Pressable` still
+  focuses the input on tap, which opens the `decimal-pad` keyboard, and the keyboard layout
+  (T068) is unchanged. Tests in `tests/component/transactionFormNew.test.tsx`: the defaults test
+  checks the amount is empty and has no `autoFocus`; the SC-001 test takes 5 interactions and
+  checks that pressing the amount calls `TextInput.focus` before typing; the other form and
+  keyboard suites stay green. Phone check: Add opens the form with no keyboard; tapping the
+  amount opens it, with the amount, chips and Save above it; quickstart scenario 12 is timed
+  again with 5 interactions.
+
+### Block 8j: phone review fine-tuning (developer, 2026-10-06 and 2026-10-07)
+
+Made in fine-tuning mode (AGENTS.md): code first, checked on the developer's phone, then
+design.md ("Phone review", "Performance rules", Motion, Dialogs, Transaction form, All
+transactions), contracts/ui-screens.md (Edit form states, Actions, texts), plan.md and the
+constitution (principle V) were updated once and reviewed in one round. Test suites named below
+are `tests/component/<name>.test.tsx` unless the path says otherwise. This block supersedes: the
+row grow-in, slide-out and 280 / 220 / 560 ms timings in T065 and T072 (T087, T088); the toast
+"over a closing sheet" in T070 and T071 (T089); and the system `Alert`s in T068 (T086: the app's
+dialog is a `Modal` window, which covers the keyboard like the `Alert` did). Phone check: the
+developer's reviews of 2026-10-06 and 2026-10-07, then quickstart scenario 14.
+
+- [x] T080 Look (2026-10-06): plain background; the "metal" balance card (navy / maroon sheen,
+  white text, dark tinted glass controls; `sober` kept behind `CARD_STYLE`), its 62 / 16 / 14 / 19
+  type and steady body height while loading; `heading` section titles; category tiles with icons
+  and colors (`ui/categoryLook.ts`, `categoryColors`); solid list cards with category icons; the
+  glass Add pill; the form's income-green amount, four-per-row category tiles, Date and Note in
+  one card, deep-blue Save and stretching glass Type drop. Tests: theme, contrast, summary,
+  breakdown and form suites.
+- [x] T081 The balance card has no rim, no inner highlight and no border width, with its base hue
+  as fill, so no thin light line shows at its edge (`ui/Totals.tsx`). Tests: component suites.
+- [x] T082 (FR-003) The empty amount shows a `0,00` placeholder with the region's separator in
+  `textMuted`. Tests: `transactionFormNew` defaults.
+- [x] T083 (FR-011, FR-025) A list hands the tapped row to the edit form
+  (`state/openedTransaction.ts`), which mounts filled with no loading state and still reads the
+  row in the background; a row deleted meanwhile closes with the banner. Without a handed row the
+  loading state stays. Tests: `transactionFormEdit` (opening from the list, by link, FR-025).
+- [x] T084 All transactions uses Android's own push and pop (the `ios_from_right` trial is
+  dropped); a focus reload that brings back the same rows keeps the old state, so nothing
+  re-renders mid-animation (`useMonthSummary`). Tests: `useMonthSummary`.
+- [x] T085 The form footer has its own `formBackground` fill; Delete fades and folds away while
+  the keyboard opens, so only Save rises; a keyboard height the form never saw close (state
+  closed or unknown) is ignored, and closing the sheet closes the keyboard. Tests: `keyboard`,
+  `transactionFormNew`.
+- [x] T086 (FR-010, FR-013) The app's own confirmation dialog (`ui/ConfirmDialog.tsx`) replaces
+  the system `Alert` for Discard and Delete, with a message line; back and a tap outside pick the
+  safe choice. Tests: form, edit and sheet suites through `tests/helpers/confirmDialog.ts`.
+- [x] T087 One motion rhythm: `fast` 200 and `standard` 300 ms (`ui/motion.tsx`), ease-out in and
+  ease-in out; the sheet opens in 300 ms and travels its measured height; only the screen that
+  opened the sheet moves back (`SheetTransitionContext` opener), with transforms only. Tests:
+  `glass`, `sheet`, `behindSheet`, `toast`.
+- [x] T088 (SC-004) Lists: `Animated.FlatList` with a native layout transition for the rows
+  around a change; new and deleted rows have no motion of their own and the edited row keeps its
+  flash (`ui/RowMotion.tsx`); a small render window (`initialNumToRender` 12,
+  `maxToRenderPerBatch` 8, `windowSize` 5) and items memoized by content
+  (`ui/TransactionList.tsx`). Tests: `rowChanges`, `allTransactions`.
+- [x] T089 (FR-019, FR-020, FR-025, FR-032) Save and Delete write first, play the haptic at once,
+  close the sheet, and only then show the toast, switch month and reload (`useConfirmChange`,
+  the form routes); summary screens reload on focus only, never while the sheet slides, and
+  setting the month already shown keeps the same state (`SelectedMonthContext`), so a save in the
+  month on screen runs one query. Tests: `rowChanges`, `toast`, `transactionFormNew` (FR-020
+  order), `tests/unit/todayAndMonth.test.tsx` (same month).
+- [x] T090 `jest.config.js` caps `maxWorkers` at 4, so `npm test` fits in WSL2's memory.
 
 ---
 
@@ -974,7 +1021,7 @@ and reviewed in one round before the batch's final commit:
   US3.
 - **Polish (Phase 7)**: needs all stories. T051 can run any time after Phase 1.
 - **Glass and motion (Phase 8)**: needs Phases 3–6 and T055. It runs before T052–T054, so the
-  APKs are built from the final design. Its blocks go in order 8a → 8f.
+  APKs are built from the final design. Its blocks go in order 8a → 8j.
 
 ### Key task dependencies
 
@@ -1027,6 +1074,8 @@ Task: "T035 [P] [US1] MonthHeader (title) in src/ui/MonthHeader.tsx"
 | 8f | T069–T071 | Haptics, toast, design review, full phone check |
 | 8g | T073–T076 | Developer's phone review: month change without counting, € sign, day groups (FR-017, FR-029), flat form look (design only) |
 | 8h | T077–T078 | Add next to Transactions; 5 latest on the summary and See all (FR-002, FR-017) |
+| 8i | T079 | New form opens without the keyboard (FR-003, SC-001) |
+| 8j | T080–T090 | Phone review fine-tuning: look, dialog, motion rhythm, performance |
 | 9 | T052–T054 | APK verification and final check |
 
 Commits: one or more Conventional Commits per block, proposed to the developer and made only

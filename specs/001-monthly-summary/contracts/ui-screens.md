@@ -54,8 +54,11 @@ show the FR-025 save error.
 - List item: type, category label, amount, note if any; its date is its day's header. Spoken as
   "Expense, Food, 12,50 €, 30 September 2026, note: lunch" (FR-031), with the date, so each item
   makes sense on its own.
-- Tapping an item opens `/transaction/[id]`, which loads the stored row (see Edit form states).
-  If loading fails, the modal closes and the summary shows "Couldn't open this transaction." in
+- Tapping an item opens `/transaction/[id]` and hands it the tapped row, so the form opens filled
+  with no loading state; it still reads the stored row in the background (see Edit form states).
+  If that read fails, the modal goes back (with edits already typed, the Discard check runs first,
+  FR-010; a handed row counts as the stored values, so an untouched form is not dirty) and the
+  screen it was opened from (the summary or All transactions) shows "Couldn't open this transaction." in
   an inline banner above the list with a **Dismiss** button. The banner stays until it is
   dismissed, the month changes or another transaction opens. It is announced once with
   `AccessibilityInfo.announceForAccessibility`. The user ends up on the summary they came from
@@ -92,17 +95,18 @@ One shared `TransactionForm` component.
   large text sizes.
 - The form's scroll container uses `keyboardShouldPersistTaps="handled"`, so the first tap on a
   chip or on **Save** acts right away and does not just close the keyboard.
-- A component test records an expense with the keyboard open in 4 interactions: open, type, chip,
-  Save.
+- A component test records an expense in 5 interactions: open, tap the amount (which focuses
+  it and opens the keyboard), type, chip, Save; the real keyboard layout is checked on the phone
+  (quickstart scenario 12).
 
 ### Form states
 
 | State   | Form | When                                            | Shows                                               |
 | ------- | ---- | ----------------------------------------------- | --------------------------------------------------- |
 | ready   | New  | Always (nothing to load)                        | Fields with defaults below                          |
-| loading | Edit | `getById` in progress                           | Title + loading indicator; no fields, no Save/Delete; closing is allowed with no prompt |
-| ready   | Edit | Row loaded                                      | Fields with the stored values                       |
-| error   | Edit | `getById` threw or returned `null`              | Closes the modal; the summary shows "Couldn't open this transaction." (FR-025) |
+| loading | Edit | Opened without a row from a list (a link), `getById` in progress | Title + loading indicator; no fields, no Save/Delete; closing is allowed with no prompt |
+| ready   | Edit | Row handed over by the list, or loaded          | Fields with the stored values                       |
+| error   | Edit | `getById` threw or returned `null` (also checked in the background when the row was handed over) | Closes the modal; the screen it was opened from shows "Couldn't open this transaction." (FR-025) |
 | saving  | Both | Save or delete in progress (milliseconds)       | Fields kept. Save stays enabled (FR-009), but taps during an operation already in progress are ignored, so nothing is inserted twice. Back/close waits until the operation finishes. |
 
 The form has no empty state: a form always has fields to fill. "Today" (the default date and the
@@ -111,7 +115,7 @@ latest allowed date) is computed when the form opens and again when the user tap
 | Field    | New                                       | Edit           | Control                         |
 | -------- | ----------------------------------------- | -------------- | ------------------------------- |
 | Type     | Expense                                   | Stored value   | Two-option toggle               |
-| Amount   | Empty, focused, numeric keyboard          | Stored, region decimal separator, no thousands separator | Text input (`decimal-pad`) |
+| Amount   | Empty, not focused (tap opens the numeric keyboard); placeholder `0,00` with the region's separator | Stored, region decimal separator, no thousands separator | Text input (`decimal-pad`) |
 | Date     | Today, or last day of the month on screen (FR-003) | Stored | Native date dialog (2000-01-01..today). A stored date after today opens the dialog on today, and the field is flagged as the one to fix |
 | Category | None selected                             | Stored value   | Chips for the selected type     |
 | Note     | Empty                                     | Stored value   | Text input; `onChangeText` cuts typed or pasted text to 100 graphemes with `countGraphemes` (no `maxLength`, which counts UTF-16 units) |
@@ -119,17 +123,25 @@ latest allowed date) is computed when the form opens and again when the user tap
 Actions:
 
 - **Save** is always enabled (FR-009). On invalid input it shows a message next to each invalid
-  field, moves focus to the first one and keeps the input. On success it sets the selected month
-  to the transaction's month and closes.
-- **Delete** (edit only) asks "Delete this transaction?" with **Delete** and **Cancel** (FR-013).
-- After a successful save or delete, the summary shows a short confirmation toast, "Saved" or
-  "Deleted", for about 1.8 s, above the **Add** button (FR-032). It is announced once with
+  field, moves focus to the first one and keeps the input. On success it closes the sheet; the
+  month switch to the transaction's month happens once the sheet is gone (below).
+- **Delete** (edit only) asks "Delete this transaction?" with **Delete** and **Cancel** (FR-013),
+  in the app's own dialog (design.md, Dialogs).
+- After a successful save or delete the success haptic plays at once and the sheet closes; once
+  it is gone, the screen it was opened from shows a short confirmation toast, "Saved" or
+  "Deleted", for about 1.8 s (FR-032; on All transactions too, which is part of the summary's
+  flow), and the summary switches month if needed. The reload is the focus reload (FR-019):
+  one query for a save in the month on screen (setting the month already shown changes nothing);
+  for a save that moved the transaction to another month, that month loads and the focus
+  reload's older reply is discarded. Nothing re-renders the screens behind the sheet while it
+  slides (design.md, Performance rules). It is announced once with
   `announceForAccessibility`, is not focusable, ignores touches and needs no action. It confirms
   the result; the list and totals already show it. No toast shows after a failure, nor when
   `remove` throws `NotFoundError` (the row was already gone; the summary just reloads).
 - Changing **Type** clears the category (FR-012).
 - Leaving with unsaved changes (back button, swipe, close) asks "Discard changes?" with
-  **Discard** and **Keep editing** (FR-010).
+  **Discard** and **Keep editing** (FR-010), in the app's own dialog. In either dialog, Android's
+  back button or a tap outside the card picks the safe choice.
 - If saving or deleting fails: "Couldn't save. Your changes are still here." or "Couldn't
   delete." The form keeps its content (FR-025).
 - If `update` throws `NotFoundError` (the row no longer exists), the form stays open with its
@@ -164,9 +176,9 @@ Validation messages:
 | Form titles | "Add transaction", "Edit transaction" |
 | Form labels | "Type" (**Expense** / **Income**), "Amount", "Date", "Category", "Note (optional)" |
 | Form buttons | **Save**, **Delete** |
-| Delete dialog | "Delete this transaction?" with **Delete** and **Cancel** |
+| Delete dialog | "Delete this transaction?", "This can't be undone.", with **Delete** and **Cancel** |
 | Confirmation toast | "Saved", "Deleted" |
-| Discard dialog | "Discard changes?" with **Discard** and **Keep editing** |
+| Discard dialog | "Discard changes?", "What you entered will be lost.", with **Discard** and **Keep editing** |
 | Category labels | As in data-model.md |
 
 ## Accessibility (FR-031, SC-007)

@@ -26,7 +26,8 @@ packages are listed and justified in Dependencies below; visual design in [desig
 [data-model.md](data-model.md)
 
 **Testing**: Jest with the `jest-expo` preset, React Native Testing Library, and `better-sqlite3`
-for repository integration tests on Node
+for repository integration tests on Node. `jest.config.js` caps `maxWorkers` at 4: Jest's default
+(one worker per core) ran out of WSL2 memory and closed the whole distribution
 
 **Target Platform**: Android, with Expo SDK 57's default `minSdkVersion` (not raised, to avoid
 an extra build-properties dependency). Android 10 (API 29) is the lowest version we test on
@@ -37,13 +38,13 @@ an extra build-properties dependency). Android 10 (API 29) is the lowest version
 **Project Type**: mobile app (single Expo project at the repository root)
 
 **Performance Goals**: cold start to current month's totals and first list items in ≤ 1 s with
-1,000 transactions in the month (SC-004); recording an expense in 4 interactions (SC-001)
+1,000 transactions in the month (SC-004); recording an expense in 5 interactions (SC-001)
 
 **Constraints**: fully offline, with zero network requests (SC-005); no cloud backup (FR-027);
 exact integer cents (FR-028); system largest font size and TalkBack (FR-031); light and dark
 mode (FR-030)
 
-**Scale/Scope**: single user per phone; 2 screens (summary, form) plus 2 confirmations; one
+**Scale/Scope**: single user per phone; 3 screens (summary, all transactions, form) plus 2 app dialogs; one
 table; up to thousands of transactions per month
 
 ## Constitution Check
@@ -56,7 +57,7 @@ table; up to thousands of transactions per month
 | II. Tested Behavior | Jest unit tests for all money logic (parsing, totals, percentages); integration tests for SQL; component tests for screens; tests never use the network; CI runs everything on each PR. | PASS |
 | III. Financial Data Integrity & Privacy | `amount_cents INTEGER` end to end, amounts formatted only in UI helpers, EUR only; no secrets needed in 001 (`.env.example` added when the first secret appears); `reportError` logs codes only; no analytics, crash reporting or OTA updates; cloud backup and phone-to-phone transfer off on every Android version; release build without the `INTERNET` permission. | PASS |
 | IV. Simplicity First | Every package in `dependencies` and `devDependencies` is justified below; no ORM, no state library, no UI kit; one repository, pure domain functions. | PASS |
-| V. Fast, Mobile-First UX | **Add** always visible; form opens with the amount focused (4 interactions, SC-001); loading, error and empty states defined for the summary and form ([contracts/ui-screens.md](contracts/ui-screens.md)); English UI. | PASS |
+| V. Fast, Mobile-First UX | **Add** always visible; form opens without the keyboard and the amount one tap away (5 interactions, SC-001); loading, error and empty states defined for the summary and form ([contracts/ui-screens.md](contracts/ui-screens.md)); English UI. Smoothness (v1.1.0): UI-thread motion, no JS work during transitions, tapped rows handed to the edit form, small memoized list windows ([design.md](design.md), Performance rules). | PASS |
 
 **Post-design re-check (after Phase 1)**: PASS. The design adds no dependencies beyond the list
 below and no extra layers. The 2026-10-06 glass and motion revision adds `react-native-reanimated`
@@ -155,14 +156,16 @@ src/
 │   ├── money.ts                  # always the € sign (research R7)
 │   └── date.ts                   # numeric (form), spoken, month and day names (FR-017, FR-029)
 ├── hooks/
-│   ├── useMonthSummary.ts        # loading | error | ready, reload on focus
+│   ├── useMonthSummary.ts        # loading | error | ready, reload on focus (same rows keep state)
+│   ├── useConfirmChange.ts       # haptic at once; toast and row change once the sheet is gone
 │   ├── useCountUp.ts             # animated amounts: throttled state, final value for screen readers
 │   ├── useToday.ts               # today, refreshed on foreground; forms also read it on open and on save
 │   └── useRegion.ts              # locale tag; decimal separator derived from the same Intl formatter
 ├── state/
 │   ├── SelectedMonthContext.tsx
 │   ├── SummaryNoticeContext.tsx  # one-off banner messages for the summary (FR-025), last row change
-│   ├── SheetTransitionContext.tsx # shared value for the form sheet, summary scale and scrim
+│   ├── SheetTransitionContext.tsx # shared values: sheet progress, and which screen opened it
+│   ├── openedTransaction.ts      # the row a list hands to the edit form (no load mid-animation)
 │   └── ToastContext.tsx          # "Saved" / "Deleted" confirmation (FR-032)
 ├── ui/                           # presentational components
 │   ├── MonthHeader.tsx
@@ -171,8 +174,11 @@ src/
 │   ├── TransactionList.tsx
 │   ├── TransactionForm.tsx
 │   ├── StateMessage.tsx          # empty / error lines with optional action
+│   ├── ConfirmDialog.tsx         # the app's Discard / Delete dialog (design.md, Dialogs)
+│   ├── RowMotion.tsx             # the edited row's flash
+│   ├── Sheet.tsx, BehindSheet.tsx # the form sheet and the screen behind it
 │   ├── glass.tsx                 # GlassCard, AccentButton, AmbientBackground (design.md, Glass surfaces)
-│   ├── motion.ts                 # curves, durations, reduce motion, PressableScale
+│   ├── motion.tsx                # curves, the fast and standard durations, reduce motion, PressableScale
 │   ├── Toast.tsx
 │   └── theme.ts                  # tokens from design.md: palettes, balance-card tones, type, spacing, large text
 ├── dev/
@@ -245,7 +251,10 @@ layer instead of next to the code, so the tests of each layer are easy to find.
   `EXPO_PUBLIC_DEV_TOOLS=1` (seed for the SC-004 check, simulated storage error). The
   `production` profile sets it to `0` explicitly, so the dev-tools branch is always compiled out.
 - **Performance (SC-004)**: indexed range query for one month; `FlatList` renders the list with
-  totals and breakdown as its header, so only visible rows are drawn. The 1 s budget also
+  totals and breakdown as its header, so only visible rows are drawn (a small window and items
+  memoized by content; design.md, All transactions, "Rendering"). The phone review's rules for
+  smooth motion (UI-thread transforms, no JS work during a transition, no loading of data that is
+  already on screen) are in design.md, Performance rules. The 1 s budget also
   includes bundle load and opening the database. It is measured on the `preview` build with the
   method in [quickstart.md](quickstart.md), not assumed from the query alone.
 

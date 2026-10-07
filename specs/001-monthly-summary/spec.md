@@ -38,6 +38,14 @@
   summary shows in every state. The summary lists only the month's 5 most recent transactions;
   **See all** opens a page with every transaction of the month, grouped by day.
 
+### Session 2026-10-07 (developer's phone review)
+
+- Q: The keyboard opens as soon as the new form appears and covers half of it. Should it? →
+  A: No. The form opens with the amount field empty and not focused, so the keyboard does not
+  cover the form; the numeric keyboard opens when the user taps the amount. Recording an expense
+  takes one more tap (SC-001 goes from 4 to 5 interactions), which stays within the
+  constitution's "a few seconds" (principle V).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Record a transaction and see the month's totals (Priority: P1)
@@ -60,8 +68,8 @@ calculation to the cent.
    current month with total income, total expenses and balance all at zero, a short line saying
    there are no transactions yet, and the **Add** button.
 2. **Given** the user is on the current month, **When** they tap **Add**, **Then** a form opens
-   with type set to Expense, the amount field focused with a numeric keyboard shown, date set to
-   today and no category
+   with type set to Expense, the amount field empty and not focused (no keyboard until the user
+   taps it), date set to today and no category
    selected.
 3. **Given** the form is open, **When** the user enters 12.50, picks Food and saves, **Then** the
    form closes, the transaction appears at the top of the month's list and total expenses grow by
@@ -163,7 +171,7 @@ lands in that month.
 7. **Given** a month with 12 transactions, **When** the user views it, **Then** the summary lists
    the 5 most recent with **See all**, which opens every one of the 12, grouped by day, and Back
    returns to the summary.
-7. **Given** the user edits a transaction and moves its date to another month, **When** they save,
+8. **Given** the user edits a transaction and moves its date to another month, **When** they save,
    **Then** the app shows the month of the new date, with the transaction in it.
 
 ---
@@ -211,8 +219,8 @@ lands in that month.
   EUR, date, category and an optional note.
 - **FR-002**: The **Add** action MUST be on the summary in every state (loading, load error, empty
   month, month with transactions), next to the "Transactions" title.
-- **FR-003**: A new transaction form MUST open with type Expense, the amount field ready for
-  input (focused, numeric keyboard shown) and no category selected. The date defaults to today
+- **FR-003**: A new transaction form MUST open with type Expense, the amount field empty and not
+  focused (tapping it opens the numeric keyboard) and no category selected. The date defaults to today
   when the current month is on screen,
   and to the last day of the month on screen when a past month is shown.
 - **FR-004**: Amounts MUST be greater than 0, have at most 2 decimals and be at most 999,999.99.
@@ -333,8 +341,9 @@ lands in that month.
 
 ### Measurable Outcomes
 
-- **SC-001**: From the main screen, a user can record an expense in under 10 seconds and with 4
-  interactions: open the form, type the amount (counts as one), pick a category, save.
+- **SC-001**: From the main screen, a user can record an expense in under 10 seconds and with 5
+  interactions: open the form, tap the amount, type the amount (counts as one), pick a category,
+  save.
 - **SC-002**: Totals, balance and per-category amounts match a hand calculation to the cent for
   100% of a reference set of at least 50 transactions, including edits and deletions.
 - **SC-003**: 100% of saved transactions are still present after closing the app and after
