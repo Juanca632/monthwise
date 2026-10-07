@@ -1,7 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { GlassCard } from './glass';
+import { PressableScale } from './motion';
 import { iconSize, minTouch, radii, spacing, useTheme } from './theme';
 
 type Action = { label: string; onPress(): void };
@@ -31,28 +33,42 @@ export function StateMessage(props: Props) {
 
   if (props.variant === 'banner') {
     return (
-      <View style={[styles.banner, { backgroundColor: colors.accentSoft }]}>
+      <GlassCard
+        radius={radii.input}
+        fill={colors.bannerFill}
+        border={colors.glassBorder}
+        style={styles.bannerWrapper}
+        contentStyle={styles.banner}
+      >
         <View style={styles.bannerMessage}>
           <View importantForAccessibility="no-hide-descendants">
             <Feather name="alert-circle" size={iconSize.message} color={colors.text} />
           </View>
           <Text style={[type.label, styles.flex, { color: colors.text }]}>{props.message}</Text>
         </View>
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel={props.action.label}
           onPress={props.action.onPress}
+          // The card clips this ripple (design.md, Touch feedback).
           android_ripple={{ color: colors.ripple }}
           style={styles.textButton}
         >
           <Text style={[type.labelStrong, { color: colors.accent }]}>{props.action.label}</Text>
-        </Pressable>
-      </View>
+        </PressableScale>
+      </GlassCard>
     );
   }
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface }]}>
+    <GlassCard
+      radius={radii.card}
+      // Content, not glass: a solid surface.
+      fill={colors.surface}
+      border={colors.surface}
+      style={styles.cardWrapper}
+      contentStyle={styles.card}
+    >
       {props.icon && (
         <View
           importantForAccessibility="no-hide-descendants"
@@ -65,7 +81,7 @@ export function StateMessage(props: Props) {
       {props.helper && (
         <Text style={[type.label, styles.centered, { color: colors.textMuted }]}>{props.helper}</Text>
       )}
-    </View>
+    </GlassCard>
   );
 }
 
@@ -73,10 +89,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   centered: { textAlign: 'center' },
   inline: { padding: spacing.md },
+  cardWrapper: { marginHorizontal: spacing.md, marginTop: spacing.xxl },
   card: {
-    marginHorizontal: spacing.md,
-    marginTop: spacing.xxl,
-    borderRadius: radii.card,
     paddingVertical: spacing.xxxl,
     paddingHorizontal: spacing.xl,
     alignItems: 'center',
@@ -89,10 +103,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  bannerWrapper: { marginHorizontal: spacing.md, marginTop: spacing.sm },
   banner: {
-    marginHorizontal: spacing.md,
-    marginTop: spacing.sm,
-    borderRadius: radii.input,
     padding: spacing.md,
     gap: spacing.xs,
   },
@@ -105,7 +117,5 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
     alignItems: 'center',
     justifyContent: 'center',
-    // Clips the ripple to the rounded shape (design.md, Touch feedback).
-    overflow: 'hidden',
   },
 });

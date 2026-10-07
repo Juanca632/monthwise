@@ -2,13 +2,11 @@ import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from 'expo-router';
 import { usePreventRemove } from 'expo-router/react-navigation';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import {
   AccessibilityInfo,
-  Alert,
   findNodeHandle,
   Keyboard,
-  KeyboardAvoidingView,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,6 +14,12 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import Animated, {
+  KeyboardState,
+  useAnimatedKeyboard,
+  useAnimatedStyle,
+  useDerivedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MAX_AMOUNT_CENTS } from '@/domain/amount';
@@ -30,27 +34,32 @@ import {
   type TransactionInput,
 } from '@/domain/validation';
 import { formatNumericDate, formatSpokenDate } from '@/format/date';
-import { currencyPosition, formatAmountForInput } from '@/format/money';
+import { currencyPosition, formatAmountForInput, formSeparator } from '@/format/money';
 import { getToday } from '@/hooks/useToday';
 import { useRegion } from '@/hooks/useRegion';
+import { haptics } from '@/lib/haptics';
 
-import { iconSize, minTouch, radii, spacing, useTheme } from './theme';
+import { SEGMENT_BORDER, TypeIndicator, useShake } from './formMotion';
+import { categoryLook } from './categoryLook';
+import { useConfirmDialog } from './ConfirmDialog';
+import { ShapePressable } from './glass';
+import { useSheet } from './Sheet';
+import { PressableScale } from './motion';
+import { iconSize, minTouch, radii, spacing, useTheme, type Palette } from './theme';
 
 /** `null` means the operation succeeded; a string is the form-level failure message to show. */
 export type FormResult = string | null;
 
 type Props = {
-  title: string;
   initial: TransactionDraft;
-  /** New form only: the amount is focused so typing can start right away (SC-001). */
-  autoFocusAmount?: boolean;
   onSave(input: TransactionInput): Promise<FormResult>;
   /** Edit form only: shows Delete. */
   onDelete?(): Promise<FormResult>;
-  /** Leaves the form after a successful save or delete; the discard guard is already off. */
+  /**
+   * Leaves the form after a successful save or delete, once the sheet has slid down; the discard
+   * guard lets that navigation through.
+   */
   onDone(): void;
-  /** The close button. Leaving with changes still asks "Discard changes?". */
-  onClose(): void;
 };
 
 type Errors = Partial<Record<DraftField, DraftError>>;
@@ -93,28 +102,38 @@ const localDate = (iso: IsoDate): Date => {
   return new Date(y, m - 1, d);
 };
 
-/** The add and edit form (design.md, Transaction form; contracts/ui-screens.md). */
+/** The add and edit form's body, inside the route's sheet (design.md, Transaction form; contracts/ui-screens.md). */
 export function TransactionForm({
-  title,
   initial,
-  autoFocusAmount = false,
   onSave,
   onDelete,
   onDone,
-  onClose,
 }: Props) {
-  const { colors, type, isLargeText } = useTheme();
+  const { colors, type, cardTones } = useTheme();
   const { tag } = useRegion();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const sheet = useSheet();
+  // The keyboard goes down with the sheet. Leaving it open let the form unmount before it hid, so
+  // the next form started from its stale height, with Save raised over no keyboard.
+  const closeSheet = (then: () => void) => {
+    Keyboard.dismiss();
+    return sheet ? sheet.close(then) : then();
+  };
 
   const [draft, setDraft] = useState<TransactionDraft>(initial);
   const [errors, setErrors] = useState<Errors>({});
   const [failure, setFailure] = useState<string | null>(null);
-  const [working, setWorking] = useState(false);
   const [amountFocused, setAmountFocused] = useState(false);
   const [noteFocused, setNoteFocused] = useState(false);
-  const keyboardOpen = useKeyboardOpen();
+  const keyboardLift = useKeyboardLift(spacing.xxl + insets.bottom);
+  // One per field, so the first invalid one shakes on Save (design.md, Motion, "Invalid Save").
+  const shakes: Record<DraftField, ReturnType<typeof useShake>> = {
+    amount: useShake(),
+    category: useShake(),
+    date: useShake(),
+    note: useShake(),
+  };
 
   // Refs, not state: a second tap in the same frame must already see the first one.
   const busy = useRef(false);
@@ -138,19 +157,28 @@ export function TransactionForm({
     draft.date !== initial.date ||
     draft.category !== initial.category;
 
+  const confirm = useConfirmDialog();
   const confirmDiscard = (leave: () => void) => {
     if (!dirty) return leave();
-    Alert.alert('Discard changes?', undefined, [
-      { text: 'Keep editing', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: leave },
-    ]);
+    confirm.ask({
+      title: 'Discard changes?',
+      message: 'What you entered will be lost.',
+      cancel: 'Keep editing',
+      confirm: 'Discard',
+      onConfirm: leave,
+    });
   };
 
-  // Covers the close button, Android's back button and gestures. While an operation runs, leaving
-  // waits for it (contract, Form states).
-  usePreventRemove(dirty || working, ({ data }) => {
-    const leave = () => navigation.dispatch(data.action);
-    if (finished.current) return leave();
+  // Every way out (the close button, Android's back button and gestures, dragging the sheet
+  // down) is held here, so the sheet can slide down first: a clean form or a Discard animates,
+  // then navigates; changes ask first. While an operation runs, leaving waits for it (contract,
+  // Form states). After a save or delete the sheet has already closed, so it just navigates.
+  usePreventRemove(true, ({ data }) => {
+    // A back while the sheet slides down is dropped: its navigation is already coming.
+    if (sheet?.sliding()) return;
+    const navigate = () => navigation.dispatch(data.action);
+    if (finished.current) return navigate();
+    const leave = () => closeSheet(navigate);
     if (busy.current) {
       pendingLeave.current = leave;
       return;
@@ -168,6 +196,7 @@ export function TransactionForm({
   const changeType = (next: TransactionType) => {
     if (next === draft.type) return;
     // FR-012: categories belong to a type, so a type change needs a new one.
+    haptics.select();
     setDraft((d) => ({ ...d, type: next, category: null }));
     setErrors(({ category: _, ...rest }) => rest);
   };
@@ -200,19 +229,17 @@ export function TransactionForm({
   const run = async (operation: () => Promise<FormResult>) => {
     if (busy.current) return;
     busy.current = true;
-    setWorking(true);
     setFailure(null);
     let result: FormResult;
     try {
       result = await operation();
     } finally {
       busy.current = false;
-      setWorking(false);
     }
     if (result === null) {
       finished.current = true;
       pendingLeave.current = null;
-      onDone();
+      closeSheet(onDone);
       return;
     }
     setFailure(result);
@@ -229,24 +256,24 @@ export function TransactionForm({
       setErrors(result.errors);
       setFailure(null);
       focusField(result.firstInvalid);
+      shakes[result.firstInvalid].shake();
+      haptics.invalid();
       return;
     }
     setErrors({});
     void run(() => onSave(result.input));
   };
 
-  const close = () => {
-    if (busy.current) return;
-    onClose();
-  };
-
   // FR-013: deletion cannot be undone, so it is confirmed first; Cancel changes nothing.
   const confirmDelete = (remove: () => Promise<FormResult>) => {
     if (busy.current) return;
-    Alert.alert('Delete this transaction?', undefined, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => void run(remove) },
-    ]);
+    confirm.ask({
+      title: 'Delete this transaction?',
+      message: "This can't be undone.",
+      cancel: 'Cancel',
+      confirm: 'Delete',
+      onConfirm: () => void run(remove),
+    });
   };
 
   const position = currencyPosition(tag);
@@ -270,17 +297,9 @@ export function TransactionForm({
   const fieldLabel = (label: string, value: string, error?: string) =>
     [label, value, error].filter(Boolean).join(', ');
 
-  const amountBlockPadding = keyboardOpen
-    ? { paddingTop: spacing.md, paddingBottom: spacing.sm }
-    : { paddingTop: spacing.xxxl, paddingBottom: spacing.xl };
-
   return (
-    <KeyboardAvoidingView
-      behavior="padding"
-      style={[styles.screen, { backgroundColor: colors.formBackground }]}
-    >
-      <FormHeader title={title} onClose={close} />
-
+    // The sheet around it draws the fill and the header (routes render both).
+    <View style={styles.screen}>
       <ScrollView
         ref={scrollRef}
         keyboardShouldPersistTaps="handled"
@@ -289,23 +308,28 @@ export function TransactionForm({
         <View
           accessibilityRole="radiogroup"
           accessibilityLabel="Type"
-          style={[styles.segmentTrack, { backgroundColor: colors.segmentTrack }]}
+          style={[
+            styles.segmentTrack,
+            // The 1 dp border only keeps the track's size; flat look (design.md).
+            { backgroundColor: colors.segmentTrack, borderColor: 'transparent' },
+          ]}
         >
+          <TypeIndicator
+            index={draft.type === 'expense' ? 0 : 1}
+            inset={TRACK_PADDING}
+            gap={spacing.xxs}
+          />
           {(['expense', 'income'] as const).map((option) => {
             const checked = draft.type === option;
             const label = option === 'expense' ? 'Expense' : 'Income';
             return (
-              <Pressable
+              <ShapePressable
                 key={option}
                 accessibilityRole="radio"
                 accessibilityLabel={label}
                 accessibilityState={{ checked }}
                 onPress={() => changeType(option)}
-                android_ripple={{ color: colors.ripple }}
-                style={[
-                  styles.segment,
-                  checked && { backgroundColor: colors.segmentSelected, borderColor: colors.accent },
-                ]}
+                style={styles.segment}
               >
                 <Text
                   style={[
@@ -315,12 +339,15 @@ export function TransactionForm({
                 >
                   {label}
                 </Text>
-              </Pressable>
+              </ShapePressable>
             );
           })}
         </View>
 
-        <View style={[styles.amountBlock, amountBlockPadding]}>
+        <Animated.View
+          testID="field-amount"
+          style={[styles.amountBlock, keyboardLift.amountPadding, shakes.amount.style]}
+        >
           <Text style={[type.label, { color: colors.textMuted }]}>Amount</Text>
           {/* The whole row is tappable, so the field is easy to hit whatever the amount's width. */}
           <Pressable
@@ -336,14 +363,17 @@ export function TransactionForm({
               value={draft.amountText}
               onChangeText={(text) => update('amountText', text)}
               keyboardType="decimal-pad"
-              autoFocus={autoFocusAmount}
+              // A hint of the expected shape now that the form opens without the keyboard.
+              placeholder={`0${formSeparator(tag)}00`}
+              placeholderTextColor={colors.textMuted}
               onFocus={() => setAmountFocused(true)}
               onBlur={() => setAmountFocused(false)}
               maxFontSizeMultiplier={AMOUNT_MAX_SCALE}
               style={[
                 type.amountInput,
                 styles.amountInput,
-                { color: colors.text },
+                // Income reads green at a glance (fine-tuning 2026-10-06).
+                { color: draft.type === 'income' ? colors.income : colors.text },
                 draft.amountText.length > LONG_AMOUNT && { fontSize: LONG_AMOUNT_SIZE },
               ]}
             />
@@ -362,10 +392,14 @@ export function TransactionForm({
             ]}
           />
           {amountError && <FieldError message={amountError} />}
-        </View>
+        </Animated.View>
 
         <View style={styles.fields} onLayout={(e) => (fieldsTop.current = e.nativeEvent.layout.y)}>
-          <View onLayout={(e) => (fieldY.current.category = e.nativeEvent.layout.y)}>
+          <Animated.View
+            testID="field-category"
+            style={shakes.category.style}
+            onLayout={(e) => (fieldY.current.category = e.nativeEvent.layout.y)}
+          >
             <Text
               ref={categoryLabelRef}
               accessibilityLabel={fieldLabel('Category', categoryValue, categoryError)}
@@ -379,161 +413,205 @@ export function TransactionForm({
                 { borderColor: categoryError ? colors.error : 'transparent' },
               ]}
             >
-              {categoriesFor(draft.type).map((c) => {
-                const selected = draft.category === c.key;
-                return (
-                  <Pressable
-                    key={c.key}
-                    accessibilityRole="button"
-                    accessibilityLabel={c.label}
-                    accessibilityState={{ selected }}
-                    onPress={() => update('category', c.key)}
-                    android_ripple={{ color: selected ? colors.rippleOnAccent : colors.ripple }}
-                    style={[
-                      styles.chip,
-                      { backgroundColor: selected ? colors.accent : colors.surfaceMuted },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        selected ? type.bodyStrong : type.body,
-                        { color: selected ? colors.onAccent : colors.text },
-                      ]}
-                    >
-                      {c.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+              {categoriesFor(draft.type).map((c) => (
+                <CategoryTile
+                  key={c.key}
+                  type={draft.type}
+                  categoryKey={c.key}
+                  label={c.label}
+                  selected={draft.category === c.key}
+                  onPress={() => {
+                    if (draft.category !== c.key) haptics.select();
+                    update('category', c.key);
+                  }}
+                />
+              ))}
             </View>
             {categoryError && <FieldError message={categoryError} />}
-          </View>
+          </Animated.View>
 
+          {/* Date and Note as one list card, like the iOS Settings rows (fine-tuning 2026-10-06). */}
           <View
-            style={[styles.pair, isLargeText && styles.pairStacked]}
+            style={[styles.details, { backgroundColor: colors.surfaceMuted }]}
             onLayout={(e) => (fieldY.current.date = e.nativeEvent.layout.y)}
           >
-            <View style={!isLargeText && styles.flex}>
+            <Animated.View style={[styles.detailRow, { borderBottomColor: colors.divider }, shakes.date.style]}>
+              <Feather name="calendar" size={iconSize.button} color={colors.textMuted} />
               <Text
                 ref={dateLabelRef}
-                accessibilityLabel={fieldLabel(
-                  'Date',
-                  formatSpokenDate(draft.date),
-                  dateError,
-                )}
-                style={[type.label, styles.fieldLabel, { color: colors.textMuted }]}
+                accessibilityLabel={fieldLabel('Date', formatSpokenDate(draft.date), dateError)}
+                style={[type.body, { color: colors.text }]}
               >
                 Date
               </Text>
-              <Pressable
+              <ShapePressable
+                testID="date-box"
                 accessibilityRole="button"
                 accessibilityLabel={fieldLabel('Date', formatSpokenDate(draft.date), dateError)}
                 onPress={openDatePicker}
-                android_ripple={{ color: colors.ripple }}
-                style={[
-                  styles.box,
-                  styles.dateBox,
-                  {
-                    backgroundColor: colors.surfaceMuted,
-                    borderColor: dateError ? colors.error : 'transparent',
-                  },
-                ]}
+                style={[styles.box, styles.dateValue, fieldBorderStyle(colors, { invalid: !!dateError })]}
               >
-                <Feather name="calendar" size={iconSize.button} color={colors.textMuted} />
-                <Text style={[type.body, { color: colors.text }]}>
+                <Text style={[type.body, { color: colors.textMuted }]}>
                   {formatNumericDate(draft.date, tag)}
                 </Text>
-              </Pressable>
-              {dateError && <FieldError message={dateError} />}
-            </View>
-
-            <View style={!isLargeText && styles.flex}>
-              <Text style={[type.label, styles.fieldLabel, { color: colors.textMuted }]}>
-                Note (optional)
+                <Feather name="chevron-right" size={iconSize.button} color={colors.textMuted} />
+              </ShapePressable>
+            </Animated.View>
+            <Animated.View style={[styles.detailRow, styles.lastDetailRow, shakes.note.style]}>
+              <Feather name="edit-3" size={iconSize.button} color={colors.textMuted} />
+              <Text importantForAccessibility="no" style={[type.body, { color: colors.text }]}>
+                Note
               </Text>
               <TextInput
                 ref={noteRef}
+                testID="note-input"
                 accessibilityLabel={fieldLabel('Note (optional)', draft.note, noteError)}
                 value={draft.note}
                 // Cut by visible characters, not maxLength, which counts UTF-16 units (FR-007).
                 onChangeText={(text) => update('note', cutToGraphemes(text, NOTE_MAX_GRAPHEMES))}
-                placeholder="Add a note"
+                placeholder="Add a note (optional)"
                 placeholderTextColor={colors.textMuted}
                 onFocus={() => setNoteFocused(true)}
                 onBlur={() => setNoteFocused(false)}
                 style={[
                   type.body,
                   styles.box,
-                  {
-                    color: colors.text,
-                    backgroundColor: colors.surfaceMuted,
-                    // When focused and invalid, the error border wins (design.md).
-                    borderColor: noteError
-                      ? colors.error
-                      : noteFocused
-                        ? colors.accent
-                        : 'transparent',
-                  },
+                  styles.noteInput,
+                  { color: colors.text },
+                  fieldBorderStyle(colors, { invalid: !!noteError, focused: noteFocused }),
                 ]}
               />
-              {noteError && <FieldError message={noteError} />}
-            </View>
+            </Animated.View>
           </View>
+          {dateError && <FieldError message={dateError} />}
+          {noteError && <FieldError message={noteError} />}
         </View>
+        {/* As much room as the footer rose, so Date and Note scroll above it (contract). */}
+        <Animated.View testID="keyboard-spacer" style={keyboardLift.spacer} />
       </ScrollView>
 
-      <View
+      <Animated.View
+        testID="form-footer"
+        // Its own fill: risen over the fields, it must not leave its text over them.
         style={[
           styles.footer,
-          { paddingBottom: keyboardOpen ? spacing.sm : spacing.xxl + insets.bottom },
+          { paddingBottom: spacing.xxl + insets.bottom, backgroundColor: colors.formBackground },
+          keyboardLift.footer,
         ]}
       >
-        {failure && <FieldError message={failure} />}
+        {/* Announced when it appears, so a TalkBack user learns that Save or Delete failed. */}
+        <View accessibilityLiveRegion="polite">{failure && <FieldError message={failure} />}</View>
+        {/* Only Save rides above the keyboard: Delete fades and folds away while it opens, and
+            comes back when it closes (fine-tuning 2026-10-07). */}
         {onDelete && (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Delete"
-            onPress={() => confirmDelete(onDelete)}
-            android_ripple={{ color: colors.ripple }}
-            style={styles.textButton}
-          >
-            <Text style={[type.labelStrong, { color: colors.error }]}>Delete</Text>
-          </Pressable>
+          <Animated.View testID="delete-slot" style={[styles.deleteSlot, keyboardLift.deleteSlot]}>
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel="Delete"
+              onPress={() => confirmDelete(onDelete)}
+              android_ripple={{ color: colors.ripple }}
+              style={styles.textButton}
+            >
+              <Text style={[type.labelStrong, { color: colors.error }]}>Delete</Text>
+            </PressableScale>
+          </Animated.View>
         )}
-        <Pressable
+        {/* Flat look: a solid accent fill, no gradient, border or highlight (design.md). */}
+        <ShapePressable
           accessibilityRole="button"
           accessibilityLabel="Save"
           onPress={save}
-          android_ripple={{ color: colors.rippleOnAccent }}
-          style={[styles.saveButton, { backgroundColor: colors.accent }]}
+          overlay={colors.rippleOnAccent}
+          // The balance card's deep blue, so the form belongs to the same app (fine-tuning
+          // 2026-10-06).
+          style={[styles.saveButton, { experimental_backgroundImage: cardTones.positive.cardGlass }]}
         >
-          <Text style={[type.button, { color: colors.onAccent }]}>Save</Text>
-        </Pressable>
-      </View>
-    </KeyboardAvoidingView>
+          <Text style={[type.button, { color: cardTones.positive.cardInk }]}>Save</Text>
+        </ShapePressable>
+      </Animated.View>
+      {confirm.dialog}
+    </View>
   );
 }
 
 /** The form's header: close button and centered title. Also used by the edit form while loading. */
 export function FormHeader({ title, onClose }: { title: string; onClose(): void }) {
   const { colors, type } = useTheme();
-  const insets = useSafeAreaInsets();
   return (
-    <View testID="form-header" style={[styles.header, { paddingTop: spacing.xs + insets.top }]}>
-      <Pressable
+    // The sheet already sits below the status bar, under its grab handle.
+    <View testID="form-header" style={[styles.header, { paddingTop: spacing.xs }]}>
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel="Close"
         onPress={onClose}
-        android_ripple={{ color: colors.ripple }}
-        style={[styles.roundButton, { backgroundColor: colors.surfaceMuted }]}
+        // A rounded view does not clip its own ripple; a borderless one draws a circle instead
+        // (design.md, Touch feedback).
+        android_ripple={{ color: colors.ripple, borderless: true, radius: minTouch / 2 }}
+        style={[
+          styles.roundButton,
+          { backgroundColor: colors.surfaceMuted, borderColor: 'transparent' },
+        ]}
       >
         <Feather name="x" size={iconSize.button} color={colors.text} />
-      </Pressable>
+      </PressableScale>
       <Text accessibilityRole="header" style={[type.title, styles.title, { color: colors.text }]}>
         {title}
       </Text>
       <View style={styles.slot} />
     </View>
+  );
+}
+
+/**
+ * A category as a small tile with its icon in its own color, like the summary's tiles. Picking
+ * it fills the tile with a stronger tint of that color and outlines it in the color (the 1 dp
+ * border is always there, so nothing shifts; fine-tuning 2026-10-06).
+ */
+function CategoryTile({
+  type: txType,
+  categoryKey,
+  label,
+  selected,
+  onPress,
+}: {
+  type: TransactionType;
+  categoryKey: CategoryKey;
+  label: string;
+  selected: boolean;
+  onPress(): void;
+}) {
+  const { colors, type, scheme } = useTheme();
+  const look = categoryLook(txType, categoryKey, scheme, colors);
+  return (
+    <ShapePressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      style={[
+        styles.tile,
+        {
+          backgroundColor: selected ? look.tint : colors.surfaceMuted,
+          borderColor: selected ? look.ink : 'transparent',
+        },
+      ]}
+    >
+      <View
+        importantForAccessibility="no-hide-descendants"
+        style={[styles.tileIcon, { backgroundColor: selected ? colors.surface : look.tint }]}
+      >
+        <Feather name={look.icon} size={iconSize.button} color={look.ink} />
+      </View>
+      {/* Same weight when picked, so the label never grows; a long word shrinks a little
+          instead of spilling out of a narrow tile. */}
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        style={[type.label, styles.tileLabel, { color: colors.text }]}
+      >
+        {label}
+      </Text>
+    </ShapePressable>
   );
 }
 
@@ -549,21 +627,68 @@ function FieldError({ message }: { message: string }): ReactNode {
   );
 }
 
-/** The layout tightens while the keyboard is open, so amount, chips and Save fit (SC-001). */
-function useKeyboardOpen(): boolean {
-  const [open, setOpen] = useState(Keyboard.isVisible());
-  useEffect(() => {
-    const shown = Keyboard.addListener('keyboardDidShow', () => setOpen(true));
-    const hidden = Keyboard.addListener('keyboardDidHide', () => setOpen(false));
-    return () => {
-      shown.remove();
-      hidden.remove();
+/**
+ * The footer follows the keyboard frame by frame on the UI thread and sits 12 dp above it; with
+ * the keyboard closed it rests `restBottom` above the screen's bottom edge (design.md, Keyboard
+ * open). Both translucent flags keep Reanimated from adding its own system bar margins: the app is
+ * edge-to-edge and pads with the safe area insets itself.
+ */
+function useKeyboardLift(restBottom: number) {
+  const keyboard = useAnimatedKeyboard({
+    isStatusBarTranslucentAndroid: true,
+    isNavigationBarTranslucentAndroid: true,
+  });
+  // Only a keyboard that is opening, open or closing counts: a height left over from a keyboard
+  // the form never saw close (state closed or unknown) must not raise the footer.
+  const height = useDerivedValue(() => {
+    const state = keyboard.state.value;
+    const live =
+      state === KeyboardState.OPENING || state === KeyboardState.OPEN || state === KeyboardState.CLOSING;
+    return live ? keyboard.height.value : 0;
+  });
+  const lift = useDerivedValue(() => Math.max(0, height.value + spacing.sm - restBottom));
+  const footer = useAnimatedStyle(() => ({ transform: [{ translateY: -lift.value }] }));
+  const spacer = useAnimatedStyle(() => ({ height: lift.value }));
+  // The amount block tightens from 32/24 to 16/12 as the keyboard's first 120 dp come up, so the
+  // amount, chips and Save fit above it (SC-001) and the layout moves with the keyboard, not
+  // after it.
+  const amountPadding = useAnimatedStyle(() => {
+    const t = Math.min(1, height.value / AMOUNT_TIGHTEN_RANGE);
+    return {
+      paddingTop: spacing.xxxl - (spacing.xxxl - spacing.md) * t,
+      paddingBottom: spacing.xl - (spacing.xl - spacing.sm) * t,
     };
-  }, []);
-  return open;
+  });
+  const deleteSlot = useAnimatedStyle(() => {
+    const t = Math.min(1, height.value / AMOUNT_TIGHTEN_RANGE);
+    return { height: minTouch * (1 - t), opacity: 1 - t };
+  });
+  return { footer, spacer, amountPadding, deleteSlot };
 }
 
+const AMOUNT_TIGHTEN_RANGE = 120;
+
 const BORDER = 2;
+const REST_BORDER = 1;
+// The track's padding: 4 dp plus the 1 dp the rest border leaves (design.md, borders).
+const TRACK_PADDING = spacing.xxs + BORDER - REST_BORDER;
+
+/**
+ * design.md, "Borders never shift the layout": at rest a transparent 1 dp border plus 1 dp of extra
+ * padding; focused or invalid, a 2 dp border without it, so the field keeps its size. When a field
+ * is both, the error wins.
+ */
+function fieldBorderStyle(colors: Palette, { invalid = false, focused = false }) {
+  const active = invalid || focused;
+  const extra = active ? 0 : BORDER - REST_BORDER;
+  return {
+    borderWidth: active ? BORDER : REST_BORDER,
+    // Flat look: the resting border is there only to keep the size (design.md).
+    borderColor: invalid ? colors.error : focused ? colors.accent : 'transparent',
+    paddingHorizontal: spacing.md + extra,
+    paddingVertical: extra,
+  };
+}
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
@@ -580,15 +705,17 @@ const styles = StyleSheet.create({
     width: minTouch,
     height: minTouch,
     borderRadius: radii.full,
+    borderWidth: REST_BORDER,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
   },
   scrollContent: { paddingTop: spacing.sm, paddingBottom: spacing.md },
   segmentTrack: {
     flexDirection: 'row',
     marginHorizontal: spacing.md,
-    padding: spacing.xxs,
+    // The 1 dp border plus 1 dp of extra padding, like the fields (design.md).
+    borderWidth: REST_BORDER,
+    padding: TRACK_PADDING,
     gap: spacing.xxs,
     borderRadius: radii.segmentTrack,
   },
@@ -597,11 +724,10 @@ const styles = StyleSheet.create({
     minHeight: minTouch,
     borderRadius: radii.segment,
     // Reserved so selecting a segment never shifts the layout.
-    borderWidth: 1.5,
+    borderWidth: SEGMENT_BORDER,
     borderColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
   },
   amountBlock: { paddingHorizontal: spacing.xl, alignItems: 'center', gap: spacing.xs },
   amountRow: {
@@ -626,25 +752,60 @@ const styles = StyleSheet.create({
     padding: spacing.xs - BORDER,
     margin: -spacing.xs,
   },
-  chip: {
-    minHeight: minTouch,
-    paddingHorizontal: spacing.md,
+  // Four per row; they grow with large text instead of cutting their labels (FR-031).
+  tile: {
+    flexBasis: '22%',
+    flexGrow: 1,
+    minHeight: 76,
+    borderWidth: REST_BORDER,
+    borderRadius: radii.input,
+    padding: spacing.xs,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xxs,
+  },
+  tileIcon: {
+    width: 36,
+    height: 36,
     borderRadius: radii.full,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
+  },
+  tileLabel: { textAlign: 'center' },
+  details: { borderRadius: radii.input, overflow: 'hidden' },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingLeft: spacing.md,
+    borderBottomWidth: 1,
+  },
+  lastDetailRow: { borderBottomColor: 'transparent' },
+  dateValue: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: spacing.xxs,
+  },
+  noteInput: { flex: 1, textAlign: 'right' },
+  chip: {
+    minHeight: minTouch,
+    borderWidth: REST_BORDER,
+    paddingHorizontal: spacing.md + BORDER - REST_BORDER,
+    paddingVertical: BORDER - REST_BORDER,
+    borderRadius: radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pair: { flexDirection: 'row', gap: spacing.sm },
   pairStacked: { flexDirection: 'column', gap: spacing.lg },
-  box: {
-    minHeight: 52,
-    borderRadius: radii.input,
-    paddingHorizontal: spacing.md,
-    borderWidth: BORDER,
-  },
-  dateBox: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, overflow: 'hidden' },
+  // Border and padding come from fieldBorderStyle().
+  box: { minHeight: 52, borderRadius: radii.input },
+  dateBox: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   error: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs },
   footer: { paddingHorizontal: spacing.md, paddingTop: spacing.md, gap: spacing.xs },
+  deleteSlot: { overflow: 'hidden', justifyContent: 'center' },
   textButton: {
     alignSelf: 'center',
     minHeight: minTouch,
@@ -659,6 +820,5 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
   },
 });

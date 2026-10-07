@@ -628,18 +628,21 @@ own transactions and totals. Add one from a past month and check that it lands i
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T049 Implement the preview developer tools in `src/dev/seed.ts`:
-  - `seedCurrentMonth(db: SqlDatabase, today)` (with `db` from the dev-tools branch of T026)
-    inserts 1,000 random valid transactions dated
+- [X] T049 Implement the preview developer tools in `src/dev/seed.ts` and `src/dev/DevTools.tsx`:
+  - `seedCurrentMonth(db: SqlDatabase, today)` in `seed.ts` (with `db` from the dev-tools branch
+    of T026) inserts 1,000 random valid transactions dated
     from the 1st of the current month to today. It wraps the inserts in `BEGIN`/`COMMIT` through
-    `execAsync`, so they form one SQL transaction.
-  - After seeding, the summary reloads through `retry()`.
-  - A "Simulate storage error" switch calls `setSimulateStorageError` from T026.
-  - Render both at the bottom of the summary only inside
-    `if (process.env.EXPO_PUBLIC_DEV_TOOLS === '1')`, loading `seed.ts` with `require` inside that
-    branch. The button text is "Seed 1,000 transactions".
-  Tests in `tests/unit/seed.test.ts`: 1,000 rows, all dates within range, all valid.
-- [ ] T050 (FR-031) Accessibility pass across `src/ui/` and `src/app/`:
+    `execAsync`, so they form one SQL transaction (`ROLLBACK` on failure).
+  - `DevTools.tsx` holds the UI: the "Seed 1,000 transactions" button and a "Simulate storage
+    error" switch that calls `setSimulateStorageError` from T026. After seeding or toggling, the
+    summary reloads through `retry()`.
+  - Render it at the bottom of the summary (the list footer) only inside
+    `if (process.env.EXPO_PUBLIC_DEV_TOOLS === '1')`, loading `DevTools.tsx` with `require` inside
+    that branch.
+  Tests in `tests/unit/seed.test.ts`: 1,000 rows, all dates within range, all valid, and a failure
+  rolls back. `tests/component/devTools.test.tsx` covers the button, the switch and the
+  conditional load; `summaryScreen.test.tsx` checks the tools are absent without the flag.
+- [X] T050 (FR-031) Accessibility pass across `src/ui/` and `src/app/`:
   - Every tappable element has `accessibilityRole`, `accessibilityLabel`, ≥ 48 × 48 dp and
     `android_ripple` (design.md).
   - Decorative elements are hidden from the screen reader, and each row and pill is one accessible
@@ -652,7 +655,7 @@ own transactions and totals. Add one from a past month and check that it lands i
   Tests in `tests/component/accessibility.test.tsx` assert the example announcements from
   contracts/ui-screens.md: month header, previous button, the three totals including "minus", a
   breakdown row, a list item and a form field with an error.
-- [ ] T051 [P] Update `AGENTS.md`: replace the "Status" and "Setup and commands" TBDs with the
+- [X] T051 [P] Update `AGENTS.md`: replace the "Status" and "Setup and commands" TBDs with the
   stack (Expo SDK 57), `npm start` (and why not `npx expo start`), `npm test`, `npm run lint`,
   `npm run typecheck`, the project structure summary from plan.md and the EAS build commands.
 - [ ] T052 Verification on the `preview` APK. First time only: `npx eas-cli login` and
@@ -677,6 +680,328 @@ own transactions and totals. Add one from a past month and check that it lands i
   checkbox in this file done; open the PR from `001-monthly-summary` to `develop` (only when the
   developer asks) and wait for green CI.
 
+### Fixes from the developer's phone review
+
+- [X] T055 Wrap the root `Stack` in Expo Router's `ThemeProvider`, with the theme's `background`
+  and `card` set to the palette's `background` for the current scheme. The navigator's default
+  theme is light. Also paint the native root view with `SystemUI.setBackgroundColorAsync`
+  (palette `background`, updated when the scheme changes): its default is white and it shows
+  through while a form closes, which was the white flash on the phone. Tests in
+  `tests/component/rootLayout.test.tsx`.
+
+
+## Phase 8: Glass and motion revision (design.md, 2026-10-06)
+
+**Goal**: the glass look, motion, haptics and confirmation toast from design.md (sections Glass
+surfaces, Motion, Haptics, Toast, Components) and FR-032. Runs before the APK verification
+(T052–T054), so the APKs show the final design.
+
+**Independent test**: on the phone, in light and dark, with the largest font, TalkBack and
+"Remove animations" each on in turn, the summary and forms look and move as in design.md, every
+existing test stays green, and a 1,000-row month (dev tools seed) still scrolls smoothly.
+
+Rules for this phase: values come from design.md, never from the mockups where they differ; every
+animation has the reduce-motion path from design.md (Motion, "Reduce motion"); accessibility
+labels are built from data, never from animated values; no new dependency beyond plan.md.
+
+### Block 8a: setup and device spike
+
+- [x] T056 Set up the motion and gesture libraries:
+  - `npx expo install react-native-gesture-handler` (SDK 57's `~2.32.0`), and pin it in
+    `package.json` `overrides` like `react-native-reanimated` (plan.md, Dependencies), so the
+    3.3.0 copy pulled in by `expo-router` is not used. Check with `npm ls react-native-gesture-handler`.
+  - Wrap the root layout in `GestureHandlerRootView` (`flex: 1`, `background`).
+  - Jest: a `tests/setup/motion.ts` in `setupFiles` that requires
+    `react-native-gesture-handler/jestSetup` and calls Reanimated 4's
+    `require('react-native-reanimated').setUpTests()` (check both against their current docs).
+  - Run `npx expo install --check` afterwards: `react-native-reanimated` and the pinned
+    `react-native-worklets` must still match SDK 57.
+  Tests: `tests/component/rootLayout.test.tsx` stays green and checks the root wrapper.
+- [x] T057 Device spike (design.md, Implementation notes): a temporary `src/app/spike.tsx`
+  shows a radial-gradient glow pair on `background` (light and dark), a `cardGlass` card with an
+  inset highlight, and an accent button with its glow, all through
+  `experimental_backgroundImage` and `boxShadow`. The developer opens it on the phone and
+  checks size, position, banding on dark and the inset highlight. Record the result in
+  `specs/001-monthly-summary/device-checks.md` (section "Glass spike"). If something does not
+  render well, update design.md to its solid fallback first. Delete `spike.tsx` afterwards. No
+  tests (temporary, removed in the same block).
+
+### Block 8b: glass surfaces
+
+- [x] T058 (FR-030, FR-031) Update `src/ui/theme.ts` with every new token in design.md
+  (Glass surfaces): ambient glows per tone, `glassFill`, `glassFillStrong`, `glassBorder`,
+  `glassBorderStrong`, `glassHighlight`, `glassShadow`, `glassDivider`, `glassAvatar`,
+  `sheetFill`, `fieldFill`, `fieldBorder`, `scrim`, `cardGlass` per tone and the accent-button
+  gradient; the new dark `textMuted` and `cardLabel`; `cardDecor` removed.
+  Tests: `tests/component/theme.test.tsx` updated; new `tests/unit/contrast.test.ts` computes
+  the WCAG ratios in design.md ("Contrast over glass", field borders, accent buttons, selected
+  segment) by alpha-blending the tokens and asserts each is ≥ 4.5:1 (text) or ≥ 3:1 (borders).
+- [x] T059 Implement `src/ui/glass.tsx`: `GlassCard` (fill, border, highlight, shadow on a
+  non-clipping wrapper), `AccentButton` (gradient, border and highlight, no glow; the pressed
+  overlay in `rippleOnAccent` and the clipping on the inner pressable, design.md Touch feedback) and `AmbientBackground` (the two radial glows, hidden from the screen
+  reader; a tone change crossfades a second layer's opacity in over 600 ms, or swaps under
+  reduce motion). Tests in `tests/component/glass.test.tsx`: the background is hidden from
+  accessibility, a tone change renders the new layer, buttons keep role, label and 48 dp.
+- [x] T060 (FR-015, FR-031) Apply glass to the summary (design.md, Components table):
+  `src/app/index.tsx` gets `AmbientBackground` and the 96 dp bottom fade; `Totals` uses
+  `cardGlass` (no decorative circle) and glass stat pills; `MonthHeader` buttons (with the
+  borderless ripple from design.md, Touch feedback, which fixes the square ripple; **Try again**
+  on the card gets the pressed overlay; rows and Dismiss keep `android_ripple`, clipped by their
+  card's inner view; on the phone, check the first and last row and Dismiss, and switch them to
+  the pressed overlay if the corners show a square ripple), `Breakdown`
+  and `TransactionList` cards, dividers and avatars, and `StateMessage` banner and empty card use
+  their glass tokens; Add becomes an `AccentButton`. When the balance tone changes, the card's
+  `cardGlass` crossfades like the glow (a second gradient layer fading in over 600 ms; a swap
+  under reduce motion). Tests: summary, breakdown, month navigation and accessibility suites
+  stay green (update only style assertions that design.md changed); a tone change renders the
+  new card layer, and under reduce motion it swaps without a fade.
+- [x] T061 (FR-031) Apply glass to the form and the error screen: `fieldFill` and `fieldBorder`
+  on the close button, segmented track, unselected chips, Date and Note, with the border rule
+  from design.md ("Borders never shift the layout": 1 dp + 1 dp padding at rest, 2 dp on focus or
+  error); the selected chip and segment styles; Save as an `AccentButton`; **Try again** on the
+  error screen. Touch feedback by shape (design.md): the close button gets the borderless
+  ripple; chips, segments, the Date box and **Try again** get the pressed overlay instead of
+  `android_ripple`; the selected chip keeps its 1 dp border, in `accent`.
+  Tests: form suites stay green; a test checks that a field's outer size is the same at rest,
+  focused and invalid.
+
+### Block 8c: summary motion
+
+- [x] T062 Complete `src/ui/motion.tsx` (T059 started it with `easeOut`, the tone-change duration
+  and `useReduceMotion`): the rest of the curves and durations from design.md (Motion), a
+  `useReduceMotion()` hook that reads Reanimated's `useReducedMotion`, and `PressableScale` (scale to
+  96 % with the spring, dropped under reduce motion). It replaces `Pressable` in: Add, month
+  buttons (`MonthHeader`), list rows (`TransactionList`), Try again (`Totals`, error screen),
+  Dismiss (`StateMessage`), and in the form: close, Type segments, chips, Date box, Delete and
+  Save. (The amount row's `Pressable` stays: it is not a button, it only focuses the input.) Tests in `tests/component/motion.test.tsx`: role, label and press feedback (ripple or
+  pressed overlay, design.md Touch feedback) still pass through;
+  under reduce motion no scale is applied; the accessibility sweep (T050) stays green.
+- [x] T063 (FR-015, FR-031) Implement `src/hooks/useCountUp.ts` (design.md, Motion, "Counting
+  amounts"): it animates from the old to the new cents and writes the rounded value to state at
+  most every 50 ms; under reduce motion it jumps. `Totals` uses it for the balance and stat
+  amounts; the amount `Text` is not accessible and the parent keeps the final-value label.
+  Tests in `tests/unit/useCountUp.test.tsx` (fake timers): it ends exactly on the target cents,
+  never shows a float, jumps under reduce motion; the accessibility suite still finds
+  "Balance, minus 150,00 €" right after a change.
+- [x] T064 (FR-021) Summary entrance and month change: on cold start the balance card, breakdown,
+  the rows in the first screen and Add rise in 80 ms apart; rows mounting later by scrolling never
+  animate. Changing month slides the content 18 dp in from the side of the button tapped and
+  counts the balance, income and expenses. Tests: month navigation suite stays green; under reduce motion no
+  translate is applied.
+
+### Block 8d: the form sheet
+
+- [x] T066 (FR-010, FR-013, FR-020) Sheet presentation (design.md, Motion, "Sheet", and the
+  Components table):
+  - Look: the form routes use `presentation: 'transparentModal'` with `animation: 'none'` (the
+    app animates, so the native modal animation never doubles it). The sheet sits 36 dp below
+    the top inset on `sheetFill`, radius 28 at the top, top edge `glassBorderStrong`, with a
+    40 × 5 dp grab handle in `textMuted` at 40 %, hidden from the screen reader.
+  - Motion: `src/state/SheetTransitionContext.tsx`, provided in the root layout, holds one shared
+    value (0 closed, 1 open) that drives the sheet's slide, the summary's scale (92 %), offset
+    (6 dp down) and radius (28), and the `scrim`. Opening animates 0 → 1.
+  - Closing: `usePreventRemove` in `TransactionForm` stays on for every removal, not only when
+    the form is dirty. Its callback decides: dirty → the existing "Discard changes?" (the sheet
+    stays open); clean, or after **Discard** → animate the sheet down, then dispatch the
+    blocked `data.action`. So X, Android back and the back gesture all slide down first. Save
+    and Delete (after its confirmation, FR-013) set `finished.current` and call the same
+    animate-then-leave path from `onDone`; when that final navigation reaches the callback,
+    `finished.current` makes it take the clean branch without animating again. No scrim tap. Under reduce motion the sheet and scrim
+    fade (≤ 200 ms).
+  Tests in `tests/component/sheet.test.tsx`: back on a clean form runs the close animation
+  before navigating; back on a dirty form shows "Discard changes?" and does not navigate;
+  Discard animates and navigates; Save and Delete close through the same path, exactly once and
+  with one animation; the handle exists
+  and is hidden from accessibility; existing form suites stay green.
+- [x] T067 (FR-010) Drag to close: a gesture-handler pan on the grab handle and header only; the
+  sheet follows the finger downward; released past 30 % of its height or with a fast downward
+  fling, it runs the same close path as T066 (discard check included), otherwise it springs
+  back. Tests with gesture-handler's Jest utilities: a short drag springs back; a long drag
+  closes a clean form; a long drag on a dirty form shows "Discard changes?".
+
+- [x] T065 (FR-019) Row change animations, after the sheet exists so they are seen as the form
+  closes: `SummaryNoticeContext` gains a one-off `lastChange: { kind: 'created' | 'updated' |
+  'deleted', id }`, set by the forms right after a successful save or delete. The summary animates only that row: created rows grow in, updated
+  rows flash, and a deleted row slides out and collapses once the sheet has closed and the
+  reload result no longer contains it (the row is kept for the 280 ms exit, then dropped). If the
+  reload fails, the error state shows as today and nothing animates. Tests in
+  `tests/component/rowChanges.test.tsx`: only the changed row animates; nothing animates under
+  reduce motion; a failed reload shows the error and no animation; a 1,000-row month mounts
+  without per-row animations.
+
+### Block 8e: keyboard and form motion
+
+- [x] T068 (SC-001) Keyboard (design.md, "Keyboard open"): replace `KeyboardAvoidingView` in
+  `TransactionForm` with Reanimated's `useAnimatedKeyboard`, driving the footer (12 dp above the
+  keyboard) and the scroll view's bottom padding; the amount block's padding goes from 32/24 to
+  16/12. First check `app.config.ts` and Expo's edge-to-edge defaults for
+  `android.softwareKeyboardLayoutMode`: the window must not also resize, or the footer moves
+  twice. The native date dialog and the `Alert`s cover the keyboard and need no handling.
+  Tests (with `useAnimatedKeyboard` mocked): the footer's offset follows the mocked keyboard
+  height; Date and Note stay reachable by scrolling; the SC-001 4-interaction test stays green.
+  Phone check on a 360 × 640 dp screen (or the developer's phone) at default font: amount, all
+  expense chips and Save fit above the keyboard. If they do not, apply design.md's fallback
+  (single scrolling chip row), a decision point for the developer.
+  Done in code (2026-10-06): `softwareKeyboardLayoutMode` is unset, so Expo's default
+  `adjustResize` applies, and `useAnimatedKeyboard` takes over the insets, so the window does
+  not also resize. **Phone check pending** (the developer's final pass).
+- [x] T072 (FR-009) Form motion: the Type indicator slides with the spring; a picked chip fills
+  over 220 ms; on an invalid Save the first invalid field shakes 6 dp three times. Under reduce
+  motion the indicator and chip swap and there is no shake. Tests: each animation's reduce-motion
+  path; validation focus order (FR-009) unchanged.
+
+### Block 8f: haptics and toast
+
+- [x] T069 Implement `src/lib/haptics.ts` with the mapping in design.md (Haptics), one call per
+  action, and call it from Add, month change, Type, category, a successful save, a successful
+  delete (not the Delete tap or its dialog) and an invalid Save. Tests in
+  `tests/unit/haptics.test.ts` with `expo-haptics` mocked: each moment calls its haptic exactly
+  once (including invalid Save → Error); Save does not also fire a tap haptic; failed saves and
+  deletes fire no success haptic.
+- [x] T070 (FR-032) Confirmation toast (design.md, Toast; contracts/ui-screens.md):
+  `src/state/ToastContext.tsx` (provider) and `src/ui/Toast.tsx`, mounted in the root layout
+  above the navigator; "Saved" after a successful save and
+  "Deleted" after a successful delete, triggered where `lastChange` is set (T065); its bottom at
+  `28 + insets.bottom + 56 + 12`, `pointerEvents="none"`, announced once, about 1.8 s; under
+  reduce motion it fades (≤ 200 ms) without moving; none after a failure or when `remove` throws
+  `NotFoundError`. Tests in `tests/component/toast.test.tsx`: shown and announced after save and
+  delete; not after a failed save, a failed delete, or `NotFoundError` on remove; its bottom
+  offset; no translate under reduce motion; gone after its time.
+- [ ] T071 **Design review done (2026-10-06); the developer's phone pass is pending** (checklist in
+  device-checks.md, "Glass and motion"). Check the implemented UI: run the `design-reviewer` agent on `src/ui/`, `src/app/`
+  and `theme.ts` against design.md, and fix or accept its findings as for the docs. Then the
+  developer checks on the phone: light and dark, largest font, TalkBack, "Remove animations",
+  a seeded 1,000-row month scrolling smoothly, SC-001 with the keyboard open at default font, the
+  toast over a closing sheet, whether Android's touch-feedback setting silences the haptics
+  (design.md, Haptics), and a rough cold-start check with the new libraries (the measured SC-004
+  run stays in T052). Record the results in `specs/001-monthly-summary/device-checks.md`
+  (section "Glass and motion").
+
+### Block 8g: fixes from the developer's phone review (2026-10-06)
+
+Spec clarifications (Session 2026-10-06), FR-017, FR-029, contracts/ui-screens.md, research R7
+("Currency sign") and design.md (day headers, flat form look, counting) were updated first.
+
+- [x] T073 (design.md, Motion, "Change month" and "Counting amounts") Counting only within a month: `useCountUp` forgets the last value while there
+  is nothing to show (a month loading), so a month change shows the new amounts at once and only
+  a save or delete in the month on screen counts. Tests: `tests/unit/useCountUp.test.tsx`
+  updated (null resets; a same-month change still counts); the month navigation suite shows the
+  new month's amounts right after the change.
+- [x] T074 (FR-029) Always the `€` sign: `format/money.ts` replaces the `currency` part with `€`
+  and, when it comes before the number, drops the whitespace literal right after it (research
+  R7). Tests in `tests/unit/money.test.ts`: `es-US` gives `€1,234.00` and `-€1,234.00`;
+  `es-ES`, `en-*` and `ar-EG` outputs are unchanged; zero-euro negatives (`-€0.50`) and spoken
+  labels ("minus €1,234.00") use the sign too; the form's `€` position is unchanged.
+- [x] T075 (FR-017) Day groups: `domain/summary.ts` (or a new `domain/days.ts`) groups the
+  month's rows by date, newest first, with each day's net in cents; `format/date.ts` names a day
+  ("Today", "Yesterday", "Mon 5 Oct") and speaks it ("Monday 5 October"); `TransactionList`
+  draws a header per day and each day's rows as their own card (first/last per day), with row
+  captions showing only the note. Entrance, month slide and row-change motion keep working, and
+  only the first 8 items (headers and rows) animate. Update plan.md's structure listing for the
+  new domain and format functions. Tests: unit tests for grouping (order, nets in cents, income
+  and expense mix, zero net) and day names (today, yesterday, older, today's date in a past
+  month view); component tests for the headers' text, heading role and spoken label, the net
+  moving under the day at large text, and the cards per day; the 1,000-row test still renders
+  only the first window; existing summary, accessibility and row-change suites stay green.
+- [x] T076 Flat form look (design.md, Components and Transaction form): the sheet on
+  `formBackground`; close button, unselected chips, Date and Note on `surfaceMuted` with a
+  transparent 1 dp border at rest (the size rule stays); the track on `segmentTrack` and the
+  indicator on `segmentSelected`; the selected chip solid `accent` without highlight; Save solid
+  `accent` without border. The chip label's color crossfades with its fill. Restore
+  `segmentTrack` and `segmentSelected` in `theme.ts` and drop `segmentIndicator`. Tests: theme and contrast tests updated (segment border against its fill
+  and the track; `textMuted` on `background` at the glow's peak for the day headers); form
+  suites stay green, including the field size test.
+
+### Block 8h: Add next to "Transactions" and See all (developer, 2026-10-06)
+
+Spec clarification (Session 2026-10-06), FR-002, FR-017, contracts/ui-screens.md ("Summary
+screen", "All transactions") and design.md (Summary screen item 4, "All transactions", Toast,
+insets) were updated first.
+
+- [x] T077 (FR-002) **Add** moves from the floating button to the right of the "Transactions"
+  title, which shows in every state; the bottom fade goes; lists end with `28 + insets.bottom`;
+  the toast's bottom moves to `28 + insets.bottom`. Tests: the summary, accessibility and
+  devTools suites find **Add** in loading, error, empty and ready states; the SC-001 test still
+  takes 4 interactions; the toast offset test is updated.
+- [x] T078 (FR-017) The summary lists the 5 most recent transactions (grouped by day) and shows
+  **See all** when there are more; **See all** opens `src/app/transactions.tsx` (stack screen,
+  header with Back and the month), which lists every transaction of the month with the same
+  grouping, row changes, banner and sheet scale-back, using `useMonthSummary`. Tests: the summary
+  shows 5 of 7 and **See all**, with a cut day's header still netting the whole day; it shows no
+  **See all** at 5 or fewer; the new screen lists all 7 by day, opens an item, reloads on
+  focus, shows loading, error and empty, and its 1,000-row month renders only the first window.
+
+### Block 8i: the new form opens without the keyboard (developer, 2026-10-07)
+
+Spec clarification (Session 2026-10-07), FR-003, SC-001, plan.md, contracts/ui-screens.md
+("Layout with the keyboard open", "Form states"), design.md (keyboard fallback) and
+quickstart.md (form defaults, scenario 12) were updated first. This supersedes "autofocused on
+new" in T038 and the 4 interactions in Phase 3's goal, T041, T068 and T077.
+
+- [x] T079 (FR-003, SC-001) `src/app/transaction/new.tsx` stops passing `autoFocusAmount`, and
+  `TransactionForm` drops the prop (no screen uses it). The amount row's `Pressable` still
+  focuses the input on tap, which opens the `decimal-pad` keyboard, and the keyboard layout
+  (T068) is unchanged. Tests in `tests/component/transactionFormNew.test.tsx`: the defaults test
+  checks the amount is empty and has no `autoFocus`; the SC-001 test takes 5 interactions and
+  checks that pressing the amount calls `TextInput.focus` before typing; the other form and
+  keyboard suites stay green. Phone check: Add opens the form with no keyboard; tapping the
+  amount opens it, with the amount, chips and Save above it; quickstart scenario 12 is timed
+  again with 5 interactions.
+
+### Block 8j: phone review fine-tuning (developer, 2026-10-06 and 2026-10-07)
+
+Made in fine-tuning mode (AGENTS.md): code first, checked on the developer's phone, then
+design.md ("Phone review", "Performance rules", Motion, Dialogs, Transaction form, All
+transactions), contracts/ui-screens.md (Edit form states, Actions, texts), plan.md and the
+constitution (principle V) were updated once and reviewed in one round. Test suites named below
+are `tests/component/<name>.test.tsx` unless the path says otherwise. This block supersedes: the
+row grow-in, slide-out and 280 / 220 / 560 ms timings in T065 and T072 (T087, T088); the toast
+"over a closing sheet" in T070 and T071 (T089); and the system `Alert`s in T068 (T086: the app's
+dialog is a `Modal` window, which covers the keyboard like the `Alert` did). Phone check: the
+developer's reviews of 2026-10-06 and 2026-10-07, then quickstart scenario 14.
+
+- [x] T080 Look (2026-10-06): plain background; the "metal" balance card (navy / maroon sheen,
+  white text, dark tinted glass controls; `sober` kept behind `CARD_STYLE`), its 62 / 16 / 14 / 19
+  type and steady body height while loading; `heading` section titles; category tiles with icons
+  and colors (`ui/categoryLook.ts`, `categoryColors`); solid list cards with category icons; the
+  glass Add pill; the form's income-green amount, four-per-row category tiles, Date and Note in
+  one card, deep-blue Save and stretching glass Type drop. Tests: theme, contrast, summary,
+  breakdown and form suites.
+- [x] T081 The balance card has no rim, no inner highlight and no border width, with its base hue
+  as fill, so no thin light line shows at its edge (`ui/Totals.tsx`). Tests: component suites.
+- [x] T082 (FR-003) The empty amount shows a `0,00` placeholder with the region's separator in
+  `textMuted`. Tests: `transactionFormNew` defaults.
+- [x] T083 (FR-011, FR-025) A list hands the tapped row to the edit form
+  (`state/openedTransaction.ts`), which mounts filled with no loading state and still reads the
+  row in the background; a row deleted meanwhile closes with the banner. Without a handed row the
+  loading state stays. Tests: `transactionFormEdit` (opening from the list, by link, FR-025).
+- [x] T084 All transactions uses Android's own push and pop (the `ios_from_right` trial is
+  dropped); a focus reload that brings back the same rows keeps the old state, so nothing
+  re-renders mid-animation (`useMonthSummary`). Tests: `useMonthSummary`.
+- [x] T085 The form footer has its own `formBackground` fill; Delete fades and folds away while
+  the keyboard opens, so only Save rises; a keyboard height the form never saw close (state
+  closed or unknown) is ignored, and closing the sheet closes the keyboard. Tests: `keyboard`,
+  `transactionFormNew`.
+- [x] T086 (FR-010, FR-013) The app's own confirmation dialog (`ui/ConfirmDialog.tsx`) replaces
+  the system `Alert` for Discard and Delete, with a message line; back and a tap outside pick the
+  safe choice. Tests: form, edit and sheet suites through `tests/helpers/confirmDialog.ts`.
+- [x] T087 One motion rhythm: `fast` 200 and `standard` 300 ms (`ui/motion.tsx`), ease-out in and
+  ease-in out; the sheet opens in 300 ms and travels its measured height; only the screen that
+  opened the sheet moves back (`SheetTransitionContext` opener), with transforms only. Tests:
+  `glass`, `sheet`, `behindSheet`, `toast`.
+- [x] T088 (SC-004) Lists: `Animated.FlatList` with a native layout transition for the rows
+  around a change; new and deleted rows have no motion of their own and the edited row keeps its
+  flash (`ui/RowMotion.tsx`); a small render window (`initialNumToRender` 12,
+  `maxToRenderPerBatch` 8, `windowSize` 5) and items memoized by content
+  (`ui/TransactionList.tsx`). Tests: `rowChanges`, `allTransactions`.
+- [x] T089 (FR-019, FR-020, FR-025, FR-032) Save and Delete write first, play the haptic at once,
+  close the sheet, and only then show the toast, switch month and reload (`useConfirmChange`,
+  the form routes); summary screens reload on focus only, never while the sheet slides, and
+  setting the month already shown keeps the same state (`SelectedMonthContext`), so a save in the
+  month on screen runs one query. Tests: `rowChanges`, `toast`, `transactionFormNew` (FR-020
+  order), `tests/unit/todayAndMonth.test.tsx` (same month).
+- [x] T090 `jest.config.js` caps `maxWorkers` at 4, so `npm test` fits in WSL2's memory.
+
 ---
 
 ## Dependencies & Execution Order
@@ -695,6 +1020,8 @@ own transactions and totals. Add one from a past month and check that it lands i
 - **US4 (Phase 6)**: needs US1's summary and header (T035, T037). It is independent of US2 and
   US3.
 - **Polish (Phase 7)**: needs all stories. T051 can run any time after Phase 1.
+- **Glass and motion (Phase 8)**: needs Phases 3–6 and T055. It runs before T052–T054, so the
+  APKs are built from the final design. Its blocks go in order 8a → 8j.
 
 ### Key task dependencies
 
@@ -705,6 +1032,9 @@ own transactions and totals. Add one from a past month and check that it lands i
   T039 → T037, T038.
 - T044 → T038, T039. T045 → T030, T032, T044. T047 → T035, T028. T040 → T037. T041 → T039. T048 → T047 (the banner case also needs
   T045; if US4 is done before US3, that case moves to T046).
+- T057 → T056. T058 → T057. T059 → T058. T060, T061 → T059. T062 → T060, T061.
+  T063, T064 → T062. T066 → T056, T062. T065 → T064, T066. T067 → T066. T068 → T062, T066.
+  T072 → T068. T069 → T066, T072. T070 → T065, T066. T071 → T056–T072. T052 → T071.
 
 ### Parallel Opportunities
 
@@ -735,7 +1065,18 @@ Task: "T035 [P] [US1] MonthHeader (title) in src/ui/MonthHeader.tsx"
 | 4 | T042–T043 | Breakdown per category |
 | 5 | T044–T046 | Edit and delete |
 | 6 | T047–T048 | Previous months |
-| 7 | T049–T054 | Dev tools, accessibility, APK verification, docs |
+| 7 | T049–T051, T055 | Dev tools, accessibility, docs, white-flash fix |
+| 8a | T056–T057 | Glass spike screen on the phone |
+| 8b | T058–T061 | Glass look on the summary, form and error screen, light and dark |
+| 8c | T062–T064 | Press feedback, entrance, month change, counting totals |
+| 8d | T066, T067, T065 | Form sheet over the summary, close paths, drag to close, discard check, row changes |
+| 8e | T068, T072 | Keyboard and Save above it (SC-001); Type indicator, chips, invalid shake |
+| 8f | T069–T071 | Haptics, toast, design review, full phone check |
+| 8g | T073–T076 | Developer's phone review: month change without counting, € sign, day groups (FR-017, FR-029), flat form look (design only) |
+| 8h | T077–T078 | Add next to Transactions; 5 latest on the summary and See all (FR-002, FR-017) |
+| 8i | T079 | New form opens without the keyboard (FR-003, SC-001) |
+| 8j | T080–T090 | Phone review fine-tuning: look, dialog, motion rhythm, performance |
+| 9 | T052–T054 | APK verification and final check |
 
 Commits: one or more Conventional Commits per block, proposed to the developer and made only
 when they ask.

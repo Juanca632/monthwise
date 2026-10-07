@@ -127,6 +127,23 @@ it('keeps the data on screen during a same-month reload (no loading state)', asy
   expect(logTiming).not.toHaveBeenCalled();
 });
 
+it('keeps the same rows object when a focus reload brings back identical rows', async () => {
+  const { repository, calls } = controlledRepository();
+  mockDb = dbValue({ repository });
+  const { result } = renderSummary();
+  await settle(() => calls[0].deferred.resolve([row(1, '2026-10-02', 1250)]));
+  const before = result.current.summary.rows;
+
+  focus();
+  await settle(() => calls[1].deferred.resolve([row(1, '2026-10-02', 1250)]));
+  expect(result.current.summary.rows).toBe(before);
+
+  focus();
+  await settle(() => calls[2].deferred.resolve([row(1, '2026-10-02', 900)]));
+  expect(result.current.summary.rows).not.toBe(before);
+  expect(result.current.summary.summary.expenseCents).toBe(900);
+});
+
 it('discards a slow reply for a month that is no longer selected', async () => {
   const { repository, calls } = controlledRepository();
   mockDb = dbValue({ repository });

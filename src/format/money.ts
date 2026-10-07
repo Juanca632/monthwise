@@ -46,11 +46,30 @@ function currencyParts(
   // How engines sign a zero varies (`-0`, `+0`), so whole-euro zero borrows the layout of ±1
   // and puts the 0 back. This keeps `-0,50 €` signed.
   const parts = currencyFormatter(tag, signDisplay).formatToParts(sign * Math.max(euros, 1));
-  return parts.map((part) => {
-    if (part.type === 'fraction') return { ...part, value: pad2(rest) };
-    if (euros === 0 && part.type === 'integer') return { ...part, value: '0' };
-    return part;
-  });
+  return withEuroSign(
+    parts.map((part) => {
+      if (part.type === 'fraction') return { ...part, value: pad2(rest) };
+      if (euros === 0 && part.type === 'integer') return { ...part, value: '0' };
+      return part;
+    }),
+  );
+}
+
+/**
+ * Always `€`, never the code `EUR` that regions outside the euro area get (`es-US`:
+ * `EUR 1,234.00`; FR-029, research R7). Before the number, the space after a letter code goes
+ * too, as ICU does for symbols: `€1,234.00`. After the number the region's spacing stays
+ * (`1.234,00 €`).
+ */
+function withEuroSign(parts: Intl.NumberFormatPart[]): Intl.NumberFormatPart[] {
+  const index = parts.findIndex((p) => p.type === 'currency');
+  if (index < 0 || parts[index].value === '€') return parts;
+  const integer = parts.findIndex((p) => p.type === 'integer');
+  const next = parts[index + 1];
+  const dropSpace = index < integer && next?.type === 'literal' && next.value.trim() === '';
+  return parts
+    .map((p, i) => (i === index ? { ...p, value: '€' } : p))
+    .filter((_, i) => !(dropSpace && i === index + 1));
 }
 
 const join = (parts: Intl.NumberFormatPart[]): string => parts.map((p) => p.value).join('');

@@ -49,7 +49,9 @@ export function SelectedMonthProvider({ children }: { children: ReactNode }) {
     return {
       selected,
       today,
-      setSelected,
+      // The same month keeps the same object: a save in the month on screen must not look like a
+      // month change, which reloaded the summary a second time after every save.
+      setSelected: (month) => setSelected((current) => (sameMonth(current, month) ? current : month)),
       canGoPrevious,
       canGoNext,
       goPrevious: () => {

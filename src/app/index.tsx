@@ -1,31 +1,70 @@
-import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
-import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AccessibilityInfo, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import type { YearMonth } from '@/domain/month';
 import { useMonthSummary } from '@/hooks/useMonthSummary';
 import { useRegion } from '@/hooks/useRegion';
+import { haptics } from '@/lib/haptics';
+import { handOffTransaction } from '@/state/openedTransaction';
+import { useSelectedMonth } from '@/state/SelectedMonthContext';
+import { useSheetOpener } from '@/state/SheetTransitionContext';
 import { useSummaryNotice } from '@/state/SummaryNoticeContext';
+import { Appear, SummaryMotionProvider, type SummaryMotion } from '@/ui/Appear';
 import { Breakdown } from '@/ui/Breakdown';
+import { BehindSheet } from '@/ui/BehindSheet';
 import { MonthHeader } from '@/ui/MonthHeader';
+import { useRowChanges } from '@/ui/RowMotion';
 import { StateMessage } from '@/ui/StateMessage';
-import { iconSize, radii, spacing, useTheme } from '@/ui/theme';
+import { spacing } from '@/ui/theme';
 import { Totals, type TotalsContent } from '@/ui/Totals';
-import { TransactionList } from '@/ui/TransactionList';
+import { SeeAll, TransactionList, TransactionsTitle } from '@/ui/TransactionList';
 
-const ADD_HEIGHT = 56;
-const ADD_GAP = spacing.xxl;
+/** The summary shows this many of the month's most recent transactions (FR-017). */
+const PREVIEW_ROWS = 5;
 const OPEN_FAILED = "Couldn't open this transaction.";
+
+// Expo inlines EXPO_PUBLIC_* at build time, so production bundles drop this branch and, with it,
+// the dev tools module (contracts/ui-screens.md). A static import would keep it.
+let DevTools: typeof import('@/dev/DevTools').DevTools | null = null;
+if (process.env.EXPO_PUBLIC_DEV_TOOLS === '1') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  DevTools = require('@/dev/DevTools').DevTools;
+}
+
+const monthIndex = (m: YearMonth) => m.year * 12 + m.month;
+
+/** The clock the summary's entrance and month-change motion run on (ui/Appear.tsx). */
+function useSummaryMotion(): SummaryMotion {
+  const { selected } = useSelectedMonth();
+  // The summary stays mounted under the forms, so its mount is the cold start.
+  const [entranceStart] = useState(() => Date.now());
+  const [monthChange, setMonthChange] = useState<SummaryMotion['monthChange']>(null);
+  const shown = useRef(selected);
+  useEffect(() => {
+    const from = shown.current;
+    shown.current = selected;
+    if (from === selected) return;
+    // Recorded right after the render that changes the month, which shows it loading; the new
+    // month's content mounts later, when its query returns, and reads this. An earlier month
+    // means the left (previous) button, so its content comes in from the left.
+    setMonthChange({ at: Date.now(), from: monthIndex(selected) < monthIndex(from) ? 'left' : 'right' });
+  }, [selected]);
+  return useMemo(() => ({ entranceStart, monthChange }), [entranceStart, monthChange]);
+}
 
 /** The monthly summary (contracts/ui-screens.md, Summary screen). */
 export default function SummaryScreen() {
-  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { tag } = useRegion();
+  const notice = useSummaryNotice();
+  const sheetOpener = useSheetOpener();
   const { status, rows, summary, retry } = useMonthSummary();
   const router = useRouter();
-  const notice = useSummaryNotice();
+  const motion = useSummaryMotion();
+  // The totals come from the stored rows; the list may still show a deleted row leaving.
+  const changes = useRowChanges(rows, status, notice.lastChange);
 
   // Announced once when it appears; it stays on screen until dismissed (contract, FR-025).
   useEffect(() => {
@@ -37,6 +76,8 @@ export default function SummaryScreen() {
   const openTransaction = (id: number) => {
     // The banner is about an earlier attempt; opening another transaction clears it.
     notice.dismiss();
+    handOffTransaction(rows.find((r) => r.id === id));
+    sheetOpener.set('summary');
     router.push({ pathname: '/transaction/[id]', params: { id: String(id) } });
   };
 
@@ -52,89 +93,68 @@ export default function SummaryScreen() {
             balanceCents: summary.balanceCents,
           };
 
+  const addTransaction = () => {
+    haptics.add();
+    sheetOpener.set('summary');
+    router.push('/transaction/new');
+  };
+
   return (
-    <View style={[styles.screen, { backgroundColor: colors.background }]}>
-      <TransactionList
-        rows={rows}
-        tag={tag}
-        header={
-          <View style={{ paddingTop: spacing.sm + insets.top }}>
-            <Totals
-              tag={tag}
-              content={content}
-              header={(tone) => <MonthHeader tone={tone} />}
-            />
-            {notice.notice === 'open_failed' && (
-              <StateMessage
-                variant="banner"
-                message={OPEN_FAILED}
-                action={{ label: 'Dismiss', onPress: notice.dismiss }}
-              />
-            )}
-            {/* Ready months only: an empty month shows its own line instead (FR-022). */}
-            {status === 'ready' && rows.length > 0 && (
-              <Breakdown items={summary.breakdown} tag={tag} />
-            )}
-          </View>
-        }
-        // Loading and error show only the card; an empty month gets its own line (FR-022).
-        empty={
-          status === 'ready' ? (
-            <StateMessage
-              variant="card"
-              icon="credit-card"
-              message="No transactions this month yet."
-              helper="Tap Add to record an income or expense."
-            />
-          ) : null
-        }
-        onPressItem={openTransaction}
-        bottomPadding={ADD_HEIGHT + ADD_GAP + spacing.md + insets.bottom}
-      />
-      <AddButton bottom={ADD_GAP + insets.bottom} />
-    </View>
+    <SummaryMotionProvider value={motion}>
+      <BehindSheet screen="summary" testID="summary-content">
+        <TransactionList
+          rows={changes.rows}
+          changeFor={changes.changeFor}
+          tag={tag}
+          header={
+            <View style={{ paddingTop: spacing.sm + insets.top }}>
+              <Appear on={['entrance']} slot={0}>
+                <Totals tag={tag} content={content} header={(tone) => <MonthHeader tone={tone} />} />
+              </Appear>
+              {notice.notice === 'open_failed' && (
+                <StateMessage
+                  variant="banner"
+                  message={OPEN_FAILED}
+                  action={{ label: 'Dismiss', onPress: notice.dismiss }}
+                />
+              )}
+              {/* Ready months only: an empty month shows its own line instead (FR-022). */}
+              {status === 'ready' && rows.length > 0 && (
+                <Appear on={['entrance', 'month']} slot={1}>
+                  <Breakdown items={summary.breakdown} tag={tag} />
+                </Appear>
+              )}
+            </View>
+          }
+          // In every state, with Add (FR-002).
+          title={<TransactionsTitle onAdd={addTransaction} />}
+          // The 5 most recent; the rest are one tap away (FR-017).
+          limit={PREVIEW_ROWS}
+          // Loading and error show only the card; an empty month gets its own line (FR-022).
+          empty={
+            status === 'ready' ? (
+              <Appear on={['entrance', 'month']} slot={1}>
+                <StateMessage
+                  variant="card"
+                  icon="credit-card"
+                  message="No transactions this month yet."
+                  helper="Tap Add to record an income or expense."
+                />
+              </Appear>
+            ) : null
+          }
+          footer={
+            <>
+              {rows.length > PREVIEW_ROWS && <SeeAll onPress={() => router.push('/transactions')} />}
+              {/* Shown in every state, so the simulated storage error can be turned off again. */}
+              {DevTools && <DevTools onChanged={retry} />}
+            </>
+          }
+          onPressItem={openTransaction}
+          bottomPadding={spacing.xxl + insets.bottom}
+        />
+      </BehindSheet>
+    </SummaryMotionProvider>
   );
 }
 
-/** Always visible, whatever the summary's state (FR-002). */
-function AddButton({ bottom }: { bottom: number }) {
-  const { colors, type, scheme } = useTheme();
-  const router = useRouter();
-  return (
-    // The shadow sits on a wrapper that does not clip; the button clips its ripple (design.md).
-    <View
-      pointerEvents="box-none"
-      style={[styles.addWrapper, { bottom }, scheme === 'light' && styles.addShadow]}
-    >
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Add transaction"
-        onPress={() => router.push('/transaction/new')}
-        android_ripple={{ color: colors.rippleOnAccent }}
-        style={[styles.addButton, { backgroundColor: colors.accent }]}
-      >
-        <Feather name="plus" size={iconSize.button} color={colors.onAccent} />
-        <Text style={[type.button, { color: colors.onAccent }]}>Add</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  addWrapper: {
-    position: 'absolute',
-    alignSelf: 'center',
-    borderRadius: radii.full,
-  },
-  addShadow: { boxShadow: '0 6px 20px rgba(47,91,234,0.28)' },
-  addButton: {
-    minHeight: ADD_HEIGHT,
-    paddingHorizontal: spacing.xxl,
-    borderRadius: radii.full,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    overflow: 'hidden',
-  },
-});

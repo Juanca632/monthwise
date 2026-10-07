@@ -1,7 +1,7 @@
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { useState } from 'react';
-import { AccessibilityInfo, Alert } from 'react-native';
+import { AccessibilityInfo } from 'react-native';
 
 import { DatabaseProvider } from '@/data/DatabaseProvider';
 import { openAndMigrate } from '@/data/migrations';
@@ -10,6 +10,7 @@ import type { TransactionInput } from '@/domain/validation';
 import { SelectedMonthProvider, useSelectedMonth, type SelectedMonthValue } from '@/state/SelectedMonthContext';
 import { SummaryNoticeProvider } from '@/state/SummaryNoticeContext';
 
+import { answerDialog, openDialog } from '../helpers/confirmDialog';
 import { ignoreListBatchingWarnings } from '../helpers/listWarnings';
 import { openTestDatabase, type TestDatabase } from '../helpers/betterSqliteAdapter';
 
@@ -35,6 +36,17 @@ jest.mock('@react-native-community/datetimepicker', () => ({
   DateTimePickerAndroid: { open: jest.fn() },
 }));
 
+// One haptic per action, for its result (T069): checked in the save and delete tests below.
+const mockHaptics = {
+  add: jest.fn(),
+  monthChange: jest.fn(),
+  select: jest.fn(),
+  saved: jest.fn(),
+  deleted: jest.fn(),
+  invalid: jest.fn(),
+};
+jest.mock('@/lib/haptics', () => ({ haptics: mockHaptics }));
+beforeEach(() => Object.values(mockHaptics).forEach((m) => m.mockClear()));
 const mockOpen = jest.fn();
 jest.mock('expo-sqlite', () => ({ openDatabaseAsync: (...a: unknown[]) => mockOpen(...a) }));
 
@@ -161,29 +173,38 @@ async function saveForm() {
   await flush();
 }
 
-/** Answers the last native dialog with the button that has this text. */
-function answerDialog(text: string) {
-  const buttons = jest.mocked(Alert.alert).mock.calls.at(-1)![2]!;
-  // Cancel has no handler: the native dialog just closes.
-  act(() => buttons.find((b) => b.text === text)!.onPress?.());
-}
-
 ignoreListBatchingWarnings();
 
 beforeEach(() => {
   mockOpen.mockReset();
   mockDispatch.mockClear();
   jest.mocked(DateTimePickerAndroid.open).mockClear();
-  jest.spyOn(Alert, 'alert').mockClear();
   jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockClear();
   jest.spyOn(AccessibilityInfo, 'setAccessibilityFocus').mockImplementation(() => {});
   jest.mocked(AccessibilityInfo.setAccessibilityFocus).mockClear();
 });
 
 describe('opening (FR-011)', () => {
-  it('shows a loading state, then the stored values in the region format', async () => {
+  it('from the list, shows the stored values in the region format right away', async () => {
     await renderApp([lunch]);
     fireEvent.press(screen.getByRole('button', { name: /^Expense, Food/ }));
+
+    // The list hands the row over, so the form mounts before the sheet opens: no loading state.
+    expect(formOpen()).toBe(true);
+    expect(screen.queryAllByLabelText('Loading')).toHaveLength(0);
+    expect(amountInput().props.value).toBe('12,50');
+
+    await flush();
+    expect(amountInput().props.value).toBe('12,50');
+    expect(chip('Food').props.accessibilityState).toEqual({ selected: true });
+    expect(screen.getByLabelText(/^Note \(optional\)/).props.value).toBe('lunch');
+    expect(screen.getByText('05/10/2026')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeTruthy();
+  });
+
+  it('without a row from the list (a link), shows a loading state, then the stored values', async () => {
+    await renderApp([lunch]);
+    act(() => mockNav.open(String(stored()[0].id)));
 
     expect(formOpen()).toBe(true);
     expect(screen.getAllByLabelText('Loading').length).toBeGreaterThan(0);
@@ -192,9 +213,6 @@ describe('opening (FR-011)', () => {
     await flush();
     expect(amountInput().props.value).toBe('12,50');
     expect(chip('Food').props.accessibilityState).toEqual({ selected: true });
-    expect(screen.getByLabelText(/^Note \(optional\)/).props.value).toBe('lunch');
-    expect(screen.getByText('05/10/2026')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Delete' })).toBeTruthy();
   });
 
   it('closes and shows a banner when the transaction cannot be loaded (FR-025)', async () => {
@@ -225,6 +243,7 @@ describe('editing', () => {
     // RNTL turns the no-break space into a plain one before applying a RegExp.
     expect(screen.getByLabelText(/^Expense, Food, 21,50 €/)).toBeTruthy();
     expect(screen.getByLabelText(`Food, ${eur('21,50')}, 4 percent`)).toBeTruthy();
+    expect(mockHaptics.saved).toHaveBeenCalledTimes(1);
   });
 
   it('changing to income clears the category and asks for a new one (FR-012)', async () => {
@@ -268,11 +287,13 @@ describe('editing', () => {
   it('closing without changes does not ask, though the amount was pre-formatted (FR-010)', async () => {
     await renderApp([lunch]);
     await openRow('Expense, Food');
-    expect(mockGuard.prevent).toBe(false);
+    act(() => mockGuard.callback!({ data: { action: BACK } }));
+    expect(openDialog()).toBeNull();
+    expect(mockDispatch).toHaveBeenCalledWith(BACK);
 
     fireEvent.changeText(amountInput(), '13');
     act(() => mockGuard.callback!({ data: { action: BACK } }));
-    expect(Alert.alert).toHaveBeenCalledWith('Discard changes?', undefined, expect.any(Array));
+    expect(openDialog()).toBe('Discard changes?');
   });
 
   it('a stored date after today is flagged on Save, and kept until another is picked', async () => {
@@ -314,6 +335,7 @@ describe('save and delete failures (FR-025)', () => {
 
     expect(screen.getByText("Couldn't save. Your changes are still here.")).toBeTruthy();
     expect(amountInput().props.value).toBe('20');
+    expect(mockHaptics.saved).not.toHaveBeenCalled();
   });
 
   it('a storage error on delete shows "Couldn\'t delete." and keeps the content', async () => {
@@ -327,6 +349,7 @@ describe('save and delete failures (FR-025)', () => {
     expect(formOpen()).toBe(true);
     expect(screen.getByText("Couldn't delete.")).toBeTruthy();
     expect(amountInput().props.value).toBe('12,50');
+    expect(mockHaptics.deleted).not.toHaveBeenCalled();
   });
 
   it('deleting a row that is already gone closes the form and the summary reloads', async () => {
@@ -339,6 +362,8 @@ describe('save and delete failures (FR-025)', () => {
 
     expect(formOpen()).toBe(false);
     expect(screen.getByText('No transactions this month yet.')).toBeTruthy();
+    // Nothing was deleted by this tap, so nothing confirms it (no haptic, no toast).
+    expect(mockHaptics.deleted).not.toHaveBeenCalled();
   });
 });
 
@@ -348,15 +373,18 @@ describe('deleting (FR-013)', () => {
     await openRow('Expense, Food');
     press('Delete');
 
-    expect(Alert.alert).toHaveBeenCalledWith('Delete this transaction?', undefined, expect.any(Array));
+    expect(openDialog()).toBe('Delete this transaction?');
     expect(stored()).toHaveLength(2);
     answerDialog('Delete');
     await flush();
 
     expect(formOpen()).toBe(false);
     expect(stored()).toHaveLength(1);
+    // The deleted row stays for its exit (200 ms under reduce motion), then goes.
+    await act(() => new Promise((resolve) => setTimeout(resolve, 250)));
     expect(screen.queryByLabelText(/^Expense, Food/)).toBeNull();
     expect(screen.getByLabelText(`Expenses, ${eur('500,00')}`)).toBeTruthy();
+    expect(mockHaptics.deleted).toHaveBeenCalledTimes(1);
   });
 
   it('Cancel changes nothing', async () => {
@@ -368,6 +396,7 @@ describe('deleting (FR-013)', () => {
 
     expect(formOpen()).toBe(true);
     expect(stored()).toHaveLength(1);
+    expect(mockHaptics.deleted).not.toHaveBeenCalled();
   });
 });
 

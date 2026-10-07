@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Summary, dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#7D96FF}a:hover{color:#9DB0FF}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:inherit}
+.rise{animation:rise 520ms cubic-bezier(.2,.8,.2,1) both}
+.slide-l{animation:slideL 340ms cubic-bezier(.2,.8,.2,1) both}
+.slide-r{animation:slideR 340ms cubic-bezier(.2,.8,.2,1) both}
+.press{transition:transform 140ms cubic-bezier(.3,1.4,.5,1),filter 140ms}
+.press:active{transform:scale(.96);filter:brightness(1.15)}
+@keyframes rise{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes slideL{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+@keyframes slideR{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.rise,.slide-l,.slide-r{animation:fadeOnly 200ms both}.press:active{transform:none}@keyframes fadeOnly{from{opacity:0}to{opacity:1}}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0D0F13; color: #F2F4F7; font-family: Manrope, system-ui, sans-serif; font-variant-numeric: tabular-nums;">
+  <div aria-hidden="true" style="position: absolute; width: 340px; height: 340px; left: -120px; top: -90px; border-radius: 50%; background: {{orbA}}; filter: blur(70px); transition: background 400ms;"></div>
+  <div aria-hidden="true" style="position: absolute; width: 280px; height: 280px; right: -110px; top: 300px; border-radius: 50%; background: rgba(69, 211, 168, 0.16); filter: blur(70px);"></div>
+  <div aria-hidden="true" style="position: absolute; width: 260px; height: 260px; left: -60px; bottom: -80px; border-radius: 50%; background: rgba(125, 150, 255, 0.14); filter: blur(80px);"></div>
+
+  <div style="position: relative; height: 100%; overflow: hidden; padding: 44px 12px 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px;">
+    <section class="rise" aria-label="Balance card" style="position: relative; border-radius: 28px; padding: 12px 12px 16px; background: {{cardFill}}; border: 1px solid rgba(255, 255, 255, 0.14); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 20px 40px rgba(0, 0, 0, 0.35); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px); transition: background 400ms;">
+      <div style="display: flex; align-items: center;">
+        <button class="press" type="button" aria-label="Previous month, September 2026" onClick="{{goPrev}}" style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12); opacity: {{prevOpacity}};">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F2F4F7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+        </button>
+        <h1 style="flex: 1; margin: 0; text-align: center; font-size: 16px; font-weight: 600;">{{monthTitle}}</h1>
+        <button class="press" type="button" aria-label="Next month, October 2026" onClick="{{goNext}}" style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12); opacity: {{nextOpacity}};">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F2F4F7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+      </div>
+      <div style="text-align: center; padding: 24px 0 20px;">
+        <div style="font-size: 14px; font-weight: 500; color: rgba(242, 244, 247, 0.62);">Balance</div>
+        <div style="font-size: 54px; font-weight: 700; letter-spacing: -1.5px; line-height: 1.15; margin-top: 4px; color: {{amountColor}};">{{balanceText}}</div>
+      </div>
+      <sc-if value="{{isOct}}" hint-placeholder-val="{{ true }}">
+        <div class="slide-r" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 16px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.10);">
+            <div aria-hidden="true" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(69, 211, 168, 0.18);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#45D3A8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></div>
+            <div><div style="font-size: 12px; font-weight: 500; color: rgba(242, 244, 247, 0.62);">Income</div><div style="font-size: 16px; font-weight: 700; margin-top: 4px;">2.450,00 €</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 16px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.10);">
+            <div aria-hidden="true" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.10);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2F4F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"></path></svg></div>
+            <div><div style="font-size: 12px; font-weight: 500; color: rgba(242, 244, 247, 0.62);">Expenses</div><div style="font-size: 16px; font-weight: 700; margin-top: 4px;">1.284,60 €</div></div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{isSep}}" hint-placeholder-val="{{ false }}">
+        <div class="slide-l" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 16px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.10);">
+            <div aria-hidden="true" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(69, 211, 168, 0.18);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#45D3A8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></div>
+            <div><div style="font-size: 12px; font-weight: 500; color: rgba(242, 244, 247, 0.62);">Income</div><div style="font-size: 16px; font-weight: 700; margin-top: 4px;">2.450,00 €</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 16px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.10);">
+            <div aria-hidden="true" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255, 154, 140, 0.18);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF9A8C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"></path></svg></div>
+            <div><div style="font-size: 12px; font-weight: 500; color: rgba(242, 244, 247, 0.62);">Expenses</div><div style="font-size: 16px; font-weight: 700; margin-top: 4px;">2.610,20 €</div></div>
+          </div>
+        </div>
+      </sc-if>
+    </section>
+
+    <sc-if value="{{isOct}}" hint-placeholder-val="{{ true }}">
+      <div class="slide-r" style="display: flex; flex-direction: column; gap: 12px;">
+        <div class="rise" style="animation-delay: 80ms;">
+          <h2 style="margin: 0; padding: 4px 12px 8px; font-size: 15px; font-weight: 600;">Spending by category</h2>
+          <div style="border-radius: 20px; padding: 4px 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.10); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+            <sc-for list="{{octBreakdown}}" as="row" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 8px; min-height: 48px; border-bottom: {{row.divider}};">
+                <span style="flex: 1; font-size: 15px; font-weight: 500;">{{row.label}}</span>
+                <span style="font-size: 15px; font-weight: 600;">{{row.amount}}</span>
+                <span style="min-width: 32px; text-align: center; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #9DB0FF; background: rgba(125, 150, 255, 0.16);">{{row.pct}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div class="rise" style="animation-delay: 160ms;">
+          <h2 style="margin: 0; padding: 4px 12px 8px; font-size: 15px; font-weight: 600;">Transactions</h2>
+          <div style="border-radius: 20px; padding: 4px 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.10);">
+            <sc-for list="{{octRows}}" as="row" hint-placeholder-count="4">
+              <button class="press" type="button" aria-label="{{row.spoken}}" style="width: 100%; display: flex; align-items: center; gap: 12px; min-height: 64px; border-bottom: {{row.divider}};">
+                <span aria-hidden="true" style="width: 40px; height: 40px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; background: {{row.avatarBg}}; color: {{row.avatarInk}}; border: 1px solid rgba(255, 255, 255, 0.08);">{{row.initial}}</span>
+                <span style="flex: 1; display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 15px; font-weight: 600;">{{row.label}}</span><span style="font-size: 13px; color: rgba(242, 244, 247, 0.62);">{{row.caption}}</span></span>
+                <span style="font-size: 15px; font-weight: 600; color: {{row.amountInk}};">{{row.amount}}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{isSep}}" hint-placeholder-val="{{ false }}">
+      <div class="slide-l" style="display: flex; flex-direction: column; gap: 12px;">
+        <div>
+          <h2 style="margin: 0; padding: 4px 12px 8px; font-size: 15px; font-weight: 600;">Spending by category</h2>
+          <div style="border-radius: 20px; padding: 4px 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.10);">
+            <sc-for list="{{sepBreakdown}}" as="row" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 8px; min-height: 48px; border-bottom: {{row.divider}};">
+                <span style="flex: 1; font-size: 15px; font-weight: 500;">{{row.label}}</span>
+                <span style="font-size: 15px; font-weight: 600;">{{row.amount}}</span>
+                <span style="min-width: 32px; text-align: center; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #9DB0FF; background: rgba(125, 150, 255, 0.16);">{{row.pct}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <h2 style="margin: 0; padding: 4px 12px 8px; font-size: 15px; font-weight: 600;">Transactions</h2>
+          <div style="border-radius: 20px; padding: 4px 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.10);">
+            <sc-for list="{{sepRows}}" as="row" hint-placeholder-count="4">
+              <button class="press" type="button" aria-label="{{row.spoken}}" style="width: 100%; display: flex; align-items: center; gap: 12px; min-height: 64px; border-bottom: {{row.divider}};">
+                <span aria-hidden="true" style="width: 40px; height: 40px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; background: {{row.avatarBg}}; color: {{row.avatarInk}}; border: 1px solid rgba(255, 255, 255, 0.08);">{{row.initial}}</span>
+                <span style="flex: 1; display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 15px; font-weight: 600;">{{row.label}}</span><span style="font-size: 13px; color: rgba(242, 244, 247, 0.62);">{{row.caption}}</span></span>
+                <span style="font-size: 15px; font-weight: 600; color: {{row.amountInk}};">{{row.amount}}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; height: 96px; background: linear-gradient(180deg, rgba(13, 15, 19, 0) 0%, rgba(13, 15, 19, 0.45) 100%); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); mask-image: linear-gradient(180deg, transparent 0%, #000 70%); -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 70%);"></div>
+  <a class="press rise" href="Form.dc.html" style="position: absolute; left: 50%; bottom: 44px; margin-left: -64px; width: 128px; height: 56px; box-sizing: border-box; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; font-size: 16px; font-weight: 600; color: #0D0F13; background: linear-gradient(180deg, rgba(160, 178, 255, 0.95), rgba(112, 137, 250, 0.92)); border: 1px solid rgba(255, 255, 255, 0.40); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 12px 32px rgba(125, 150, 255, 0.35); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); animation-delay: 240ms;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0D0F13" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+    Add
+  </a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { month: 'oct', shown: 116540 };
+  }
+  fmt(cents) {
+    var neg = cents < 0;
+    var abs = Math.abs(Math.round(cents));
+    var euros = String(Math.floor(abs / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    var dec = String(abs % 100).padStart(2, '0');
+    return (neg ? '−' : '') + euros + ',' + dec + ' €';
+  }
+  animateTo(target) {
+    var from = this.state.shown;
+    var start = null;
+    var self = this;
+    if (this.raf) cancelAnimationFrame(this.raf);
+    var step = function (t) {
+      if (start === null) start = t;
+      var p = Math.min(1, (t - start) / 520);
+      var eased = 1 - Math.pow(1 - p, 3);
+      self.setState({ shown: Math.round(from + (target - from) * eased) });
+      if (p < 1) self.raf = requestAnimationFrame(step);
+    };
+    this.raf = requestAnimationFrame(step);
+  }
+  componentWillUnmount() { if (this.raf) cancelAnimationFrame(this.raf); }
+  rows(list) {
+    return list.map(function (r, i) {
+      return Object.assign({}, r, { divider: i === list.length - 1 ? '0' : '1px solid rgba(255, 255, 255, 0.07)' });
+    });
+  }
+  tx(label, caption, amount, income, spoken) {
+    return {
+      label: label, caption: caption, amount: amount, initial: label[0], spoken: spoken,
+      avatarBg: income ? 'rgba(69, 211, 168, 0.16)' : 'rgba(255, 255, 255, 0.07)',
+      avatarInk: income ? '#45D3A8' : 'rgba(242, 244, 247, 0.62)',
+      amountInk: income ? '#45D3A8' : '#F2F4F7'
+    };
+  }
+  renderVals() {
+    var self = this;
+    var oct = this.state.month === 'oct';
+    return {
+      isOct: oct,
+      isSep: !oct,
+      monthTitle: oct ? 'October 2026' : 'September 2026',
+      balanceText: this.fmt(this.state.shown),
+      amountColor: this.state.shown < 0 ? '#FF9A8C' : '#F2F4F7',
+      cardFill: this.state.shown < 0
+        ? 'linear-gradient(160deg, rgba(255, 154, 140, 0.16), rgba(255, 154, 140, 0.04))'
+        : 'linear-gradient(160deg, rgba(157, 176, 255, 0.16), rgba(255, 255, 255, 0.03))',
+      orbA: oct ? 'rgba(125, 150, 255, 0.38)' : 'rgba(255, 154, 140, 0.30)',
+      prevOpacity: oct ? 1 : 1,
+      nextOpacity: oct ? 0.35 : 1,
+      goPrev: function () { if (self.state.month !== 'sep') { self.setState({ month: 'sep' }); self.animateTo(-16020); } },
+      goNext: function () { if (self.state.month !== 'oct') { self.setState({ month: 'oct' }); self.animateTo(116540); } },
+      octBreakdown: this.rows([
+        { label: 'Housing', amount: '650,00 €', pct: '51%' },
+        { label: 'Food', amount: '412,30 €', pct: '32%' },
+        { label: 'Leisure', amount: '125,90 €', pct: '10%' },
+        { label: 'Transport', amount: '96,40 €', pct: '8%' }
+      ]),
+      sepBreakdown: this.rows([
+        { label: 'Shopping', amount: '1.320,00 €', pct: '51%' },
+        { label: 'Housing', amount: '650,00 €', pct: '25%' },
+        { label: 'Food', amount: '480,20 €', pct: '18%' },
+        { label: 'Leisure', amount: '160,00 €', pct: '6%' }
+      ]),
+      octRows: this.rows([
+        this.tx('Food', 'Groceries · 05/10/2026', '−42,80 €', false, 'Expense, Food, 42,80 €, 5 October 2026, note: Groceries'),
+        this.tx('Transport', 'Metro card · 03/10/2026', '−18,40 €', false, 'Expense, Transport, 18,40 €, 3 October 2026, note: Metro card'),
+        this.tx('Housing', 'Rent · 01/10/2026', '−650,00 €', false, 'Expense, Housing, 650,00 €, 1 October 2026, note: Rent'),
+        this.tx('Salary', '01/10/2026', '+2.450,00 €', true, 'Income, Salary, 2.450,00 €, 1 October 2026')
+      ]),
+      sepRows: this.rows([
+        this.tx('Shopping', 'Laptop · 22/09/2026', '−1.320,00 €', false, 'Expense, Shopping, 1.320,00 €, 22 September 2026, note: Laptop'),
+        this.tx('Food', 'Dinner · 19/09/2026', '−64,50 €', false, 'Expense, Food, 64,50 €, 19 September 2026, note: Dinner'),
+        this.tx('Leisure', 'Concert · 12/09/2026', '−160,00 €', false, 'Expense, Leisure, 160,00 €, 12 September 2026, note: Concert'),
+        this.tx('Salary', '01/09/2026', '+2.450,00 €', true, 'Income, Salary, 2.450,00 €, 1 September 2026')
+      ])
+    };
+  }
+}
+</script>
+</body>
+</html>

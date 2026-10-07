@@ -45,9 +45,12 @@ describe('formatMoney', () => {
     expect(formatMoney(99999999, 'ar-EG')).toBe(`${RLM}999,999.99${NBSP}€`);
   });
 
-  it('es-US shows the ISO code, as on the developer phone', () => {
-    expect(formatMoney(123400, 'es-US')).toBe(`EUR${NBSP}1,234.00`);
-    expect(formatMoney(-100, 'es-US')).toBe(`-EUR${NBSP}1.00`);
+  it('es-US shows the € sign, not the ISO code, with the region\'s separators (FR-029)', () => {
+    expect(formatMoney(123400, 'es-US')).toBe('€1,234.00');
+    expect(formatMoney(-100, 'es-US')).toBe('-€1.00');
+    expect(formatMoney(-50, 'es-US')).toBe('-€0.50');
+    expect(formatSignedMoney(1250, 'income', 'es-US')).toBe('+€12.50');
+    expect(spokenMoney(-123400, 'es-US')).toBe('minus €1,234.00');
   });
 
   it('pads single-digit cents', () => {

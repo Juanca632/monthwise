@@ -23,6 +23,29 @@
   out of both cloud backup and phone-to-phone transfer on every Android version; how data moves
   to a new phone is decided in 006.
 
+### Session 2026-10-06 (developer's phone review)
+
+- Q: A long month reads as one endless list. Should it be split by day? → A: Yes. The list is
+  grouped by day, newest first; each day has a header ("Today", "Yesterday", or "Mon 5 Oct")
+  with that day's net amount (income minus expenses) on the right, and its rows in their own
+  card below.
+- Q: On a phone whose region does not use the euro (for example `es-US`), amounts showed as
+  `EUR 1,234.00`. Should the currency be the region's code or the `€` sign? → A: Always the `€`
+  sign; the region still decides the separators and where the sign goes (`€1,234.00`,
+  `1.234,00 €`).
+- Q: The floating **Add** button covers the middle of the screen, and a long month makes the
+  summary an endless list. → A: **Add** moves next to the "Transactions" title, which the
+  summary shows in every state. The summary lists only the month's 5 most recent transactions;
+  **See all** opens a page with every transaction of the month, grouped by day.
+
+### Session 2026-10-07 (developer's phone review)
+
+- Q: The keyboard opens as soon as the new form appears and covers half of it. Should it? →
+  A: No. The form opens with the amount field empty and not focused, so the keyboard does not
+  cover the form; the numeric keyboard opens when the user taps the amount. Recording an expense
+  takes one more tap (SC-001 goes from 4 to 5 interactions), which stays within the
+  constitution's "a few seconds" (principle V).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Record a transaction and see the month's totals (Priority: P1)
@@ -45,8 +68,8 @@ calculation to the cent.
    current month with total income, total expenses and balance all at zero, a short line saying
    there are no transactions yet, and the **Add** button.
 2. **Given** the user is on the current month, **When** they tap **Add**, **Then** a form opens
-   with type set to Expense, the amount field focused with a numeric keyboard shown, date set to
-   today and no category
+   with type set to Expense, the amount field empty and not focused (no keyboard until the user
+   taps it), date set to today and no category
    selected.
 3. **Given** the form is open, **When** the user enters 12.50, picks Food and saves, **Then** the
    form closes, the transaction appears at the top of the month's list and total expenses grow by
@@ -145,7 +168,10 @@ lands in that month.
 6. **Given** the user is viewing September 2026, **When** they tap **Add**, **Then** the form's
    date defaults to 30 September 2026, and after saving the app shows September 2026 with the new
    transaction in it.
-7. **Given** the user edits a transaction and moves its date to another month, **When** they save,
+7. **Given** a month with 12 transactions, **When** the user views it, **Then** the summary lists
+   the 5 most recent with **See all**, which opens every one of the 12, grouped by day, and Back
+   returns to the summary.
+8. **Given** the user edits a transaction and moves its date to another month, **When** they save,
    **Then** the app shows the month of the new date, with the transaction in it.
 
 ---
@@ -191,10 +217,10 @@ lands in that month.
 
 - **FR-001**: Users MUST be able to record a transaction with: type (income or expense), amount in
   EUR, date, category and an optional note.
-- **FR-002**: The **Add** action MUST be visible on the summary at all times, including while data
-  loads and when loading fails.
-- **FR-003**: A new transaction form MUST open with type Expense, the amount field ready for
-  input (focused, numeric keyboard shown) and no category selected. The date defaults to today
+- **FR-002**: The **Add** action MUST be on the summary in every state (loading, load error, empty
+  month, month with transactions), next to the "Transactions" title.
+- **FR-003**: A new transaction form MUST open with type Expense, the amount field empty and not
+  focused (tapping it opens the numeric keyboard) and no category selected. The date defaults to today
   when the current month is on screen,
   and to the last day of the month on screen when a past month is shown.
 - **FR-004**: Amounts MUST be greater than 0, have at most 2 decimals and be at most 999,999.99.
@@ -232,9 +258,16 @@ lands in that month.
   and the share of total expenses as a whole percent (rounded half up, so 12.5% shows 13%; a
   non-zero share below 0.5% shows "<1%"), largest first, ties ordered alphabetically; categories
   with no expenses are omitted.
-- **FR-017**: The summary MUST list the selected month's transactions, newest date first; on the
-  same date, the most recently recorded first. Each item shows at least amount, type, category,
-  date and note (if any).
+- **FR-017**: The summary MUST list the selected month's 5 most recent transactions (counted as
+  transactions, so the last day shown may list only some of its transactions; its header's net
+  still covers the whole day); when the month has more, a **See all** action opens a page
+  listing all of them. Both lists show transactions
+  newest date first; on the same date, the most recently recorded first. The list is grouped by day: each day starts with a
+  header naming the day ("Today", "Yesterday", or the English short weekday, day and month, for
+  example "Mon 5 Oct", no year) and showing that day's net amount (its income minus its
+  expenses): `+` above zero, minus below, no sign at zero. "Today" and "Yesterday" are relative
+  to the actual date, whatever month is on screen. Each
+  item shows at least amount, type, category and note (if any); its date is its day's header.
 - **FR-018**: Each month MUST be calculated on its own; no balance carries over between months.
 - **FR-019**: Every change (add, edit, delete) MUST be reflected in the list, totals and breakdown
   as soon as the user returns to the summary.
@@ -273,16 +306,22 @@ lands in that month.
 - **FR-028**: Money MUST be calculated exactly to the cent; totals MUST stay exact for any
   combination of valid transactions and never show rounding errors.
 - **FR-029**: Amounts and numeric dates MUST be displayed using the phone's region settings
-  (decimal and thousands separators, € position, day/month order). Dates in the list and the form
-  are numeric in the region's order (for example `30/09/2026` in Spain). All interface text,
-  including the month names in the month header, is in English. The currency is always EUR.
+  (decimal and thousands separators, € position, day/month order). The currency is always EUR
+  and always shown as the `€` sign, never as the code `EUR`. Dates in the form are numeric in
+  the region's order (for example `30/09/2026` in Spain). All interface text, including the month
+  names in the month header and the list's day headers, is in English.
 - **FR-030**: The app MUST follow the phone's light or dark appearance setting.
 - **FR-031**: The app MUST stay usable with the phone's largest text size setting: no amount,
   total or label is cut off or overlapping, even for the maximum amount 999,999.99. The screen
-  reader MUST announce every button, field, amount, breakdown row and the month header; a
+  reader MUST announce every button, field, amount, breakdown row, the month header and each list
+  day header (its day in English words and its net, "minus" when negative); a
   transaction is announced with its type, category, amount, full date and note (if any), amounts
   in the region's format, and a negative balance is announced in words ("minus"). Every tappable
   element MUST be at least the platform's recommended minimum touch size.
+- **FR-032**: After a transaction is saved or deleted successfully, the app MUST briefly confirm
+  it on the summary ("Saved" or "Deleted") without needing any action and without covering the
+  month controls, and the screen reader MUST announce it once. No confirmation appears after a
+  failure.
 
 ### Key Entities
 
@@ -302,15 +341,17 @@ lands in that month.
 
 ### Measurable Outcomes
 
-- **SC-001**: From the main screen, a user can record an expense in under 10 seconds and with 4
-  interactions: open the form, type the amount (counts as one), pick a category, save.
+- **SC-001**: From the main screen, a user can record an expense in under 10 seconds and with 5
+  interactions: open the form, tap the amount, type the amount (counts as one), pick a category,
+  save.
 - **SC-002**: Totals, balance and per-category amounts match a hand calculation to the cent for
   100% of a reference set of at least 50 transactions, including edits and deletions.
 - **SC-003**: 100% of saved transactions are still present after closing the app and after
   restarting the phone.
 - **SC-004**: On a phone with Android 10 or later and 4 GB of RAM, opening the app from a cold
-  start shows the current month's totals and first list items within 1 second, with 1,000
-  transactions in that month.
+  start shows the current month's totals and its 5 most recent transactions within 1 second,
+  with 1,000 transactions in that month; the **See all** page shows its first items within
+  1 second and scrolls that month smoothly (FR-017).
 - **SC-005**: During a full test session covering all user stories, the app makes zero network
   requests, as checked with a network monitor.
 - **SC-006**: In a first-use test with at least 3 people, every participant records their first

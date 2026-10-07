@@ -16,6 +16,17 @@ const MONTH_NAMES = [
   'December',
 ] as const;
 
+// Day headers use English weekday and month names too (FR-017, FR-029).
+const WEEKDAY_NAMES = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+] as const;
+
 function parts(iso: IsoDate): { year: number; month: number; day: number } {
   const [year, month, day] = iso.split('-').map(Number);
   return { year, month, day };
@@ -50,4 +61,36 @@ export function formatSpokenDate(iso: IsoDate): string {
 /** Month header, e.g. "October 2026". */
 export function monthTitle(ym: YearMonth): string {
   return `${MONTH_NAMES[ym.month - 1]} ${ym.year}`;
+}
+
+/** Days between two calendar dates, counted in UTC so time zones and DST never shift them. */
+function daysBetween(from: IsoDate, to: IsoDate): number {
+  const utc = (iso: IsoDate) => {
+    const { year, month, day } = parts(iso);
+    return Date.UTC(year, month - 1, day);
+  };
+  return Math.round((utc(to) - utc(from)) / 86_400_000);
+}
+
+function weekday(iso: IsoDate): string {
+  const { year, month, day } = parts(iso);
+  return WEEKDAY_NAMES[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
+}
+
+/** "Today" and "Yesterday" relative to the actual date, whatever month is on screen. */
+function relativeDay(iso: IsoDate, today: IsoDate): string | null {
+  const ago = daysBetween(iso, today);
+  return ago === 0 ? 'Today' : ago === 1 ? 'Yesterday' : null;
+}
+
+/** A list day header: "Today", "Yesterday" or "Mon 5 Oct" (no year: a month never crosses one). */
+export function dayName(iso: IsoDate, today: IsoDate): string {
+  const { month, day } = parts(iso);
+  return relativeDay(iso, today) ?? `${weekday(iso).slice(0, 3)} ${day} ${MONTH_NAMES[month - 1].slice(0, 3)}`;
+}
+
+/** The same day for screen readers: "Today", "Yesterday" or "Monday 5 October". */
+export function spokenDayName(iso: IsoDate, today: IsoDate): string {
+  const { month, day } = parts(iso);
+  return relativeDay(iso, today) ?? `${weekday(iso)} ${day} ${MONTH_NAMES[month - 1]}`;
 }
