@@ -1,10 +1,12 @@
 import { Feather } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { next, previous } from '@/domain/month';
 import { monthTitle } from '@/format/date';
+import { haptics } from '@/lib/haptics';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
 
+import { PressableScale } from './motion';
 import { iconSize, minTouch, radii, useTheme, type CardTone } from './theme';
 
 type Props = { tone: CardTone };
@@ -26,7 +28,10 @@ export function MonthHeader({ tone }: Props) {
           label={`Previous month, ${monthTitle(previous(selected))}`}
           icon="chevron-left"
           tone={tone}
-          onPress={goPrevious}
+          onPress={() => {
+            haptics.monthChange();
+            goPrevious();
+          }}
         />
       ) : (
         <View style={styles.slot} />
@@ -39,7 +44,10 @@ export function MonthHeader({ tone }: Props) {
           label={`Next month, ${monthTitle(next(selected))}`}
           icon="chevron-right"
           tone={tone}
-          onPress={goNext}
+          onPress={() => {
+            haptics.monthChange();
+            goNext();
+          }}
         />
       ) : (
         <View style={styles.slot} />
@@ -56,17 +64,22 @@ type MonthButtonProps = {
 };
 
 function MonthButton({ label, icon, tone, onPress }: MonthButtonProps) {
-  const { colors } = useTheme();
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      android_ripple={{ color: colors.ripple }}
-      style={[styles.slot, styles.button, { backgroundColor: tone.monthButton }]}
+      // A rounded view does not clip its own ripple; a borderless one draws a circle instead
+      // (design.md, Touch feedback).
+      android_ripple={{ color: tone.cardRim, borderless: true, radius: minTouch / 2 }}
+      style={[
+        styles.slot,
+        styles.button,
+        { backgroundColor: tone.monthButton, borderColor: tone.cardRim },
+      ]}
     >
       <Feather name={icon} size={iconSize.button} color={tone.cardInk} />
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -75,10 +88,9 @@ const styles = StyleSheet.create({
   slot: { width: minTouch, height: minTouch },
   button: {
     borderRadius: radii.full,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    // Clips the ripple to the circle (design.md, Touch feedback).
-    overflow: 'hidden',
   },
   title: { flex: 1, textAlign: 'center' },
 });

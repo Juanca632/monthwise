@@ -29,6 +29,10 @@ jest.mock('expo-sqlite', () => ({
   },
 }));
 
+// expo-router's testing library swaps Reanimated for Reanimated's own mock, which has no
+// useReducedMotion ("ADD ME IF NEEDED"); its jest.mock runs on import, after any of ours.
+require('react-native-reanimated').useReducedMotion = () => false;
+
 const layout = require('@/app/_layout');
 
 const SECRET = 'Lunch 12,50 €';

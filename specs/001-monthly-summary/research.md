@@ -86,10 +86,17 @@ in beta (`next` tag) and is not used.
   (`formatToParts(1.5)` on the same formatter), not from `decimalSeparator`, so the form and the
   display can never disagree. Every formatter uses `numberingSystem: 'latn'`, so digits are
   always 0–9, which the parser accepts. The form's separator is `,` when `Intl` gives `,`, and
-  `.` in every other case (for example the Arabic `٫`). A unit test covers `ar-EG`. Display uses `Intl.NumberFormat(languageTag,
+  `.` in every other case (for example the Arabic `٫`). A unit test covers `ar-EG`. Display uses (dates: the form only; the list's
+  day headers and spoken dates are English constants, FR-029) `Intl.NumberFormat(languageTag,
   { style: 'currency', currency: 'EUR' })` and `Intl.DateTimeFormat(languageTag,
   { day: '2-digit', month: '2-digit', year: 'numeric' })`. Month names (header and spoken dates)
   come from an English constant list, since they are interface text (FR-029).
+- **Currency sign** (developer, 2026-10-06): a region outside the euro area formats EUR with
+  the code (`es-US`: `EUR 1,234.00`). The formatter therefore replaces the `currency` part with
+  `€`; when the sign comes before the number it also drops the space ICU inserts only between
+  a letter code and digits, so `es-US` gives `€1,234.00` and `es-ES` keeps `1.234,00 €`. A
+  plain string swap is used instead of `currencyDisplay: 'narrowSymbol'`, which Hermes support
+  for was not checked on the device.
 - **Formatting locale**: a typical user has English as the language and a European region,
   for example `en-ES`. Android's ICU data differs between OS versions, and older ones may not
   include `en_ES`, falling back to plain `en` (`€12.50`). So the result on one phone says nothing

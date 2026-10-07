@@ -1,7 +1,7 @@
-# Device checks: Hermes `Intl` output (T011)
+# Device checks
 
-Recorded on 2026-10-05 in Expo Go (Expo SDK 57, Hermes) on the developer's Android phone, with
-the temporary screen from T011 (research R7 and R13, quickstart scenario 11). These outputs are
+Hermes `Intl` output (T011), every section before "Glass spike": recorded on 2026-10-05 in Expo
+Go (Expo SDK 57, Hermes) on the developer's Android phone, with the temporary screen from T011 (research R7 and R13, quickstart scenario 11). These outputs are
 the expected values for the formatting tests in T019 and T020: where Node (Jest) differs, the
 device output wins.
 
@@ -62,3 +62,52 @@ Everything else above matches Node character for character, including the `ar-EG
 
 `useGrouping: 'min2'` has no effect on Hermes (`es-ES` 1234 still gives `1.234,00 €`). It is
 recorded only for reference; the app does not use it.
+
+## Glass spike (T057)
+
+Recorded on 2026-10-06 in Expo Go (Expo SDK 57, React Native 0.86) on the developer's Android
+phone, with the temporary `src/app/spike.tsx` (deleted at the end of block 8a). Every value came
+from design.md (Glass surfaces), drawn with `experimental_backgroundImage` and `boxShadow`, in
+light and dark and in both balance tones. design.md was updated with the results the same day.
+
+| Technique | Result | Decision |
+| --- | --- | --- |
+| Ambient glows (two `radial-gradient` disks, 340 and 300 dp plus a 70 dp fade) | Size, position and banding look right in light and dark | Keep |
+| `cardGlass` 160° `linear-gradient`, glass fills and borders | Look right | Keep |
+| Inset top highlight (`inset 0 1px 0`) and the card's outer shadow | Look right | Keep |
+| Accent glow (`0 12px 32px` accent, outer `boxShadow` on the button's wrapper) | A white rectangle around the button, at radius 999 and at half the height | Dropped from accent buttons and the selected chip |
+| Removing `borderWidth` at runtime from a view with a gradient | Expo Go closed | Borders are never removed at runtime; only their color changes |
+| `android_ripple` on a 48 dp circle with `overflow: 'hidden'`, radius 999 and 24 | A square ripple in both | Circular icon buttons use `borderless: true, radius: 24`, which the developer liked; other rounded pressables use a pressed overlay (design.md, Touch feedback) |
+| Clear-glass Add (glass fill, accent or plain border), then `expo-blur` (`dimezisBlurViewSdk31Plus`) with the iOS Liquid Glass layers (light blur, 10 % fill, lit rim, diagonal sheen) | The developer found it worse than the accent gradient, almost invisible in light | Add and Save keep the opaque accent gradient with the white border and highlight; `expo-blur` stays out |
+
+A translucent accent fill was not tried on the phone: by calculation, `onAccent` text drops
+below 4.5:1 (light 3.8:1 even at 85 % opacity).
+
+## Glass and motion (T071)
+
+The `design-reviewer` pass over `src/ui/`, `src/app/` and `theme.ts` ran on 2026-10-06 with no
+critical or major findings; its minor findings were fixed or listed below. The phone checks are
+the developer's single final pass (blocks 8b–8f were built back to back without stopping); each
+one gets a result here.
+
+| Check | Result |
+| --- | --- |
+| Light and dark: ambient glows (position, banding), card glass and the tone crossfade (positive ↔ negative) | Pending |
+| Card shadows: no white rectangle around the balance and breakdown cards (shadow on a wrapper) | Pending |
+| Ripples: month arrows and close are circles; first and last list row and Dismiss stay inside their card's corners | Pending |
+| Form borders: chips, Type track, Date and Note; focusing Note or a date error moves nothing | Pending |
+| Press scale and its spring (not too bouncy); entrance on a cold start; month slide; counting totals | Pending |
+| Sheet: opens over the summary, X / back / drag close it, "Discard changes?" on a dirty form, a second back while closing does nothing, Discard really closes | Pending |
+| Row changes: new row grows in, edited row flashes inside its card, deleted row slides out | Pending |
+| Keyboard (SC-001, default font, 360 × 640 dp or this phone): amount, all expense chips and Save fit above it; footer moves with it, not twice | Pending |
+| Type indicator, chip fill, invalid shake | Pending |
+| Haptics, and whether Android's touch-feedback setting silences them | Pending |
+| Toast over the closing sheet, "Saved" and "Deleted" | Pending |
+| Largest font: nothing cut off (balance, stat pills, form) | Pending |
+| TalkBack: summary labels, the Date field read once or twice (review finding), the failure message announced, the summary behind an open sheet not reachable | Pending |
+| "Remove animations": nothing moves; sheet closes at once; drag is off | Pending |
+| A seeded 1,000-row month scrolls smoothly; rough cold-start feel with the new libraries | Pending |
+
+Known minor items left for the fine-tuning pass: sizes such as 56, 52, 64, 40 and the 1.5 dp
+segment border are written in a few files instead of shared tokens; the chip's inner highlight
+now sits 1 dp lower (inside the border); for 220 ms a picked chip's label has lower contrast.

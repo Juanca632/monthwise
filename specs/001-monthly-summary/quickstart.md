@@ -29,11 +29,12 @@ npm run typecheck         # tsc --noEmit
 | Totals, balance, breakdown, percentages | Unit tests on a reference set of ≥ 50 transactions    | FR-015, FR-016, SC-002 |
 | Totals after creates, edits and deletes | Integration test: ≥ 50 repository operations, then summary | SC-002, FR-019 |
 | Note length with emojis                 | Unit tests, `countGraphemes`                          | FR-007          |
-| Money and date formatting per region    | Unit tests with `es-ES`, `en-GB`, `en-US`; separator taken from the same formatter | FR-005, FR-029 |
+| Money and date formatting per region    | Unit tests with `es-ES`, `en-GB`, `en-US`, `es-US` (always `€`); separator taken from the same formatter | FR-005, FR-029 |
+| Day groups                              | Unit tests for grouping and day names; component tests for headers, their labels and per-day cards | FR-017, FR-031 |
 | "Today", midnight and foreground        | Unit tests for `useToday` and `SelectedMonthContext` with a fake clock and `AppState` events | Spec edge case, FR-003 |
 | Month after save, reload on focus       | Component tests: after save the summary shows the saved date's month; focus triggers a reload without the loading state | FR-019, FR-020  |
 | Draft validation                        | Unit tests, `validation.ts`: date range 2000-01-01..today, category valid for type, note length | FR-006, FR-007, FR-008 |
-| Form defaults                           | Component tests: new form has Expense, amount focused, no category, date per FR-003 | FR-003 |
+| Form defaults                           | Component tests: new form has Expense, amount empty and not focused, no category, date per FR-003 | FR-003 |
 | Note typing and paste                   | Component test: pasting more than 100 emoji keeps exactly 100 | FR-007 |
 | Theme                                   | Component test: the palette follows a mocked `useColorScheme` (light and dark) | FR-030 |
 | Opens on current month; month limits    | Component tests: first render shows the current month; previous hidden on January 2000, next hidden on the current month | FR-014, FR-021 |
@@ -64,19 +65,29 @@ All must pass, with lint and type check, before a PR is merged (CI).
 8. **Discard**: change a field, press Android back → "Discard changes?".
 9. **Region and theme**: switch the phone region (Spain ↔ United Kingdom) and dark mode → amounts,
    dates and colors follow without losing data. Repeat the dark mode part on the preview APK.
-10. **Accessibility**: largest font size and TalkBack on → record an expense and hear the totals
-    (SC-007). Scroll to the end of a long list: the last row is not covered by **Add**. With
+10. **Accessibility**: largest font size and TalkBack on → the list's day headers ("Today",
+    "Yesterday", "Mon 5 Oct") read as headings with their net, and a long net moves under the
+    day; record an expense and hear the totals
+    (SC-007). In a month with more than 5 transactions, **See all** opens every one of them by day,
+    and Back returns to the summary; the last row clears the bottom edge. With
     `999.999,99 €`, a month total above 10 million and a 100-character note, nothing is cut off;
     the stat pills, rows and Date/Note switch to one column (design.md, Large text).
 11. **Intl on Hermes** (first task, then once per SDK upgrade): on the device, check the output of
     the money and date formatters for `es-ES`, `en-GB` and `en-ES` (English UI, Spanish region)
     against the unit test expectations, and check whether `Intl.Segmenter` exists.
-12. **SC-001 speed**: from the summary, record an expense with a stopwatch: tap **Add**, type the
-    amount, tap a category, tap **Save**. Pass: 4 interactions and under 10 s in 5 of 5 tries.
+12. **SC-001 speed**: from the summary, record an expense with a stopwatch: tap **Add**, tap the
+    amount, type it, tap a category, tap **Save**. Pass: 5 interactions and under 10 s in 5 of 5 tries.
 13. **SC-006 first use** (production-profile APK, which has no seed button, installed from the
     EAS download link on a phone with no dev server): give the app to at least 3 people with no instructions and ask
     them to "record that you spent 8 euros on lunch". Pass: all of them do it without help. Write
     down where anyone hesitated.
+14. **Smoothness** (preview APK or `npm start -- --no-dev --minify`, with the 1,000-row seed;
+    design.md, Performance rules): open and close forms from the summary and from **See all**,
+    save, edit and delete rows, and scroll fast. Pass: no visible frame drops; scrolling works as
+    soon as the sheet is gone; no strip of the sheet stays on screen; with the keyboard open only
+    Save rises, and the next form never starts with Save raised. Measured on the preview APK:
+    run `adb shell dumpsys gfxinfo io.github.juanca632.monthwise reset`, do the run above once,
+    then `adb shell dumpsys gfxinfo io.github.juanca632.monthwise`: "Janky frames" at most 5 %.
 
 ## Verification build (release APK)
 

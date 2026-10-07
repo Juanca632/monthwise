@@ -23,12 +23,30 @@ export type MonthSummary = {
 const keyOf = (m: YearMonth) => `${m.year}-${m.month}`;
 const NO_ROWS: readonly Transaction[] = [];
 
+const sameRows = (a: readonly Transaction[], b: readonly Transaction[]) =>
+  a.length === b.length &&
+  a.every((r, i) => {
+    const o = b[i];
+    return (
+      r.id === o.id &&
+      r.type === o.type &&
+      r.amountCents === o.amountCents &&
+      r.date === o.date &&
+      r.category === o.category &&
+      r.note === o.note &&
+      r.createdAt === o.createdAt
+    );
+  });
+
 // Once per app run: SC-004 is about the cold start, not later reloads.
 let firstQueryLogged = false;
 
 /**
  * Loads the month on screen: when the database becomes ready, when the month changes and every
- * time the screen gets focus (FR-019), so closing a form shows its change.
+ * time the screen gets focus (FR-019), so closing a form shows its change. Not while the form's
+ * sheet slides down: reloading then kept the JS thread busy, so the sheet's screen left late and
+ * blocked scrolling, and the row's animation played hidden under the sheet (fine-tuning
+ * 2026-10-07).
  */
 export function useMonthSummary(): MonthSummary {
   const db = useDatabase();
@@ -54,7 +72,12 @@ export function useMonthSummary(): MonthSummary {
           firstQueryLogged = true;
           logTiming('first-query', performance.now() - start);
         }
-        setData({ key: keyOf(selected), rows });
+        const nextKey = keyOf(selected);
+        // Focus reloads mostly bring back the same rows (e.g. leaving See all): keeping the old
+        // state lets React skip a full summary render in the middle of the back animation.
+        setData((prev) =>
+          prev?.key === nextKey && sameRows(prev.rows, rows) ? prev : { key: nextKey, rows },
+        );
         setFailedKey(null);
       },
       (e: unknown) => {
@@ -67,6 +90,7 @@ export function useMonthSummary(): MonthSummary {
 
   // Re-runs on focus and whenever `load` changes (database ready, month changed).
   useFocusEffect(load);
+
 
   const retry = useCallback(() => {
     // A retry starts from scratch, so it shows the loading state (contracts/ui-screens.md).
