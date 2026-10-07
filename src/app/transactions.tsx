@@ -6,7 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { monthTitle } from '@/format/date';
 import { useMonthSummary } from '@/hooks/useMonthSummary';
 import { useRegion } from '@/hooks/useRegion';
+import { handOffTransaction } from '@/state/openedTransaction';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
+import { useSheetOpener } from '@/state/SheetTransitionContext';
 import { useSummaryNotice } from '@/state/SummaryNoticeContext';
 import { BehindSheet } from '@/ui/BehindSheet';
 import { ShapePressable } from '@/ui/glass';
@@ -25,12 +27,15 @@ export default function AllTransactionsScreen() {
   const router = useRouter();
   const { tag } = useRegion();
   const { selected } = useSelectedMonth();
-  const { status, rows, retry } = useMonthSummary();
   const notice = useSummaryNotice();
+  const sheetOpener = useSheetOpener();
+  const { status, rows, retry } = useMonthSummary();
   const changes = useRowChanges(rows, status, notice.lastChange);
 
   const openTransaction = (id: number) => {
     notice.dismiss();
+    handOffTransaction(rows.find((r) => r.id === id));
+    sheetOpener.set('all');
     router.push({ pathname: '/transaction/[id]', params: { id: String(id) } });
   };
 
@@ -91,7 +96,7 @@ export default function AllTransactionsScreen() {
     );
 
   return (
-    <BehindSheet testID="all-transactions">
+    <BehindSheet screen="all" testID="all-transactions">
       <TransactionList
         rows={changes.rows}
         changeFor={changes.changeFor}

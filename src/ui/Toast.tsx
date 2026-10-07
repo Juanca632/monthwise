@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useToast, type ShownToast } from '@/state/ToastContext';
 
-import { durations, easeOut, useReduceMotion } from './motion';
+import { durations, easeIn, easeOut, useReduceMotion } from './motion';
 import { iconSize, insetHighlight, radii, spacing, useTheme } from './theme';
 
 const RISE = 16;
@@ -46,7 +46,7 @@ function ToastPill({ toast, onDone }: { toast: ShownToast; onDone(): void }) {
         withTiming(1, { duration: fade, easing: easeOut, ...never }),
         // Stays: a timing to the same value holds it for `stay`.
         withTiming(1, { duration: stay, ...never }),
-        withTiming(0, { duration: fade, easing: easeOut, ...never }),
+        withTiming(0, { duration: fade, easing: easeIn, ...never }),
       ),
     );
     if (!reduceMotion) risen.set(withTiming(1, { duration: fade, easing: easeOut, ...never }));

@@ -19,6 +19,8 @@ export type Palette = {
   textMuted: string;
   accent: string;
   onAccent: string;
+  /** Text on `error` (the dialog's destructive button). */
+  onError: string;
   accentSoft: string;
   income: string;
   incomeSoft: string;
@@ -86,6 +88,7 @@ export const palettes: Record<Scheme, Palette> = {
     textMuted: '#5B6472',
     accent: '#2F5BEA',
     onAccent: '#FFFFFF',
+    onError: '#FFFFFF',
     accentSoft: '#EAF0FF',
     income: '#0B6B5E',
     incomeSoft: '#E3F4EE',
@@ -130,6 +133,7 @@ export const palettes: Record<Scheme, Palette> = {
     textMuted: '#B0B8C6',
     accent: '#7D96FF',
     onAccent: '#0D0F13',
+    onError: '#0D0F13',
     accentSoft: '#1E2640',
     income: '#45D3A8',
     incomeSoft: '#12332C',
@@ -421,13 +425,15 @@ export function useTheme(): Theme {
  */
 export const categoryColors: Record<Scheme, Record<ExpenseCategory, string>> = {
   light: {
-    food: '#D9480F',
+    // Food and leisure darkened so their percent text reads at 4.5:1 on white (design review,
+    // 2026-10-07).
+    food: '#C2410C',
     transport: '#1864AB',
     housing: '#6741D9',
     bills: '#0B7285',
     health: '#C92A2A',
     shopping: '#A61E4D',
-    leisure: '#2B8A3E',
+    leisure: '#237032',
     other: '#495057',
   },
   dark: {

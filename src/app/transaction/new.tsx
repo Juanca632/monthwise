@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { useDatabase } from '@/data/DatabaseProvider';
 import { StorageError } from '@/data/errors';
@@ -19,6 +19,8 @@ export default function NewTransactionScreen() {
   const { whenReady } = useDatabase();
   const { selected, setSelected } = useSelectedMonth();
   const confirmChange = useConfirmChange();
+  // Runs once the sheet has slid down, so nothing re-renders the summary behind it mid-slide.
+  const afterClose = useRef<(() => void) | null>(null);
 
   // Computed once when the form opens (FR-003): today on the current month, otherwise the last
   // day of the month on screen.
@@ -42,9 +44,12 @@ export default function NewTransactionScreen() {
       return "Couldn't save. Your changes are still here.";
     }
     // Outside the try: the row is stored, so nothing here may turn it into a "Couldn't save".
-    confirmChange({ kind: 'created', id: created.id });
-    // FR-020: the summary shows the month the transaction landed in.
-    setSelected(monthOf(input.date));
+    const announce = confirmChange({ kind: 'created', id: created.id });
+    afterClose.current = () => {
+      announce();
+      // FR-020: the summary shows the month the transaction landed in.
+      setSelected(monthOf(input.date));
+    };
     return null;
   };
 
@@ -53,9 +58,12 @@ export default function NewTransactionScreen() {
     <Sheet header={<FormHeader title="Add transaction" onClose={() => router.back()} />}>
       <TransactionForm
         initial={initial}
-        autoFocusAmount
         onSave={save}
-        onDone={() => router.back()}
+        onDone={() => {
+          router.back();
+          afterClose.current?.();
+          afterClose.current = null;
+        }}
       />
     </Sheet>
   );

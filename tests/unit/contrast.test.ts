@@ -1,4 +1,4 @@
-import { cardTones, palettes, type BalanceTone, type Scheme } from '@/ui/theme';
+import { cardTones, categoryColors, palettes, type BalanceTone, type Scheme } from '@/ui/theme';
 
 // theme.ts reads whether the font is loaded; that needs native modules Jest does not have.
 jest.mock('expo-font', () => ({ isLoaded: () => true }));
@@ -121,15 +121,21 @@ describe.each(schemes)('%s form (flat look on formBackground)', (scheme) => {
     expect(ratio(blend(c.background, c.fieldBorder), parse(c.background))).toBeGreaterThanOrEqual(INDICATOR);
   });
 
-  it('Add keeps its white text readable at every gradient stop', () => {
-    const gradient = stops(c.accentGradient);
-    expect(gradient).toHaveLength(2);
-    for (const stop of gradient) {
-      expect(ratio(parse(cardTones[scheme].positive.cardInk), parse(stop))).toBeGreaterThanOrEqual(TEXT);
-    }
+  it('Add keeps its text readable on its glass pill over the background', () => {
+    expect(ratio(parse(c.text), blend(c.background, c.glassFillStrong))).toBeGreaterThanOrEqual(TEXT);
   });
 
   it('Save and the selected chip keep onAccent text readable on accent', () => {
     expect(ratio(parse(c.onAccent), parse(c.accent))).toBeGreaterThanOrEqual(TEXT);
+  });
+
+  it('every category color reads as text on its tile (the breakdown percent)', () => {
+    for (const color of Object.values(categoryColors[scheme])) {
+      expect(ratio(parse(color), parse(c.surface))).toBeGreaterThanOrEqual(TEXT);
+    }
+  });
+
+  it("the dialog's destructive button keeps onError text readable on error", () => {
+    expect(ratio(parse(c.onError), parse(c.error))).toBeGreaterThanOrEqual(TEXT);
   });
 });

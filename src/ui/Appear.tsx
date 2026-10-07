@@ -43,7 +43,7 @@ function planFor(motion: SummaryMotion | null, on: readonly Moment[], slot: numb
   }
   const sinceStart = now - motion.entranceStart;
   if (on.includes('entrance') && sinceStart < ENTRANCE_WINDOW) {
-    // 80 ms apart from the cold start. Content that arrives late (the first query) keeps the
+    // 60 ms apart from the cold start. Content that arrives late (the first query) keeps the
     // same spacing among itself instead of all appearing at once.
     const { entranceStagger: step } = durations;
     const delay = Math.max(slot * step - sinceStart, (slot - 1) * step, 0);

@@ -2,7 +2,7 @@ import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { useState } from 'react';
 import * as ReactNative from 'react-native';
-import { AccessibilityInfo, Alert, Text, TextInput } from 'react-native';
+import { AccessibilityInfo, Text, TextInput } from 'react-native';
 
 import { DatabaseProvider } from '@/data/DatabaseProvider';
 import { openAndMigrate } from '@/data/migrations';
@@ -10,6 +10,7 @@ import { createTransactionRepository, type Transaction } from '@/data/transactio
 import { SelectedMonthProvider, useSelectedMonth, type SelectedMonthValue } from '@/state/SelectedMonthContext';
 import { SummaryNoticeProvider } from '@/state/SummaryNoticeContext';
 
+import { answerDialog, dialogButtons, openDialog } from '../helpers/confirmDialog';
 import { openTestDatabase, type TestDatabase } from '../helpers/betterSqliteAdapter';
 
 jest.mock('@/hooks/useToday', () => ({
@@ -139,12 +140,11 @@ beforeEach(async () => {
   mockLeftWithoutPrompt.mockClear();
   jest.mocked(DateTimePickerAndroid.open).mockClear();
   mockLocale = { languageTag: 'es-ES', regionCode: 'ES' };
-  jest.spyOn(Alert, 'alert').mockClear();
   await readyDatabase();
 });
 
 describe('defaults (FR-003)', () => {
-  it('opens as an empty Expense dated today, with the amount focused', async () => {
+  it('opens as an empty Expense dated today, with the amount not focused', async () => {
     renderForm();
     await flush();
 
@@ -152,7 +152,9 @@ describe('defaults (FR-003)', () => {
     expect(screen.getByRole('radio', { name: 'Expense' }).props.accessibilityState).toEqual({ checked: true });
     expect(screen.getByRole('radio', { name: 'Income' }).props.accessibilityState).toEqual({ checked: false });
     expect(amountInput().props.value).toBe('');
-    expect(amountInput().props.autoFocus).toBe(true);
+    // No keyboard until the user taps the amount, so the whole form shows.
+    expect(amountInput().props.autoFocus).toBeFalsy();
+    expect(amountInput().props.placeholder).toBe('0,00');
     expect(amountInput().props.keyboardType).toBe('decimal-pad');
     expect(screen.getByText('15/10/2026')).toBeTruthy();
     for (const chip of ['Food', 'Transport', 'Housing', 'Bills', 'Health', 'Shopping', 'Leisure', 'Other']) {
@@ -167,15 +169,20 @@ describe('defaults (FR-003)', () => {
   });
 });
 
-it('records an expense in 4 interactions: open, type, chip, Save (SC-001)', async () => {
+it('records an expense in 5 interactions: open, tap the amount, type, chip, Save (SC-001)', async () => {
+  const focus = jest.spyOn(TextInput.prototype, 'focus');
+  focus.mockClear();
   renderForm(); // 1. open
   await flush();
   // Taps on chips and Save act right away even with the keyboard open.
   expect(screen.UNSAFE_getByType(ReactNative.ScrollView).props.keyboardShouldPersistTaps).toBe('handled');
 
-  typeAmount('12,50'); // 2. type
-  pressButton('Food'); // 3. chip
-  await save(); // 4. Save
+  fireEvent.press(amountInput()); // 2. tap the amount, which opens the keyboard
+  expect(focus).toHaveBeenCalledTimes(1);
+  focus.mockRestore();
+  typeAmount('12,50'); // 3. type
+  pressButton('Food'); // 4. chip
+  await save(); // 5. Save
 
   expect(rows()).toEqual([
     expect.objectContaining({
@@ -366,19 +373,47 @@ describe('"Discard changes?" (FR-010)', () => {
     typeAmount('5');
     await leave();
 
-    expect(Alert.alert).toHaveBeenCalledWith('Discard changes?', undefined, expect.any(Array));
-    const buttons = jest.mocked(Alert.alert).mock.calls[0][2]!;
-    expect(buttons.map((b) => b.text)).toEqual(['Keep editing', 'Discard']);
+    expect(openDialog()).toBe('Discard changes?');
+    expect(dialogButtons()).toEqual(['Keep editing', 'Discard']);
     expect(mockDispatch).not.toHaveBeenCalled();
-    act(() => buttons[1].onPress!());
+    answerDialog('Discard');
+    expect(openDialog()).toBeNull();
     expect(mockDispatch).toHaveBeenCalledWith(BACK);
   });
 
-  it('does not ask without changes', async () => {
+  it('Keep editing closes the dialog and keeps the form as it was', async () => {
+    renderForm();
+    await flush();
+    typeAmount('5');
+    await leave();
+
+    answerDialog('Keep editing');
+    expect(openDialog()).toBeNull();
+    expect(mockDispatch).not.toHaveBeenCalled();
+    expect(amountInput().props.value).toBe('5');
+  });
+
+  it('a tap outside the dialog cancels it, like Keep editing', async () => {
+    renderForm();
+    await flush();
+    typeAmount('5');
+    await leave();
+
+    // The backdrop is still at opacity 0 here (it fades in), which RNTL counts as hidden.
+    fireEvent.press(screen.getByTestId('confirm-dialog-backdrop', { includeHiddenElements: true }));
+    expect(openDialog()).toBeNull();
+    expect(mockDispatch).not.toHaveBeenCalled();
+  });
+
+  it('does not ask without changes, and takes the keyboard down with the sheet', async () => {
+    const dismiss = jest.spyOn(ReactNative.Keyboard, 'dismiss');
+    dismiss.mockClear();
     renderForm();
     await flush();
     await leave();
-    expect(Alert.alert).not.toHaveBeenCalled();
+    expect(dismiss).toHaveBeenCalled();
+    dismiss.mockRestore();
+    expect(openDialog()).toBeNull();
     // Every removal is held so the sheet can slide down first; a clean form then just goes.
     expect(mockGuard.prevent).toBe(true);
     expect(mockDispatch).toHaveBeenCalledWith(BACK);
@@ -390,7 +425,7 @@ describe('"Discard changes?" (FR-010)', () => {
     typeAmount('5');
     typeAmount('');
     await leave();
-    expect(Alert.alert).not.toHaveBeenCalled();
+    expect(openDialog()).toBeNull();
   });
 
   it('does not ask after a successful save', async () => {
@@ -403,7 +438,7 @@ describe('"Discard changes?" (FR-010)', () => {
 
     // router.back() reaches the guard, which lets it through.
     await leave();
-    expect(Alert.alert).not.toHaveBeenCalled();
+    expect(openDialog()).toBeNull();
     expect(mockDispatch).toHaveBeenCalledWith(BACK);
   });
 });
@@ -446,8 +481,15 @@ describe('saving', () => {
     fireEvent.press(dateBox());
     const { onValueChange } = jest.mocked(DateTimePickerAndroid.open).mock.calls[0][0];
     act(() => onValueChange!({ nativeEvent: { timestamp: 0, utcOffset: 0 } }, new Date(2026, 8, 30)));
+    // The month switches only once the sheet is gone: when the form navigates back, the summary
+    // behind it has not been touched yet, so nothing re-renders it mid-slide.
+    let monthAtBack: unknown = null;
+    mockBack.mockImplementationOnce(() => {
+      monthAtBack = month.current!.selected;
+    });
     await save();
 
+    expect(monthAtBack).toEqual({ year: 2026, month: 10 });
     expect(month.current!.selected).toEqual({ year: 2026, month: 9 });
     expect((rows()[0] as Pick<Transaction, 'date'>).date).toBe('2026-09-30');
   });

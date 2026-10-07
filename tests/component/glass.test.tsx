@@ -46,16 +46,16 @@ describe('AmbientBackground', () => {
     expect(opacityOf('ambient-glow-positive')).toBe(0);
   });
 
-  it('crossfades to the new tone over 600 ms', () => {
+  it('crossfades to the new tone over 300 ms (standard)', () => {
     render(<AmbientBackground tone="positive" />);
     screen.rerender(<AmbientBackground tone="negative" />);
 
-    act(() => jest.advanceTimersByTime(300));
+    act(() => jest.advanceTimersByTime(150));
     const halfway = opacityOf('ambient-glow-negative');
     expect(halfway).toBeGreaterThan(0);
     expect(halfway).toBeLessThan(1);
 
-    act(() => jest.advanceTimersByTime(400));
+    act(() => jest.advanceTimersByTime(200));
     expect(opacityOf('ambient-glow-negative')).toBe(1);
     expect(opacityOf('ambient-glow-positive')).toBe(0);
   });
@@ -76,12 +76,12 @@ describe('balance card (FR-015)', () => {
     expect(opacityOf('card-glass-positive')).toBe(1);
 
     screen.rerender(balanceCard(-1000));
-    act(() => jest.advanceTimersByTime(300));
+    act(() => jest.advanceTimersByTime(150));
     const halfway = opacityOf('card-glass-negative');
     expect(halfway).toBeGreaterThan(0);
     expect(halfway).toBeLessThan(1);
 
-    act(() => jest.advanceTimersByTime(400));
+    act(() => jest.advanceTimersByTime(200));
     expect(opacityOf('card-glass-negative')).toBe(1);
     expect(opacityOf('card-glass-positive')).toBe(0);
     // The label is built from the data, never from the fading layers.

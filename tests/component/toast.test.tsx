@@ -65,7 +65,7 @@ it.each([
 ] as const)('%o shows "%s" and announces it once', (change, message) => {
   renderApp();
   expect(toast()).toBeNull();
-  act(() => confirm.current!(change));
+  act(() => confirm.current!(change)());
   expect(screen.getByText(message, { includeHiddenElements: true })).toBeTruthy();
   expect(announce).toHaveBeenCalledTimes(1);
   expect(announce).toHaveBeenCalledWith(message);
@@ -73,7 +73,7 @@ it.each([
 
 it('sits 28 dp above the bottom inset, ignores touches and is not a focus stop', () => {
   renderApp();
-  act(() => confirm.current!({ kind: 'created', id: 1 }));
+  act(() => confirm.current!({ kind: 'created', id: 1 })());
   const style = StyleSheet.flatten(toast()!.props.style);
   expect(style.bottom).toBe(28 + INSETS.bottom);
   expect(toast()!.props.pointerEvents).toBe('none');
@@ -82,7 +82,7 @@ it('sits 28 dp above the bottom inset, ignores touches and is not a focus stop',
 
 it('rises 16 dp while fading in, then fades out and is gone after about 1.8 s', () => {
   renderApp();
-  act(() => confirm.current!({ kind: 'created', id: 1 }));
+  act(() => confirm.current!({ kind: 'created', id: 1 })());
   expect(motion().transform[0].translateY).toBe(16);
   wait(300);
   expect(motion()).toMatchObject({ opacity: 1, transform: [{ translateY: 0 }] });
@@ -93,7 +93,7 @@ it('rises 16 dp while fading in, then fades out and is gone after about 1.8 s', 
 it('fades without moving under reduce motion', () => {
   mockReduceMotion.mockReturnValue(true);
   renderApp();
-  act(() => confirm.current!({ kind: 'deleted', id: 1 }));
+  act(() => confirm.current!({ kind: 'deleted', id: 1 })());
   expect(motion().transform[0].translateY).toBe(0);
   wait(100);
   const opacity = motion().opacity;

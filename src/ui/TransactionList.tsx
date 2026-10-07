@@ -1,6 +1,7 @@
-import { useMemo, type ReactElement } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, type ReactElement } from 'react';
 import { Feather } from '@expo/vector-icons';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import type { Transaction } from '@/data/transactionRepository';
 import { labelFor, type CategoryKey } from '@/domain/categories';
@@ -11,7 +12,7 @@ import { formatMoney, formatSignedMoney, spokenMoney } from '@/format/money';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
 
 import { Appear, MAX_ANIMATED_ROWS } from './Appear';
-import { PressableScale } from './motion';
+import { durations, easeOut, PressableScale, useReduceMotion } from './motion';
 import { RowMotion, type RowChange } from './RowMotion';
 import { categoryLook } from './categoryLook';
 import { ShapePressable } from './glass';
@@ -41,6 +42,8 @@ type Props = {
 type Item =
   | { kind: 'day'; key: string; date: IsoDate; netCents: number; first: boolean }
   | { kind: 'row'; key: string; row: Transaction; first: boolean; last: boolean };
+
+const rowShift = LinearTransition.duration(durations.rowShift).easing(easeOut);
 
 /** Rows grouped by day (FR-017), flattened so one FlatList still draws only what is visible. */
 function itemsOf(rows: readonly Transaction[], limit: number): Item[] {
@@ -82,10 +85,41 @@ export function TransactionList({
   bottomPadding,
 }: Props) {
   const items = useMemo(() => itemsOf(rows, limit), [rows, limit]);
+  const reduceMotion = useReduceMotion();
+
+  // One stable press handler, so a screen's new callback on each render does not redraw rows.
+  const onPressRef = useRef(onPressItem);
+  useEffect(() => {
+    onPressRef.current = onPressItem;
+  }, [onPressItem]);
+  const pressItem = useCallback((id: number) => onPressRef.current?.(id), []);
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: Item; index: number }) => (
+      <ListCell
+        item={item}
+        index={index}
+        tag={tag}
+        change={item.kind === 'row' ? (changeFor?.(item.row.id) ?? null) : null}
+        onPress={pressItem}
+      />
+    ),
+    [tag, changeFor, pressItem],
+  );
+
   return (
-    <FlatList
+    <Animated.FlatList
       data={items}
       keyExtractor={(item) => item.key}
+      // A month can hold 1,000 transactions: mount about a screen at first and a few screens
+      // around the visible one as it scrolls, instead of FlatList's default 21 screens, so opening
+      // a form or deleting never competes with mounting hundreds of rows (fine-tuning 2026-10-07).
+      initialNumToRender={12}
+      maxToRenderPerBatch={8}
+      windowSize={5}
+      // When a row comes or goes, the others glide to their places natively; under reduce motion
+      // they jump (fine-tuning 2026-10-07).
+      itemLayoutAnimation={reduceMotion ? undefined : rowShift}
       ListHeaderComponent={
         <>
           {header}
@@ -95,29 +129,70 @@ export function TransactionList({
       ListEmptyComponent={empty}
       ListFooterComponent={footer}
       contentContainerStyle={{ paddingBottom: bottomPadding }}
-      renderItem={({ item, index }) => (
-        // Only the first screen's items can animate (SC-004). Every item keeps the same wrapper,
-        // so one crossing index 8 after a delete is not remounted.
-        <Appear on={['entrance', 'month']} slot={2 + index} enabled={index < MAX_ANIMATED_ROWS}>
-          {item.kind === 'day' ? (
-            <DayHeader date={item.date} netCents={item.netCents} first={item.first} tag={tag} />
-          ) : (
-            <RowMotion
-              change={changeFor?.(item.row.id) ?? null}
-              flashShape={[styles.flashShape, item.first && styles.firstCard, item.last && styles.lastCard]}
-            >
-              <TransactionRow
-                row={item.row}
-                tag={tag}
-                first={item.first}
-                last={item.last}
-                onPress={onPressItem}
-              />
-            </RowMotion>
-          )}
-        </Appear>
-      )}
+      renderItem={renderItem}
     />
+  );
+}
+
+type CellProps = {
+  item: Item;
+  index: number;
+  tag: string;
+  change: RowChange | null;
+  onPress(id: number): void;
+};
+
+/**
+ * One list item. Memoized by content: a reload brings new row objects for the whole month, but
+ * only the items whose values, place in their day card or change differ are drawn again.
+ */
+const ListCell = memo(function ListCell({ item, index, tag, change, onPress }: CellProps) {
+  return (
+    // Only the first screen's items can animate (SC-004). Every item keeps the same wrapper, so
+    // one crossing index 8 after a delete is not remounted.
+    <Appear on={['entrance', 'month']} slot={2 + index} enabled={index < MAX_ANIMATED_ROWS}>
+      {item.kind === 'day' ? (
+        <DayHeader date={item.date} netCents={item.netCents} first={item.first} tag={tag} />
+      ) : (
+        <RowMotion
+          change={change}
+          flashShape={[styles.flashShape, item.first && styles.firstCard, item.last && styles.lastCard]}
+        >
+          <TransactionRow row={item.row} tag={tag} first={item.first} last={item.last} onPress={onPress} />
+        </RowMotion>
+      )}
+    </Appear>
+  );
+}, sameCell);
+
+// `index` is left out: Appear reads it only at mount, so rows that move up after a delete are
+// not drawn again.
+function sameCell(a: CellProps, b: CellProps): boolean {
+  if (a.tag !== b.tag || a.change !== b.change || a.onPress !== b.onPress) {
+    return false;
+  }
+  const x = a.item;
+  const y = b.item;
+  if (x.kind === 'day' || y.kind === 'day') {
+    return (
+      x.kind === 'day' &&
+      y.kind === 'day' &&
+      x.date === y.date &&
+      x.netCents === y.netCents &&
+      x.first === y.first
+    );
+  }
+  const r = x.row;
+  const s = y.row;
+  return (
+    x.first === y.first &&
+    x.last === y.last &&
+    r.id === s.id &&
+    r.type === s.type &&
+    r.amountCents === s.amountCents &&
+    r.date === s.date &&
+    r.category === s.category &&
+    r.note === s.note
   );
 }
 

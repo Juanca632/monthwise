@@ -7,7 +7,9 @@ import type { YearMonth } from '@/domain/month';
 import { useMonthSummary } from '@/hooks/useMonthSummary';
 import { useRegion } from '@/hooks/useRegion';
 import { haptics } from '@/lib/haptics';
+import { handOffTransaction } from '@/state/openedTransaction';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
+import { useSheetOpener } from '@/state/SheetTransitionContext';
 import { useSummaryNotice } from '@/state/SummaryNoticeContext';
 import { Appear, SummaryMotionProvider, type SummaryMotion } from '@/ui/Appear';
 import { Breakdown } from '@/ui/Breakdown';
@@ -56,9 +58,10 @@ function useSummaryMotion(): SummaryMotion {
 export default function SummaryScreen() {
   const insets = useSafeAreaInsets();
   const { tag } = useRegion();
+  const notice = useSummaryNotice();
+  const sheetOpener = useSheetOpener();
   const { status, rows, summary, retry } = useMonthSummary();
   const router = useRouter();
-  const notice = useSummaryNotice();
   const motion = useSummaryMotion();
   // The totals come from the stored rows; the list may still show a deleted row leaving.
   const changes = useRowChanges(rows, status, notice.lastChange);
@@ -73,6 +76,8 @@ export default function SummaryScreen() {
   const openTransaction = (id: number) => {
     // The banner is about an earlier attempt; opening another transaction clears it.
     notice.dismiss();
+    handOffTransaction(rows.find((r) => r.id === id));
+    sheetOpener.set('summary');
     router.push({ pathname: '/transaction/[id]', params: { id: String(id) } });
   };
 
@@ -90,12 +95,13 @@ export default function SummaryScreen() {
 
   const addTransaction = () => {
     haptics.add();
+    sheetOpener.set('summary');
     router.push('/transaction/new');
   };
 
   return (
     <SummaryMotionProvider value={motion}>
-      <BehindSheet testID="summary-content">
+      <BehindSheet screen="summary" testID="summary-content">
         <TransactionList
           rows={changes.rows}
           changeFor={changes.changeFor}

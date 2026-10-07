@@ -1,7 +1,7 @@
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { useState } from 'react';
-import { AccessibilityInfo, Alert } from 'react-native';
+import { AccessibilityInfo } from 'react-native';
 
 import { DatabaseProvider } from '@/data/DatabaseProvider';
 import { openAndMigrate } from '@/data/migrations';
@@ -10,6 +10,7 @@ import type { TransactionInput } from '@/domain/validation';
 import { SelectedMonthProvider, useSelectedMonth, type SelectedMonthValue } from '@/state/SelectedMonthContext';
 import { SummaryNoticeProvider } from '@/state/SummaryNoticeContext';
 
+import { answerDialog, openDialog } from '../helpers/confirmDialog';
 import { ignoreListBatchingWarnings } from '../helpers/listWarnings';
 import { openTestDatabase, type TestDatabase } from '../helpers/betterSqliteAdapter';
 
@@ -172,29 +173,38 @@ async function saveForm() {
   await flush();
 }
 
-/** Answers the last native dialog with the button that has this text. */
-function answerDialog(text: string) {
-  const buttons = jest.mocked(Alert.alert).mock.calls.at(-1)![2]!;
-  // Cancel has no handler: the native dialog just closes.
-  act(() => buttons.find((b) => b.text === text)!.onPress?.());
-}
-
 ignoreListBatchingWarnings();
 
 beforeEach(() => {
   mockOpen.mockReset();
   mockDispatch.mockClear();
   jest.mocked(DateTimePickerAndroid.open).mockClear();
-  jest.spyOn(Alert, 'alert').mockClear();
   jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockClear();
   jest.spyOn(AccessibilityInfo, 'setAccessibilityFocus').mockImplementation(() => {});
   jest.mocked(AccessibilityInfo.setAccessibilityFocus).mockClear();
 });
 
 describe('opening (FR-011)', () => {
-  it('shows a loading state, then the stored values in the region format', async () => {
+  it('from the list, shows the stored values in the region format right away', async () => {
     await renderApp([lunch]);
     fireEvent.press(screen.getByRole('button', { name: /^Expense, Food/ }));
+
+    // The list hands the row over, so the form mounts before the sheet opens: no loading state.
+    expect(formOpen()).toBe(true);
+    expect(screen.queryAllByLabelText('Loading')).toHaveLength(0);
+    expect(amountInput().props.value).toBe('12,50');
+
+    await flush();
+    expect(amountInput().props.value).toBe('12,50');
+    expect(chip('Food').props.accessibilityState).toEqual({ selected: true });
+    expect(screen.getByLabelText(/^Note \(optional\)/).props.value).toBe('lunch');
+    expect(screen.getByText('05/10/2026')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeTruthy();
+  });
+
+  it('without a row from the list (a link), shows a loading state, then the stored values', async () => {
+    await renderApp([lunch]);
+    act(() => mockNav.open(String(stored()[0].id)));
 
     expect(formOpen()).toBe(true);
     expect(screen.getAllByLabelText('Loading').length).toBeGreaterThan(0);
@@ -203,9 +213,6 @@ describe('opening (FR-011)', () => {
     await flush();
     expect(amountInput().props.value).toBe('12,50');
     expect(chip('Food').props.accessibilityState).toEqual({ selected: true });
-    expect(screen.getByLabelText(/^Note \(optional\)/).props.value).toBe('lunch');
-    expect(screen.getByText('05/10/2026')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Delete' })).toBeTruthy();
   });
 
   it('closes and shows a banner when the transaction cannot be loaded (FR-025)', async () => {
@@ -281,12 +288,12 @@ describe('editing', () => {
     await renderApp([lunch]);
     await openRow('Expense, Food');
     act(() => mockGuard.callback!({ data: { action: BACK } }));
-    expect(Alert.alert).not.toHaveBeenCalled();
+    expect(openDialog()).toBeNull();
     expect(mockDispatch).toHaveBeenCalledWith(BACK);
 
     fireEvent.changeText(amountInput(), '13');
     act(() => mockGuard.callback!({ data: { action: BACK } }));
-    expect(Alert.alert).toHaveBeenCalledWith('Discard changes?', undefined, expect.any(Array));
+    expect(openDialog()).toBe('Discard changes?');
   });
 
   it('a stored date after today is flagged on Save, and kept until another is picked', async () => {
@@ -366,7 +373,7 @@ describe('deleting (FR-013)', () => {
     await openRow('Expense, Food');
     press('Delete');
 
-    expect(Alert.alert).toHaveBeenCalledWith('Delete this transaction?', undefined, expect.any(Array));
+    expect(openDialog()).toBe('Delete this transaction?');
     expect(stored()).toHaveLength(2);
     answerDialog('Delete');
     await flush();

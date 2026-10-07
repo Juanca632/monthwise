@@ -1,11 +1,11 @@
 import { act, render, screen } from '@testing-library/react-native';
-import { getAnimatedStyle, makeMutable } from 'react-native-reanimated';
+import { getAnimatedStyle, KeyboardState, makeMutable } from 'react-native-reanimated';
 
 import { Sheet } from '@/ui/Sheet';
 import { FormHeader, TransactionForm } from '@/ui/TransactionForm';
 
 // T068 (design.md, Transaction form, "Keyboard open"): the footer follows the keyboard.
-const mockKeyboard = { height: makeMutable(0), state: makeMutable(0) };
+const mockKeyboard = { height: makeMutable(0), state: makeMutable(4) };
 jest.mock('react-native-reanimated', () => ({
   __esModule: true,
   ...jest.requireActual('react-native-reanimated'),
@@ -34,12 +34,13 @@ jest.mock('expo-router/react-navigation', () => ({ usePreventRemove: () => {} })
 const REST = 28 + INSETS.bottom;
 const GAP = 12;
 
-function renderForm() {
+function renderForm({ withDelete = false } = {}) {
   render(
     <Sheet header={<FormHeader title="Add transaction" onClose={jest.fn()} />}>
       <TransactionForm
         initial={{ type: 'expense', amountText: '', date: '2026-10-15', category: null, note: '' }}
         onSave={async () => null}
+        onDelete={withDelete ? async () => null : undefined}
         onDone={jest.fn()}
       />
     </Sheet>,
@@ -51,15 +52,17 @@ const footerLift = () => {
   return -style.transform[0].translateY;
 };
 const spacer = () => (getAnimatedStyle(screen.getByTestId('keyboard-spacer')) as { height: number }).height;
-const keyboardAt = (height: number) =>
+const keyboardAt = (height: number, state = height > 0 ? KeyboardState.OPEN : KeyboardState.CLOSED) =>
   act(() => {
     mockKeyboard.height.value = height;
+    mockKeyboard.state.value = state;
     jest.advanceTimersByTime(16);
   });
 
 beforeEach(() => {
   jest.useFakeTimers();
   mockKeyboard.height.value = 0;
+  mockKeyboard.state.value = KeyboardState.CLOSED;
 });
 afterEach(() => jest.useRealTimers());
 
@@ -101,4 +104,34 @@ it('tightens the amount block from 32/24 to 16/12 as the keyboard comes up', () 
   expect(padding()).toMatchObject({ paddingTop: 24, paddingBottom: 18 });
   keyboardAt(300);
   expect(padding()).toMatchObject({ paddingTop: 16, paddingBottom: 12 });
+});
+
+it('folds Delete away as the keyboard opens, so only Save rides above it', () => {
+  renderForm({ withDelete: true });
+  const slot = () => getAnimatedStyle(screen.getByTestId('delete-slot')) as { height: number; opacity: number };
+  keyboardAt(0);
+  expect(slot()).toMatchObject({ height: 48, opacity: 1 });
+  keyboardAt(60);
+  expect(slot()).toMatchObject({ height: 24, opacity: 0.5 });
+  keyboardAt(300);
+  expect(slot()).toMatchObject({ height: 0, opacity: 0 });
+});
+
+it("gives the footer the sheet's fill, so nothing shows through it over the fields", () => {
+  renderForm();
+  expect(screen.getByTestId('form-footer').props.style).toEqual(
+    expect.arrayContaining([expect.objectContaining({ backgroundColor: expect.any(String) })]),
+  );
+});
+
+it('ignores a height left over from a keyboard the form never saw close', () => {
+  renderForm({ withDelete: true });
+  keyboardAt(300, KeyboardState.CLOSED);
+  expect(footerLift()).toBe(0);
+  expect(spacer()).toBe(0);
+  keyboardAt(300, KeyboardState.UNKNOWN);
+  expect(footerLift()).toBe(0);
+  // While it closes, the footer still follows it down.
+  keyboardAt(150, KeyboardState.CLOSING);
+  expect(footerLift()).toBe(150 + GAP - REST);
 });

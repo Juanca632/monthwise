@@ -55,8 +55,11 @@ export function Totals({ header, content, tag }: Props) {
   return (
     <GlassCard
       radius={radii.balanceCard}
-      border={tone.cardRim}
-      highlight
+      // No rim or top highlight: the deep hue reads as the card's edge (fine-tuning 2026-10-07).
+      // `cardContent` also drops the 1 dp border width, or the page shows through that ring as a
+      // thin light line; the base fill covers the rounded edges' antialiasing.
+      border="transparent"
+      fill={tone.cardBackground}
       shadow={tone.cardShadow}
       style={styles.card}
       contentStyle={styles.cardContent}
@@ -202,7 +205,7 @@ function StatPill({ label, cents, shownCents, tag, tone, icon, iconColor, iconBa
 
 const styles = StyleSheet.create({
   card: { marginHorizontal: spacing.sm },
-  cardContent: { padding: spacing.sm, paddingBottom: spacing.md },
+  cardContent: { borderWidth: 0, padding: spacing.sm, paddingBottom: spacing.md },
   centered: { textAlign: 'center' },
   loading: { height: 120, alignItems: 'center', justifyContent: 'center' },
   error: {

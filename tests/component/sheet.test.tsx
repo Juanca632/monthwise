@@ -1,5 +1,4 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
-import { Alert, type AlertButton } from 'react-native';
 import { State } from 'react-native-gesture-handler';
 import { fireGestureHandler, getByGestureTestId } from 'react-native-gesture-handler/jest-utils';
 import { getAnimatedStyle } from 'react-native-reanimated';
@@ -7,6 +6,8 @@ import { getAnimatedStyle } from 'react-native-reanimated';
 import type { TransactionDraft } from '@/domain/validation';
 import { Sheet } from '@/ui/Sheet';
 import { FormHeader, TransactionForm, type FormResult } from '@/ui/TransactionForm';
+
+import { answerDialog, openDialog } from '../helpers/confirmDialog';
 
 // The sheet's motion (design.md, Motion, "Sheet" and "Drag the sheet"), with animations on:
 // suites default to reduce motion (tests/setup/motion.ts).
@@ -72,8 +73,6 @@ const sheetOffset = () => {
 };
 const wait = (ms: number) => act(() => jest.advanceTimersByTime(ms));
 const flush = () => act(async () => {});
-const alertButton = (text: string) =>
-  (jest.mocked(Alert.alert).mock.calls.at(-1)![2] as AlertButton[]).find((b) => b.text === text)!;
 const drag = (translationY: number, velocityY = 0) =>
   act(() =>
     fireGestureHandler(getByGestureTestId('sheet-drag'), [
@@ -89,12 +88,10 @@ beforeEach(() => {
   mockDispatch.mockClear();
   mockBack.mockClear();
   mockGuard.callback = null;
-  jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 });
 
 afterEach(() => {
   jest.useRealTimers();
-  jest.mocked(Alert.alert).mockRestore();
 });
 
 describe('the sheet (T066)', () => {
@@ -105,6 +102,18 @@ describe('the sheet (T066)', () => {
     expect(sheetOffset()).toBe(0);
     const handle = screen.getByTestId('grab-handle', { includeHiddenElements: true });
     expect(handle.props.importantForAccessibility).toBe('no-hide-descendants');
+  });
+
+  it('slides down by its own measured height, so no strip stays on screen', () => {
+    renderSheet();
+    wait(500);
+    // Taller than the window height minus its top: Android's navigation bar is part of it.
+    act(() => {
+      fireEvent(screen.getByTestId('sheet'), 'layout', { nativeEvent: { layout: { height: 900 } } });
+    });
+    act(() => mockBack());
+    wait(350);
+    expect(sheetOffset()).toBe(900);
   });
 
   it('back on a clean form slides down before navigating', () => {
@@ -124,7 +133,7 @@ describe('the sheet (T066)', () => {
     wait(500);
     fireEvent.changeText(screen.getByTestId('amount-input'), '5');
     act(() => mockBack());
-    expect(Alert.alert).toHaveBeenCalledWith('Discard changes?', undefined, expect.any(Array));
+    expect(openDialog()).toBe('Discard changes?');
     wait(500);
     expect(mockDispatch).not.toHaveBeenCalled();
     expect(sheetOffset()).toBe(0);
@@ -135,7 +144,7 @@ describe('the sheet (T066)', () => {
     wait(500);
     fireEvent.changeText(screen.getByTestId('amount-input'), '5');
     act(() => mockBack());
-    act(() => alertButton('Discard').onPress!());
+    answerDialog('Discard');
     expect(mockDispatch).not.toHaveBeenCalled();
     wait(350);
     expect(mockDispatch).toHaveBeenCalledTimes(1);
@@ -160,7 +169,7 @@ describe('the sheet (T066)', () => {
     const { onDone } = renderSheet(SAVED, { onDelete: async () => null });
     wait(500);
     fireEvent.press(screen.getByRole('button', { name: 'Delete' }));
-    act(() => alertButton('Delete').onPress!());
+    answerDialog('Delete');
     await flush();
     expect(onDone).not.toHaveBeenCalled();
     wait(350);
@@ -187,7 +196,7 @@ describe('the sheet (T066)', () => {
     wait(250);
     expect(onDone).toHaveBeenCalledTimes(1);
     expect(mockDispatch).toHaveBeenCalledTimes(1);
-    expect(Alert.alert).not.toHaveBeenCalled();
+    expect(openDialog()).toBeNull();
   });
 
   it('a back during the slide after Discard does not ask again', () => {
@@ -195,9 +204,9 @@ describe('the sheet (T066)', () => {
     wait(500);
     fireEvent.changeText(screen.getByTestId('amount-input'), '5');
     act(() => mockBack());
-    act(() => alertButton('Discard').onPress!());
+    answerDialog('Discard');
     act(() => mockBack());
-    expect(Alert.alert).toHaveBeenCalledTimes(1);
+    expect(openDialog()).toBeNull();
     wait(350);
     expect(mockDispatch).toHaveBeenCalledTimes(1);
   });
@@ -246,7 +255,7 @@ describe('drag to close (T067)', () => {
     wait(500);
     fireEvent.changeText(screen.getByTestId('amount-input'), '5');
     drag(600);
-    expect(Alert.alert).toHaveBeenCalledWith('Discard changes?', undefined, expect.any(Array));
+    expect(openDialog()).toBe('Discard changes?');
     wait(1000);
     expect(mockDispatch).not.toHaveBeenCalled();
     expect(sheetOffset()).toBeCloseTo(0, 0);

@@ -1,5 +1,4 @@
 import { act, render, screen } from '@testing-library/react-native';
-import { getAnimatedStyle } from 'react-native-reanimated';
 
 import { DatabaseProvider } from '@/data/DatabaseProvider';
 import { openAndMigrate } from '@/data/migrations';
@@ -112,28 +111,39 @@ afterEach(() => jest.useRealTimers());
 
 const MONTH = [expense(100, '2026-10-01'), expense(200, '2026-10-02'), expense(300, '2026-10-03')];
 
-it('grows in only the created row', async () => {
+it('shows a created row with no motion of its own: only the rows around it move', async () => {
   await renderSummary(MONTH);
   const created = await repository.create(expense(400, '2026-10-04'), 99);
   await changeAndReload({ kind: 'created', id: created.id });
 
-  expect(changed()).toHaveLength(1);
-  expect(changed()[0].props.testID).toBe('row-created');
-  const style = getAnimatedStyle(changed()[0]) as { opacity: number; height: number };
-  expect(style.opacity).toBe(0);
-  expect(style.height).toBe(0);
+  expect(changed()).toHaveLength(0);
+  expect(screen.getAllByLabelText(/^Expense, Food/)).toHaveLength(4);
 });
 
-it('grows in a row saved into another month once that month has loaded (FR-020)', async () => {
+it('waits for focus to reload, so nothing competes with the sheet sliding down', async () => {
   await renderSummary(MONTH);
-  const created = await repository.create(expense(400, '2026-09-20'), 99);
-  // What the add form does: record the change, then show the row's month.
+  const [row] = await repository.listByMonth({ year: 2026, month: 10 });
+  await repository.update(row.id, expense(999, row.date));
+  act(() => notice.current!.recordChange({ kind: 'updated', id: row.id }));
+  await flush();
+  expect(changed()).toHaveLength(0);
+
+  await act(async () => mockFocus.current!());
+  await flush();
+  expect(changed().map((n) => n.props.testID)).toEqual(['row-updated']);
+});
+
+it('flashes a row edited into another month once that month has loaded (FR-020)', async () => {
+  await renderSummary(MONTH);
+  const [row] = await repository.listByMonth({ year: 2026, month: 10 });
+  await repository.update(row.id, expense(999, '2026-09-20'));
+  // What the edit form does: record the change, then show the row's month.
   act(() => {
-    notice.current!.recordChange({ kind: 'created', id: created.id });
+    notice.current!.recordChange({ kind: 'updated', id: row.id });
     month.current!.setSelected({ year: 2026, month: 9 });
   });
   await flush();
-  expect(changed().map((n) => n.props.testID)).toEqual(['row-created']);
+  expect(changed().map((n) => n.props.testID)).toEqual(['row-updated']);
 });
 
 it('flashes only the edited row, once the reload shows its new values', async () => {
@@ -150,38 +160,15 @@ it('flashes only the edited row, once the reload shows its new values', async ()
   expect(screen.getByLabelText(/^Expense, Food, 9,99/)).toBeTruthy();
 });
 
-it('slides a deleted row out, then drops it', async () => {
+it('removes a deleted row with no motion of its own once the reload drops it', async () => {
   await renderSummary(MONTH);
   const [row] = await repository.listByMonth({ year: 2026, month: 10 });
   await repository.remove(row.id);
   await changeAndReload({ kind: 'deleted', id: row.id });
 
-  expect(changed().map((n) => n.props.testID)).toEqual(['row-deleted']);
-  // It cannot be opened on its way out, and the totals already exclude it.
-  expect(changed()[0].props.pointerEvents).toBe('none');
-  expect(screen.getByLabelText('Expenses, 3,00 €')).toBeTruthy();
-
-  wait(300);
   expect(changed()).toHaveLength(0);
   expect(screen.getAllByLabelText(/^Expense, Food/)).toHaveLength(2);
-});
-
-it('under reduce motion fades without moving or growing', async () => {
-  mockReduceMotion.mockReturnValue(true);
-  await renderSummary(MONTH);
-  const [row] = await repository.listByMonth({ year: 2026, month: 10 });
-  await repository.remove(row.id);
-  await changeAndReload({ kind: 'deleted', id: row.id });
-
-  const style = getAnimatedStyle(changed()[0]) as {
-    height: number | string;
-    transform: [{ translateX: number }, { scale: number }];
-  };
-  expect(style.height).toBe('auto');
-  expect(style.transform).toEqual([{ translateX: 0 }, { scale: 1 }]);
-  // Gone within the 200 ms fade.
-  wait(210);
-  expect(changed()).toHaveLength(0);
+  expect(screen.getByLabelText('Expenses, 3,00 €')).toBeTruthy();
 });
 
 it('shows the error and animates nothing when the reload fails, even after a later retry', async () => {

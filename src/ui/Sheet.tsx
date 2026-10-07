@@ -15,14 +15,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useSheetProgress } from '@/state/SheetTransitionContext';
 
-import { easeIn, sheetCurve, spring, useReduceMotion } from './motion';
+import { durations, easeIn, easeOut, spring, useReduceMotion } from './motion';
 import { radii, spacing, useTheme } from './theme';
 
 /** The sheet's top edge sits this far below the status bar, so the summary shows above it. */
 export const SHEET_TOP_GAP = 36;
-const OPEN_MS = 440;
-const CLOSE_MS = 300;
-const FADE_MS = 200;
+const OPEN_MS = durations.sheet;
+const CLOSE_MS = durations.sheet;
+const FADE_MS = durations.reducedFade;
 /** Released past this share of its height, or flung down faster than FLING, the sheet closes. */
 const CLOSE_DRAG = 0.3;
 const FLING = 1000;
@@ -68,12 +68,17 @@ export function Sheet({ header, children }: Props) {
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const top = insets.top + SHEET_TOP_GAP;
   const height = windowHeight - top;
+  // How far the sheet travels to leave the screen: its real height, measured. The window height
+  // leaves out Android's navigation bar in an edge-to-edge app, so travelling `height` left a strip
+  // of the sheet on screen until its route went away (fine-tuning 2026-10-07). Until the first
+  // layout, the bottom inset (that bar) stands in for the difference.
+  const travel = useSharedValue(height + insets.bottom);
 
   useEffect(() => {
     progress.set(
       withTiming(1, {
         duration: reduceMotion ? FADE_MS : OPEN_MS,
-        easing: sheetCurve,
+        easing: easeOut,
         reduceMotion: ReduceMotion.Never,
       }),
     );
@@ -141,13 +146,14 @@ export function Sheet({ header, children }: Props) {
   const sheetStyle = useAnimatedStyle(() =>
     reduceMotion
       ? { opacity: progress.value }
-      : { transform: [{ translateY: (1 - progress.value) * height }] },
+      : { transform: [{ translateY: (1 - progress.value) * travel.value }] },
   );
 
   return (
     <SheetContext.Provider value={controls}>
       <Animated.View
         testID="sheet"
+        onLayout={(e) => travel.set(e.nativeEvent.layout.height)}
         style={[
           styles.sheet,
           {

@@ -5,8 +5,8 @@ import { usePreventRemove } from 'expo-router/react-navigation';
 import { useRef, useState, type ReactNode } from 'react';
 import {
   AccessibilityInfo,
-  Alert,
   findNodeHandle,
+  Keyboard,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,6 +15,7 @@ import {
   View,
 } from 'react-native';
 import Animated, {
+  KeyboardState,
   useAnimatedKeyboard,
   useAnimatedStyle,
   useDerivedValue,
@@ -33,13 +34,14 @@ import {
   type TransactionInput,
 } from '@/domain/validation';
 import { formatNumericDate, formatSpokenDate } from '@/format/date';
-import { currencyPosition, formatAmountForInput } from '@/format/money';
+import { currencyPosition, formatAmountForInput, formSeparator } from '@/format/money';
 import { getToday } from '@/hooks/useToday';
 import { useRegion } from '@/hooks/useRegion';
 import { haptics } from '@/lib/haptics';
 
 import { SEGMENT_BORDER, TypeIndicator, useShake } from './formMotion';
 import { categoryLook } from './categoryLook';
+import { useConfirmDialog } from './ConfirmDialog';
 import { ShapePressable } from './glass';
 import { useSheet } from './Sheet';
 import { PressableScale } from './motion';
@@ -50,8 +52,6 @@ export type FormResult = string | null;
 
 type Props = {
   initial: TransactionDraft;
-  /** New form only: the amount is focused so typing can start right away (SC-001). */
-  autoFocusAmount?: boolean;
   onSave(input: TransactionInput): Promise<FormResult>;
   /** Edit form only: shows Delete. */
   onDelete?(): Promise<FormResult>;
@@ -105,7 +105,6 @@ const localDate = (iso: IsoDate): Date => {
 /** The add and edit form's body, inside the route's sheet (design.md, Transaction form; contracts/ui-screens.md). */
 export function TransactionForm({
   initial,
-  autoFocusAmount = false,
   onSave,
   onDelete,
   onDone,
@@ -115,7 +114,12 @@ export function TransactionForm({
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const sheet = useSheet();
-  const closeSheet = (then: () => void) => (sheet ? sheet.close(then) : then());
+  // The keyboard goes down with the sheet. Leaving it open let the form unmount before it hid, so
+  // the next form started from its stale height, with Save raised over no keyboard.
+  const closeSheet = (then: () => void) => {
+    Keyboard.dismiss();
+    return sheet ? sheet.close(then) : then();
+  };
 
   const [draft, setDraft] = useState<TransactionDraft>(initial);
   const [errors, setErrors] = useState<Errors>({});
@@ -153,12 +157,16 @@ export function TransactionForm({
     draft.date !== initial.date ||
     draft.category !== initial.category;
 
+  const confirm = useConfirmDialog();
   const confirmDiscard = (leave: () => void) => {
     if (!dirty) return leave();
-    Alert.alert('Discard changes?', undefined, [
-      { text: 'Keep editing', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: leave },
-    ]);
+    confirm.ask({
+      title: 'Discard changes?',
+      message: 'What you entered will be lost.',
+      cancel: 'Keep editing',
+      confirm: 'Discard',
+      onConfirm: leave,
+    });
   };
 
   // Every way out (the close button, Android's back button and gestures, dragging the sheet
@@ -259,10 +267,13 @@ export function TransactionForm({
   // FR-013: deletion cannot be undone, so it is confirmed first; Cancel changes nothing.
   const confirmDelete = (remove: () => Promise<FormResult>) => {
     if (busy.current) return;
-    Alert.alert('Delete this transaction?', undefined, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => void run(remove) },
-    ]);
+    confirm.ask({
+      title: 'Delete this transaction?',
+      message: "This can't be undone.",
+      cancel: 'Cancel',
+      confirm: 'Delete',
+      onConfirm: () => void run(remove),
+    });
   };
 
   const position = currencyPosition(tag);
@@ -352,7 +363,9 @@ export function TransactionForm({
               value={draft.amountText}
               onChangeText={(text) => update('amountText', text)}
               keyboardType="decimal-pad"
-              autoFocus={autoFocusAmount}
+              // A hint of the expected shape now that the form opens without the keyboard.
+              placeholder={`0${formSeparator(tag)}00`}
+              placeholderTextColor={colors.textMuted}
               onFocus={() => setAmountFocused(true)}
               onBlur={() => setAmountFocused(false)}
               maxFontSizeMultiplier={AMOUNT_MAX_SCALE}
@@ -479,20 +492,29 @@ export function TransactionForm({
 
       <Animated.View
         testID="form-footer"
-        style={[styles.footer, { paddingBottom: spacing.xxl + insets.bottom }, keyboardLift.footer]}
+        // Its own fill: risen over the fields, it must not leave its text over them.
+        style={[
+          styles.footer,
+          { paddingBottom: spacing.xxl + insets.bottom, backgroundColor: colors.formBackground },
+          keyboardLift.footer,
+        ]}
       >
         {/* Announced when it appears, so a TalkBack user learns that Save or Delete failed. */}
         <View accessibilityLiveRegion="polite">{failure && <FieldError message={failure} />}</View>
+        {/* Only Save rides above the keyboard: Delete fades and folds away while it opens, and
+            comes back when it closes (fine-tuning 2026-10-07). */}
         {onDelete && (
-          <PressableScale
-            accessibilityRole="button"
-            accessibilityLabel="Delete"
-            onPress={() => confirmDelete(onDelete)}
-            android_ripple={{ color: colors.ripple }}
-            style={styles.textButton}
-          >
-            <Text style={[type.labelStrong, { color: colors.error }]}>Delete</Text>
-          </PressableScale>
+          <Animated.View testID="delete-slot" style={[styles.deleteSlot, keyboardLift.deleteSlot]}>
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel="Delete"
+              onPress={() => confirmDelete(onDelete)}
+              android_ripple={{ color: colors.ripple }}
+              style={styles.textButton}
+            >
+              <Text style={[type.labelStrong, { color: colors.error }]}>Delete</Text>
+            </PressableScale>
+          </Animated.View>
         )}
         {/* Flat look: a solid accent fill, no gradient, border or highlight (design.md). */}
         <ShapePressable
@@ -507,6 +529,7 @@ export function TransactionForm({
           <Text style={[type.button, { color: cardTones.positive.cardInk }]}>Save</Text>
         </ShapePressable>
       </Animated.View>
+      {confirm.dialog}
     </View>
   );
 }
@@ -615,20 +638,32 @@ function useKeyboardLift(restBottom: number) {
     isStatusBarTranslucentAndroid: true,
     isNavigationBarTranslucentAndroid: true,
   });
-  const lift = useDerivedValue(() => Math.max(0, keyboard.height.value + spacing.sm - restBottom));
+  // Only a keyboard that is opening, open or closing counts: a height left over from a keyboard
+  // the form never saw close (state closed or unknown) must not raise the footer.
+  const height = useDerivedValue(() => {
+    const state = keyboard.state.value;
+    const live =
+      state === KeyboardState.OPENING || state === KeyboardState.OPEN || state === KeyboardState.CLOSING;
+    return live ? keyboard.height.value : 0;
+  });
+  const lift = useDerivedValue(() => Math.max(0, height.value + spacing.sm - restBottom));
   const footer = useAnimatedStyle(() => ({ transform: [{ translateY: -lift.value }] }));
   const spacer = useAnimatedStyle(() => ({ height: lift.value }));
   // The amount block tightens from 32/24 to 16/12 as the keyboard's first 120 dp come up, so the
   // amount, chips and Save fit above it (SC-001) and the layout moves with the keyboard, not
   // after it.
   const amountPadding = useAnimatedStyle(() => {
-    const t = Math.min(1, keyboard.height.value / AMOUNT_TIGHTEN_RANGE);
+    const t = Math.min(1, height.value / AMOUNT_TIGHTEN_RANGE);
     return {
       paddingTop: spacing.xxxl - (spacing.xxxl - spacing.md) * t,
       paddingBottom: spacing.xl - (spacing.xl - spacing.sm) * t,
     };
   });
-  return { footer, spacer, amountPadding };
+  const deleteSlot = useAnimatedStyle(() => {
+    const t = Math.min(1, height.value / AMOUNT_TIGHTEN_RANGE);
+    return { height: minTouch * (1 - t), opacity: 1 - t };
+  });
+  return { footer, spacer, amountPadding, deleteSlot };
 }
 
 const AMOUNT_TIGHTEN_RANGE = 120;
@@ -770,6 +805,7 @@ const styles = StyleSheet.create({
   dateBox: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   error: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs },
   footer: { paddingHorizontal: spacing.md, paddingTop: spacing.md, gap: spacing.xs },
+  deleteSlot: { overflow: 'hidden', justifyContent: 'center' },
   textButton: {
     alignSelf: 'center',
     minHeight: minTouch,

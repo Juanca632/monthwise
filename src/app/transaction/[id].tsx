@@ -1,15 +1,17 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useDatabase } from '@/data/DatabaseProvider';
 import { NotFoundError, StorageError } from '@/data/errors';
+import type { Transaction } from '@/data/transactionRepository';
 import { monthOf } from '@/domain/month';
 import type { TransactionDraft, TransactionInput } from '@/domain/validation';
 import { formatAmountForInput } from '@/format/money';
 import { useConfirmChange } from '@/hooks/useConfirmChange';
 import { useRegion } from '@/hooks/useRegion';
 import { reportError } from '@/lib/reportError';
+import { clearHandedTransaction, handedTransaction } from '@/state/openedTransaction';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
 import { useSummaryNotice } from '@/state/SummaryNoticeContext';
 import { Sheet } from '@/ui/Sheet';
@@ -17,6 +19,15 @@ import { useTheme } from '@/ui/theme';
 import { FormHeader, TransactionForm, type FormResult } from '@/ui/TransactionForm';
 
 const TITLE = 'Edit transaction';
+
+const draftOf = (row: Transaction, tag: string): TransactionDraft => ({
+  type: row.type,
+  // FR-005: the region's separator and no grouping, so it can be saved back unchanged.
+  amountText: formatAmountForInput(row.amountCents, tag),
+  date: row.date,
+  category: row.category,
+  note: row.note ?? '',
+});
 
 /** The edit and delete form (contracts/ui-screens.md, Edit form states). */
 export default function EditTransactionScreen() {
@@ -29,23 +40,33 @@ export default function EditTransactionScreen() {
   const { setSelected } = useSelectedMonth();
   const notice = useSummaryNotice();
   const confirmChange = useConfirmChange();
-  const [initial, setInitial] = useState<TransactionDraft | null>(null);
+  // The row the list handed over mounts the form before the sheet opens; without one (a link),
+  // the sheet shows the loading state until the database answers.
+  // Runs once the sheet has slid down, so nothing re-renders the lists behind it mid-slide.
+  const afterClose = useRef<(() => void) | null>(null);
+  const done = () => {
+    router.back();
+    afterClose.current?.();
+    afterClose.current = null;
+  };
+  const [initial, setInitial] = useState<TransactionDraft | null>(() => {
+    const row = handedTransaction(id);
+    return row && draftOf(row, tag);
+  });
 
+  useEffect(() => clearHandedTransaction, []);
+
+  // Still read when the list handed the row over, so one deleted meanwhile closes the form with
+  // the banner (FR-025); a row that is there changes nothing on screen.
   useEffect(() => {
+    const handedOver = initial !== null;
     let cancelled = false;
     (async () => {
       try {
         const row = await (await whenReady()).getById(id);
         if (!row) throw new NotFoundError();
-        if (cancelled) return;
-        setInitial({
-          type: row.type,
-          // FR-005: the region's separator and no grouping, so it can be saved back unchanged.
-          amountText: formatAmountForInput(row.amountCents, tag),
-          date: row.date,
-          category: row.category,
-          note: row.note ?? '',
-        });
+        if (cancelled || handedOver) return;
+        setInitial(draftOf(row, tag));
       } catch (e) {
         if (cancelled) return;
         reportError(e instanceof StorageError ? e.code : 'get');
@@ -70,9 +91,12 @@ export default function EditTransactionScreen() {
       return "Couldn't save. Your changes are still here.";
     }
     // Outside the try: the change is stored, so nothing here may turn it into a failure.
-    confirmChange({ kind: 'updated', id });
-    // FR-020: a date moved to another month takes the summary there.
-    setSelected(monthOf(input.date));
+    const announce = confirmChange({ kind: 'updated', id });
+    afterClose.current = () => {
+      announce();
+      // FR-020: a date moved to another month takes the summary there.
+      setSelected(monthOf(input.date));
+    };
     return null;
   };
 
@@ -85,7 +109,7 @@ export default function EditTransactionScreen() {
       reportError(e instanceof StorageError ? e.code : 'remove');
       return "Couldn't delete.";
     }
-    confirmChange({ kind: 'deleted', id });
+    afterClose.current = confirmChange({ kind: 'deleted', id });
     return null;
   };
 
@@ -95,7 +119,7 @@ export default function EditTransactionScreen() {
   return (
     <Sheet header={<FormHeader title={TITLE} onClose={() => router.back()} />}>
       {initial ? (
-        <TransactionForm initial={initial} onSave={save} onDelete={remove} onDone={() => router.back()} />
+        <TransactionForm initial={initial} onSave={save} onDelete={remove} onDone={done} />
       ) : (
         <View style={styles.loading}>
           <ActivityIndicator accessibilityLabel="Loading" color={colors.accent} size="large" />

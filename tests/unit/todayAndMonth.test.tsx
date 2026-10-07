@@ -75,6 +75,16 @@ describe('SelectedMonthContext', () => {
     expect(result.current.selected).toEqual({ year: 2026, month: 1 });
   });
 
+  it('keeps the same object when set to the month already shown, so nothing reloads', () => {
+    setClock(2026, 10, 5);
+    const { result } = renderHook(() => useSelectedMonth(), { wrapper });
+    const before = result.current.selected;
+    act(() => result.current.setSelected({ year: 2026, month: 10 }));
+    expect(result.current.selected).toBe(before);
+    act(() => result.current.setSelected({ year: 2026, month: 9 }));
+    expect(result.current.selected).toEqual({ year: 2026, month: 9 });
+  });
+
   it('never goes before January 2000', () => {
     setClock(2026, 10, 5);
     const { result } = renderHook(() => useSelectedMonth(), { wrapper });
