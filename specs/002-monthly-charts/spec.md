@@ -22,6 +22,22 @@ percentage) without leaving the screen. Read-only: no editing from charts. Money
 EUR, English UI, on-device only. Out of scope: savings goals and budgets (feature 003), recurring
 expenses (004)."
 
+## Clarifications
+
+### Session 2026-10-08
+
+- Q: When the selected month is the current month, does the categories comparison compare spending
+  so far against the whole previous month, or against the previous month by the same day? → A: By
+  the same day: for the current month both months are counted by the comparison day; a past month
+  is compared as whole months.
+- Q: How does the user pick a day on the pace chart, when up to 31 days share the phone's width
+  and every tap target must meet the minimum touch size? → A: Tapping or dragging anywhere on the
+  chart selects the nearest day; the whole chart is the touch target. With the screen reader on,
+  each day is its own element named "Day N".
+- Q: Do months with no data in the six-month range count in the headline's "in N months"? → A:
+  No: all months in the range are still shown (no-data months marked "No data"), but N counts only
+  the months with data.
+
 ## User Scenarios & Testing *(mandatory)*
 
 Terms used below:
@@ -77,13 +93,16 @@ and check both amounts for that day.
    1,000.00, **When** the user views the August summary, **Then** the card reads "€200.00 more
    than July" and both lines cover their whole month.
 5. **Given** the selected month is the current month, **When** the user views the card, **Then**
-   the selected month's line ends at today and the previous month's line covers its whole month.
+   the selected month's line ends at today (or later, see Edge Cases) and the previous month's line
+   covers its whole month.
 6. **Given** the previous month has no data and the selected month (the current month) has
    expenses, **When** the user views the card, **Then** it shows only the selected month's line and
    the sentence "No data from last month to compare"; for a past month such as August the
    sentence is "No data from July to compare".
 7. **Given** neither month has expenses (whether or not the previous month has data), **When** the
-   user views the card, **Then** it reads "No spending to compare yet".
+   user views the card, **Then** it reads "No spending to compare yet". For the current month this
+   is counted by the comparison day: with today the 12th, no October expense by day 12 and
+   September's expenses all dated after the 12th, it also reads "No spending to compare yet".
 8. **Given** the summary for any month, **When** the user taps the card, **Then** the Insights
    screen opens for that same month.
 9. **Given** the Insights screen for October (current month, today the 12th) with 120.00 spent
@@ -93,8 +112,17 @@ and check both amounts for that day.
 10. **Given** the same screen with 450.00 spent from 1 to 20 September and no October expense
     dated after today, **When** the user taps "Day 20" (after today), **Then** it shows only "Day
     20" and "September: €450.00".
-11. **Given** the user adds, edits or deletes a transaction, **When** they return to the summary
+11. **Given** the Insights screen for October, **When** the user drags a finger across the pace
+    chart and lifts it nearest to day 8, **Then** the detail for "Day 8" is shown, as in
+    scenario 9.
+12. **Given** the user adds, edits or deletes a transaction, **When** they return to the summary
     or the Insights screen, **Then** the card and the chart reflect the change.
+13. **Given** the Insights screen for October has just opened, **Then** no day detail is shown;
+    **When** the user taps "Day 8" and then "Day 9", **Then** the "Day 9" detail replaces the "Day
+    8" one; **When** they tap "Day 9" again, **Then** no detail is shown.
+14. **Given** the data of scenario 9 and the screen reader on, **When** the user moves to "Day 8"
+    on the pace chart, **Then** it is announced as "Day 8" with the same amounts the scenario 9
+    detail shows; activating it shows that detail, and activating it again hides it.
 
 ---
 
@@ -102,7 +130,9 @@ and check both amounts for that day.
 
 On the Insights screen, below the pace chart, the user sees each expense category with this month's
 spending, last month's spending and the change in euros and percent, the biggest increases first.
-The categories that went up most are where cutting back would help.
+The categories that went up most are where cutting back would help. For the current month, both
+months are counted up to the comparison day, like the pace sentence, so a month still running is
+not compared against a finished one.
 
 **Why this priority**: it tells the user where to act, which the 001 per-category breakdown cannot
 because it only shows one month.
@@ -111,7 +141,7 @@ because it only shows one month.
 new, one gone), open Insights for the later month and check each row's amounts, change and order
 against a hand calculation. Depends on the Insights screen from User Story 1.
 
-**Acceptance Scenarios**:
+**Acceptance Scenarios** (scenarios 1-6 and 8 use a past month, compared as whole months):
 
 1. **Given** Food went from 200.00 last month to 260.00 this month, **When** the user views the
    comparison, **Then** the Food row shows 260.00, 200.00, "+€60.00" and "+30%".
@@ -128,9 +158,14 @@ against a hand calculation. Depends on the Insights screen from User Story 1.
    **Then** it is not listed.
 7. **Given** the previous month has no data and the selected month (the current month) has
    expenses, **When** the user views the comparison, **Then** it shows this month's categories with
-   their amounts, no changes, and the sentence "No data from last month to compare".
+   their amounts, no changes, and the sentence "No data from last month to compare", without the
+   "Compared by day N" label.
 8. **Given** neither month has expenses, **When** the user views the comparison, **Then** it shows
    no rows and the sentence "No spending to compare yet".
+9. **Given** today is 12 October, Food had 100.00 from 1 to 12 October, 90.00 from 1 to 12
+   September and 260.00 in all of September, **When** the user views the October comparison,
+   **Then** the Food row shows 100.00, 90.00, "+€10.00" and "+11%", and the section says "Compared
+   by day 12".
 
 ---
 
@@ -153,8 +188,9 @@ User Story 1.
 
 1. **Given** the selected month is October, **When** the user views the trend, **Then** it shows
    May to October in calendar order.
-2. **Given** the six months had total income of 12,000.00 and total expenses of 10,200.00, **When**
-   the user views the trend, **Then** the headline reads "Saved €1,800.00 in 6 months · 15%".
+2. **Given** all six months have data, with total income of 12,000.00 and total expenses of
+   10,200.00, **When** the user views the trend, **Then** the headline reads "Saved €1,800.00 in 6
+   months · 15%".
 3. **Given** September had income 2,000.00 and expenses 1,700.00, **When** the user taps
    "September", **Then** it shows, without leaving the screen, "September", "Income: €2,000.00",
    "Expenses: €1,700.00", "Saved: €300.00" and "Savings rate: 15%".
@@ -166,9 +202,19 @@ User Story 1.
 6. **Given** a month in the range has no data, **When** the user views the trend, **Then** that
    month is marked "No data" rather than drawn as zero, and tapping it shows its name, "No data"
    and "View month" (unless it is the selected month).
-7. **Given** the selected month is February 2000, **When** the user views the trend, **Then** it
-   shows only January and February 2000, and the headline says "in 2 months"; with January 2000
-   selected it says "in 1 month".
+7. **Given** the selected month is February 2000 and both January and February 2000 have data,
+   **When** the user views the trend, **Then** it shows only January and February 2000, and the
+   headline says "in 2 months"; with January 2000 selected it says "in 1 month".
+8. **Given** the selected month is October and only September (income 1,000.00, expenses 900.00)
+   and October (income 2,000.00, expenses 1,800.00) have data, **When** the user views the trend,
+   **Then** it shows May to October with May to August marked "No data", and the headline reads
+   "Saved €300.00 in 2 months · 10%".
+9. **Given** the selected month is October and only October has data, with expenses 400.00 and no
+   income, **When** the user views the trend, **Then** the headline reads "Saved -€400.00 in 1
+   month · No income".
+10. **Given** the trend has just appeared, **Then** no month detail is shown; **When** the user
+    taps "August" and then "September", **Then** the "September" detail replaces the "August" one;
+    **When** they tap "September" again, **Then** no detail is shown.
 
 ---
 
@@ -217,12 +263,13 @@ the summary; scenario 6 depends on User Story 1 and scenario 7 on User Story 3.
   month. A day the selected month does not reach (after today, or past its last day) shows only
   the previous month's amount; a day past the previous month's last day uses its whole month.
 - A transaction dated after today in the current month (the phone's clock or time zone moved
-  back; 001 keeps such transactions): it counts in the categories and the trend, as in the 001
-  totals, and appears on the pace line on its own date, so the line extends to that date. The
-  sentence still compares by today. Example: today is the 12th and a 30.00 expense is dated the
-  15th; tapping "Day 14" shows the October amount by day 14 (which does not include the 30.00),
-  and tapping "Day 16" shows only September's amount. A past month always uses its whole month,
-  whatever its transactions' dates.
+  back; 001 keeps such transactions): it counts in the trend, as in the 001 totals, and appears on
+  the pace line on its own date, so the line extends to that date. The pace
+  sentence and the categories comparison still count by today, so it is left out of both until
+  its date is reached. Example: today is the 12th and a 30.00 expense is dated the 15th; tapping
+  "Day 14" shows the October amount by day 14 (which does not include the 30.00), and tapping "Day
+  16" shows only September's amount. A past month always uses its whole month, whatever its
+  transactions' dates.
 - The date changes while the app is open (past midnight, or a new month begins): the comparison
   day, the current month's line and the sentence update on the next view of the summary or Insights
   screen, as the 001 summary does for "today".
@@ -256,7 +303,8 @@ the summary; scenario 6 depends on User Story 1 and scenario 7 on User Story 3.
   month for a past month) and the previous month (whole month). The two lines MUST be told apart
   without relying on color alone.
 - **FR-003**: The card MUST show one sentence, chosen by the first rule that applies:
-  1. no expenses in either month: "No spending to compare yet";
+  1. no expenses in either month (counted by the comparison day for the current month, whole
+     months for a past month): "No spending to compare yet";
   2. previous month has no data: "No data from last month to compare" for the current month, "No
      data from <previous month name> to compare" for a past month (only the selected month's line
      is drawn);
@@ -274,8 +322,15 @@ the summary; scenario 6 depends on User Story 1 and scenario 7 on User Story 3.
   (FR-026) as its title and a way back to the summary.
 - **FR-006**: The full pace chart MUST show the same two lines and sentence as the card (FR-002,
   FR-003) at a size where single days can be told apart. It spans day 1 to the last day of the
-  longer of the two months, with day numbers marked, and each day is a tap target named "Day N".
-- **FR-007**: Tapping a day on the pace chart MUST show, without leaving the screen:
+  longer of the two months, with day numbers marked. Tapping anywhere on the chart, or dragging a
+  finger across it, selects the day nearest to the finger; while dragging, the selection follows
+  the finger. A touch becomes a drag once the finger reaches a day other than the one where it
+  touched down; otherwise it is a tap. A drag leaves selected the day where the finger lifts;
+  beyond the chart's edges it stays on the first or last day. A mostly vertical movement scrolls
+  the screen instead of selecting. With the screen reader on, each day is its own element named
+  "Day N", described with the same text its FR-007 detail shows (negatives as "minus");
+  activating it acts as a tap.
+- **FR-007**: Selecting a day on the pace chart MUST show, without leaving the screen:
   - "Day N";
   - "<selected month name>: €A", the selected month's spending by that day, unless the day is
     after the end of the selected month's line (FR-002: the later of today and its latest
@@ -287,7 +342,11 @@ the summary; scenario 6 depends on User Story 1 and scenario 7 on User Story 3.
 - **FR-008**: The categories comparison MUST list every expense category with spending in the
   selected month or the previous month, each with: its name, this month's amount, last month's
   amount, the change in euros with a sign ("+" above 0, a minus below, none for 0) and the change
-  as a percent of last month's amount ("New" when last month's amount is 0). When neither month has
+  as a percent of last month's amount ("New" when last month's amount is 0). For the current month,
+  every amount in this section (rows, FR-010 and the "no expenses" check) counts both months by the
+  comparison day, as the pace sentence does, and when changes are shown the section says
+  "Compared by day N" (N as in the pace sentence; not shown in the FR-010 or "no expenses" cases);
+  for a past month it uses both whole months and shows no such label. When neither month has
   expenses, it shows no rows and "No spending to compare yet" (this rule wins over FR-010).
 - **FR-009**: Category rows MUST be ordered by change in euros, largest increase first, ties
   ordered alphabetically by category name.
@@ -300,16 +359,17 @@ the summary; scenario 6 depends on User Story 1 and scenario 7 on User Story 3.
   data". Each month is a tap target named by its month name (for example "September").
 - **FR-012**: The trend MUST show a headline "Saved €X in N months · P%" ("1 month" when N is 1),
   where X is the total saved over the months shown (negative with a minus sign), N the number of
-  months shown including months with no data, and P the overall savings rate (total saved / total
-  income); "No income" replaces P when total income is 0. When every month shown has no data, the
-  trend shows "No data yet" instead of the chart and the headline.
+  months shown that have data (months with no data are still shown but not counted), and P the
+  overall savings rate (total saved / total income); "No income" replaces P when total income is
+  0. When every month shown has no data, the trend shows "No data yet" instead of the chart and
+  the headline.
 - **FR-013**: Tapping a month in the trend MUST show, without leaving the screen, its name and
   "Income: €I", "Expenses: €E", "Saved: €S" and "Savings rate: P%" ("Savings rate: No income" when
   its income is 0). For a month with no data it shows its name and "No data" instead. Either way
   it also offers "View month" (FR-030), except for the selected month.
 - **FR-014**: No detail is shown when a chart first appears. Each chart shows at most one detail
-  (FR-007 or FR-013); tapping another day or month replaces it, and tapping the same one again
-  hides it.
+  (FR-007 or FR-013); selecting another day or month replaces it, and tapping the same one again
+  (or activating it again with the screen reader) hides it. A drag (FR-006) never hides it.
 - **FR-015**: The Insights screen MUST be read-only: it MUST NOT offer adding, editing or deleting
   transactions.
 
@@ -346,7 +406,8 @@ the summary; scenario 6 depends on User Story 1 and scenario 7 on User Story 3.
   every value a chart shows MUST be reachable and announced without seeing the chart (each day's
   amounts on the pace chart, each category row, each trend month with its income, expenses, saved
   and savings rate), with negative values announced as "minus". Every tappable element MUST be at
-  least the platform's recommended minimum touch size.
+  least the platform's recommended minimum touch size; for the pace chart this applies to the
+  chart as a whole, since days are picked by nearest position (FR-006).
 - **FR-024**: Chart motion MUST respect the phone's "Remove animations" setting, as the rest of the
   app does.
 - **FR-025**: This feature MUST NOT send any data off the device or log any financial data, as in
@@ -389,16 +450,17 @@ the summary; scenario 6 depends on User Story 1 and scenario 7 on User Story 3.
 
 All derived from the transactions of feature 001 when a view is shown; nothing new is stored.
 
-- **Daily spending series**: for one month, the spending by day N for each day of the month (or up
-  to today for the current month).
+- **Daily spending series**: for one month, the spending by day N for each day of the month (for
+  the current month, up to the end of its line as in FR-002).
 - **Pace comparison**: the selected month's and the previous month's spending by the comparison
   day, their difference, and whether the previous month has data.
-- **Category change**: for one expense category, its spending in the selected and previous month,
-  the change in euros and the change as a percent (or "New").
+- **Category change**: for one expense category, its spending in the selected and previous month
+  (by the comparison day for the current month, whole months otherwise), the change in euros and
+  the change as a percent (or "New").
 - **Monthly totals**: for one month, total income, total expenses, saved, savings rate, and whether
   it has data.
 - **Trend**: the monthly totals of up to six months ending with the selected month, plus their
-  total saved and overall savings rate.
+  total saved, overall savings rate and the number of months with data.
 
 ## Success Criteria *(mandatory)*
 
@@ -432,8 +494,9 @@ All derived from the transactions of feature 001 when a view is shown; nothing n
 - "Spending" means expenses only. Income is used only for saved amounts and savings rates.
 - The month picker replaces 001's arrows on both screens. Moving to the next or previous month in
   one tap (arrows or swiping) is not required by this feature.
-- The categories comparison and the six-month trend do not depend on today: for the current month
-  they use all of the month's stored transactions, like the 001 totals.
+- The six-month trend does not depend on today: for the current month it uses all of the month's
+  stored transactions, like the 001 totals. The pace and the categories comparison do (comparison
+  day).
 - The texts quoted in this spec are exact. Any other on-screen label or screen-reader text is
   fixed in this feature's UI contract (`contracts/`) during planning; design.md decides only the
   look.
