@@ -658,7 +658,7 @@ own transactions and totals. Add one from a past month and check that it lands i
 - [X] T051 [P] Update `AGENTS.md`: replace the "Status" and "Setup and commands" TBDs with the
   stack (Expo SDK 57), `npm start` (and why not `npx expo start`), `npm test`, `npm run lint`,
   `npm run typecheck`, the project structure summary from plan.md and the EAS build commands.
-- [ ] T052 Verification on the `preview` APK. First time only: `npx eas-cli login` and
+- [X] T052 Verification on the `preview` APK (done 2026-10-08; results in validation-results.md and perf-results.md; the failed delete is not reachable with the dev tool, see there). First time only: `npx eas-cli login` and
   `npx eas-cli init`, then add the returned `extra.eas.projectId` to `app.config.ts`, merged with
   `extra.variant`. Then run `npx eas-cli build --platform android --profile preview`; the
   developer installs it.
