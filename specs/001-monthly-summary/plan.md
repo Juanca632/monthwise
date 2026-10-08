@@ -92,6 +92,7 @@ adds nothing over the smooth glows (design.md, Glass surfaces).
 | `better-sqlite3`, `@types/better-sqlite3` | dev | Real SQLite for repository tests on Node | `expo-sqlite` cannot run inside Jest (R10). |
 | `typescript`, `@types/react` | dev (template) | Type checking | Shipped by the `blank-typescript` template (R2). |
 | `@types/jest` | dev | Types for `describe`/`expect` in tests | Needed for `tsc` to type-check the tests. |
+| `@stryker-mutator/core`, `@stryker-mutator/jest-runner` | dev | Mutation testing of `src/domain/` and `src/data/` (`npx stryker run`, `stryker.config.json`) | Approved by the developer on 2026-10-08: the same AI writes code and tests, so a non-AI check measures whether the tests catch real bugs in the money and storage logic (T091). Not run in CI; reports go to the git-ignored `reports/`. |
 | `eslint`, `eslint-config-expo` | dev | Lint | Installed by `npx expo lint` (R14). |
 
 ## Project Structure

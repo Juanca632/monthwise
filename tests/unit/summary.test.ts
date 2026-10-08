@@ -73,6 +73,12 @@ describe('computeSummary', () => {
     expect(s.breakdown.map((b) => b.category)).toEqual(['housing', 'bills', 'food', 'transport']);
   });
 
+  it('orders an all-way tie by label whatever the row order', () => {
+    const keys = ['transport', 'shopping', 'other', 'leisure', 'housing', 'health', 'food', 'bills'];
+    const s = computeSummary(keys.map((k) => expense(k, 500)));
+    expect(s.breakdown.map((b) => b.category)).toEqual([...keys].reverse());
+  });
+
   it('adds up several rows in the same category', () => {
     const s = computeSummary([expense('food', 1250), expense('food', 750), expense('bills', 1000)]);
     expect(s.breakdown[0]).toMatchObject({ category: 'food', amountCents: 2000, percent: 67 });

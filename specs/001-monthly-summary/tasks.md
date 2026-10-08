@@ -1002,6 +1002,13 @@ developer's reviews of 2026-10-06 and 2026-10-07, then quickstart scenario 14.
   order), `tests/unit/todayAndMonth.test.tsx` (same month).
 - [x] T090 `jest.config.js` caps `maxWorkers` at 4, so `npm test` fits in WSL2's memory.
 
+### Block 8k: mutation testing (developer, 2026-10-08)
+
+- [X] T091 Run Stryker (`npx stryker run`, `stryker.config.json`) over `src/domain/` and
+  `src/data/` before the production APK (T053). Review every surviving mutant: add the missing
+  test for each real gap, and list the equivalent or harmless ones. Record the score before and
+  after in `specs/001-monthly-summary/mutation-results.md`.
+
 ---
 
 ## Dependencies & Execution Order
@@ -1076,6 +1083,7 @@ Task: "T035 [P] [US1] MonthHeader (title) in src/ui/MonthHeader.tsx"
 | 8h | T077–T078 | Add next to Transactions; 5 latest on the summary and See all (FR-002, FR-017) |
 | 8i | T079 | New form opens without the keyboard (FR-003, SC-001) |
 | 8j | T080–T090 | Phone review fine-tuning: look, dialog, motion rhythm, performance |
+| 8k | T091 | Mutation testing of domain and data (Stryker) |
 | 9 | T052–T054 | APK verification and final check |
 
 Commits: one or more Conventional Commits per block, proposed to the developer and made only
