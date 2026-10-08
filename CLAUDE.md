@@ -27,3 +27,7 @@
   "Fine-tuning mode").
 - Commit only when the developer asks (propose the message). Never push or open PRs unless asked.
 - When the same mistake happens twice, propose a new rule for this file.
+- Session handoff: the developer works from several computers and local memory does not travel.
+  Read `PROGRESS.md` at the start of a session. Before every commit, update it (what is done,
+  the next step, open decisions, pending phone checks) and include it in the commit. Anything
+  the next session must know goes there or in the specs, never only in local memory or the chat.
