@@ -94,8 +94,13 @@ unless an entry here changes them.
     a drag). If the finger first moves more than 8 dp vertically, and more vertically than
     horizontally, while still on its touch-down day, the gesture fails and the `ScrollView`
     scrolls; nothing is selected.
+  - The Insights screen scrolls in `react-native-gesture-handler`'s `ScrollView`, and the pan
+    declares `.blocksExternalGesture(scrollRef)`: the scroll waits until the pan fails (a vertical
+    move) and is blocked while it is active. Whether that wait is noticeable is a phone check; if
+    it is, the fallback is a `Gesture.Native()` scroll with `requireExternalGestureToFail`.
   - Callbacks run on the UI thread and send only events to JS (`runOnJS`): `down(day)`,
-    `move(day)` (only when the day changes), `up()` and `cancel()`.
+    `move(day)` (only when the day changes), `up()` and `cancel()`. They are worklets: `dayAtX`
+    carries the `'worklet'` directive and the measured width is a shared value set in `onLayout`.
   - A pure reducer, `chartSelection` (`src/ui/charts/selection.ts`), holds every rule:
     `up()` without any `move` to another day is a **tap on the touch-down day** (selects it, or
     hides it if it was already selected); once a `move` reached another day it is a **drag**: the

@@ -11,7 +11,8 @@ npm install                       # after the plan: adds react-native-svg 15.15.
 npm start                         # Expo Go (react-native-svg is bundled in it)
 EXPO_PUBLIC_DEV_TOOLS=1 npm start # with the dev tools: seed 1,000 or 7 months, storage error
 npm test && npm run lint && npm run typecheck
-npx jest tests/acceptance/002     # the spec-tester's black-box tests only
+npm run test:acceptance          # every black-box acceptance test, including stories in progress
+                                  # (npm test skips the files listed in tests/acceptance/002/pending.js)
 ```
 
 ## Automated checks

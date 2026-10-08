@@ -4,7 +4,9 @@ The public surface black-box tests (`tests/acceptance/002/`) use to drive the ap
 reading `src/` (research R9). It renders the real summary, Insights and month picker over real
 SQL (better-sqlite3 through `tests/helpers/betterSqliteAdapter.ts`), and owns every mock those
 screens need (today, region, fonts, safe area, router, `expo-sqlite`). It is built in the Setup
-phase and has its own tests, so it exists before any `spec-tester` run.
+phase and has its own tests, so it exists before any `spec-tester` run. Two members are wired
+later, when what they drive exists: `paceChart.*` in US1 and `tapOutsidePicker` in US4. Until
+then they throw "not wired yet", so a test that uses them fails until its story is built.
 
 ## Use
 
@@ -12,6 +14,7 @@ phase and has its own tests, so it exists before any `spec-tester` run.
 // Import the harness before any '@/...' module: it installs its mocks on import.
 import { renderApp, type AppHandle } from '../../helpers/app';
 import type { TransactionInput } from '@/domain/validation';
+import type { YearMonth } from '@/domain/month';
 
 const app = await renderApp({
   today: '2026-10-12',                 // the phone's date; the summary opens on its month
@@ -35,6 +38,7 @@ rendered tree with React Native Testing Library's `screen` as usual.
 | Member | What it does |
 | --- | --- |
 | `screen: 'summary' \| 'insights' \| 'transactions'` | The screen on top of the fake stack (getter) |
+| `selectMonth(ym: YearMonth): Promise<void>` | Makes `ym` the selected month, as choosing it in the month picker would (shared by both screens, FR-029), without going through the picker UI. For stories that need a past month before the picker exists; picker behaviour itself is tested through the picker's elements |
 | `back(): Promise<void>` | The system back action: closes the month picker if it is open, otherwise pops the top screen and focuses the one below |
 | `tapOutsidePicker(): Promise<void>` | Taps the scrim outside the open month picker's dialog |
 | `add(input): Promise<number>` | Stores a transaction through the real repository (as a saved form would) and returns its id; the screen on top then gets focus again, as when a form closes |
@@ -47,7 +51,7 @@ rendered tree with React Native Testing Library's `screen` as usual.
 | `paceChart.touch(xs: number[]): Promise<void>` | One finger on the pace chart: touches down at `xs[0]`, moves through each x in order and lifts at the last one; y stays constant. Whether it is a tap or a drag follows ui-screens.md (Touch) |
 | `paceChart.tapAt(x): Promise<void>` | Same as `touch([x])` |
 | `paceChart.dragVertically(x): Promise<void>` | Touches down at `x` and moves 40 dp down without changing day (a scroll) |
-| `paceChart.width: number` | The chart's touch width in tests: `310` dp, so each of the 31 days is 10 dp wide (day 8 covers 70 to 80) |
+| `paceChart.width: number` | The chart's touch width in tests: `310` dp, so each of the 31 days is 10 dp wide (day 8 covers 70 to 80). The harness fires the chart's layout event with this width whenever Insights renders, since Jest has no real layout |
 | `unmount(): void` | Unmounts and closes the database |
 
 Only the screen on top of the fake stack is rendered (the month picker renders over it), so
