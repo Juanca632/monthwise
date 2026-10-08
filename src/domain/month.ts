@@ -33,11 +33,26 @@ export function monthRange(ym: YearMonth): [start: IsoDate, endExclusive: IsoDat
   return [fmt(ym, 1), fmt(next(ym), 1)];
 }
 
-export function lastDayOf(ym: YearMonth): IsoDate {
+export function daysInMonth(ym: YearMonth): number {
   const { year, month } = ym;
   const leap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
-  return fmt(ym, days);
+  return [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+}
+
+export function lastDayOf(ym: YearMonth): IsoDate {
+  return fmt(ym, daysInMonth(ym));
+}
+
+/** Counts months on one axis (year·12 + month-1), so any delta crosses year ends correctly. */
+export function addMonths(ym: YearMonth, delta: number): YearMonth {
+  const index = ym.year * 12 + (ym.month - 1) + delta;
+  const month = (((index % 12) + 12) % 12) + 1;
+  return { year: (index - (month - 1)) / 12, month };
+}
+
+/** Sort order: below 0 when `a` is earlier, 0 when equal, above 0 when later. */
+export function compareMonths(a: YearMonth, b: YearMonth): number {
+  return a.year !== b.year ? a.year - b.year : a.month - b.month;
 }
 
 export function isMinMonth(ym: YearMonth): boolean {

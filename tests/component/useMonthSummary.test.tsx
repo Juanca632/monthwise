@@ -46,6 +46,7 @@ function controlledRepository() {
           calls.push({ month, deferred: { resolve, reject } });
         }),
     ),
+    listRange: jest.fn(async () => []),
   } as unknown as TransactionRepository;
   return { repository, calls };
 }

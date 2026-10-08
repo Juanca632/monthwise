@@ -56,6 +56,7 @@ async function openOnce(): Promise<Opened> {
         flag.isSimulatingStorageError() ? Promise.reject(new StorageError('simulated')) : fn(...args);
     repository = {
       listByMonth: failIfSimulating(real.listByMonth),
+      listRange: failIfSimulating(real.listRange),
       getById: failIfSimulating(real.getById),
       create: failIfSimulating(real.create),
       update: failIfSimulating(real.update),

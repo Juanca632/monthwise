@@ -162,6 +162,7 @@ it('wraps failures on a closed database in StorageError', async () => {
 // The code is the only thing reportError logs, so each operation must name itself.
 it.each([
   ['list', (r: TransactionRepository) => r.listByMonth({ year: 2026, month: 9 })],
+  ['list', (r: TransactionRepository) => r.listRange({ year: 2026, month: 8 }, { year: 2026, month: 9 })],
   ['get', (r: TransactionRepository) => r.getById(1)],
   ['create', (r: TransactionRepository) => r.create(input(), 1)],
   ['update', (r: TransactionRepository) => r.update(1, input())],
@@ -221,4 +222,80 @@ it('FR-026: rows survive closing and reopening the database', async () => {
   await openAndMigrate(db);
   repo = createTransactionRepository(db);
   expect(await repo.listByMonth({ year: 2026, month: 9 })).toEqual([b, a]);
+});
+
+describe('listRange (002)', () => {
+  const ym = (year: number, month: number) => ({ year, month });
+  const slim = (date: string, amountCents: number) => ({
+    type: 'expense',
+    amountCents,
+    date,
+    category: 'food',
+  });
+
+  it.each([
+    ['inside one year', ym(2026, 8), ym(2026, 9), '2026-07-31', '2026-08-01', '2026-09-30', '2026-10-01'],
+    ['across a year end', ym(2025, 11), ym(2026, 1), '2025-10-31', '2025-11-01', '2026-01-31', '2026-02-01'],
+    ['ending in a leap February', ym(2024, 1), ym(2024, 2), '2023-12-31', '2024-01-01', '2024-02-29', '2024-03-01'],
+    ['ending in a non-leap February', ym(2026, 1), ym(2026, 2), '2025-12-31', '2026-01-01', '2026-02-28', '2026-03-01'],
+  ])('%s holds the 1st of `from` and the last day of `to`, nothing outside', async (_n, from, to, before, first, last, after) => {
+    await repo.create(input({ date: before, amountCents: 1 }), 1);
+    await repo.create(input({ date: last, amountCents: 3 }), 2);
+    await repo.create(input({ date: first, amountCents: 2 }), 3);
+    await repo.create(input({ date: after, amountCents: 4 }), 4);
+
+    expect(await repo.listRange(from, to)).toEqual([slim(first, 2), slim(last, 3)]);
+  });
+
+  it('orders by date, then id, and returns slim rows only', async () => {
+    await repo.create(input({ date: '2026-09-20', amountCents: 1, note: 'Late' }), 1);
+    await repo.create(input({ date: '2026-09-05', amountCents: 2 }), 9);
+    await repo.create(
+      input({ date: '2026-09-20', amountCents: 3, type: 'income', category: 'salary' }),
+      5,
+    );
+
+    expect(await repo.listRange(ym(2026, 9), ym(2026, 9))).toEqual([
+      slim('2026-09-05', 2),
+      slim('2026-09-20', 1),
+      { type: 'income', amountCents: 3, date: '2026-09-20', category: 'salary' },
+    ]);
+  });
+
+  it('with from === to returns the same rows as listByMonth', async () => {
+    for (const [i, date] of ['2026-09-01', '2026-09-15', '2026-09-15', '2026-09-30', '2026-10-01'].entries()) {
+      await repo.create(input({ date, amountCents: 100 + i }), i);
+    }
+    const month = ym(2026, 9);
+    const full = await repo.listByMonth(month);
+    const asSlim = full
+      .map(({ type, amountCents, date, category }) => ({ type, amountCents, date, category }))
+      .reverse();
+
+    expect(await repo.listRange(month, month)).toEqual(asSlim);
+    expect(asSlim).toHaveLength(4);
+  });
+
+  it('returns [] when `from` is after `to`', async () => {
+    await repo.create(input({ date: '2026-09-15' }), 1);
+    expect(await repo.listRange(ym(2026, 10), ym(2026, 9))).toEqual([]);
+    expect(await repo.listRange(ym(2027, 1), ym(2026, 12))).toEqual([]);
+  });
+
+  it('reflects an update that moves a row to another month', async () => {
+    const created = await repo.create(input({ date: '2026-09-30', amountCents: 7 }), 1);
+    await repo.update(created.id, input({ date: '2026-08-31', amountCents: 7 }));
+
+    expect(await repo.listRange(ym(2026, 8), ym(2026, 9))).toEqual([slim('2026-08-31', 7)]);
+    expect(await repo.listRange(ym(2026, 9), ym(2026, 9))).toEqual([]);
+  });
+
+  it('throws StorageError("list") on a closed database', async () => {
+    db.close();
+    await expect(repo.listRange(ym(2026, 8), ym(2026, 9))).rejects.toMatchObject({
+      name: 'StorageError',
+      code: 'list',
+    });
+    db = openTestDatabase(temp.file);
+  });
 });

@@ -1,5 +1,6 @@
 import type { TransactionType } from '@/domain/categories';
-import { monthRange, type IsoDate, type YearMonth } from '@/domain/month';
+import type { LedgerRow } from '@/domain/ledger';
+import { compareMonths, monthRange, type IsoDate, type YearMonth } from '@/domain/month';
 import type { TransactionInput } from '@/domain/validation';
 
 import { NotFoundError, StorageError, type StorageErrorCode } from './errors';
@@ -17,6 +18,8 @@ export type Transaction = {
 
 export interface TransactionRepository {
   listByMonth(month: YearMonth): Promise<Transaction[]>;
+  /** Slim rows from the 1st of `from` to the last day of `to`, oldest first (002, insights). */
+  listRange(from: YearMonth, to: YearMonth): Promise<LedgerRow[]>;
   getById(id: number): Promise<Transaction | null>;
   create(input: TransactionInput, now: number): Promise<Transaction>;
   update(id: number, input: TransactionInput): Promise<Transaction>;
@@ -82,6 +85,24 @@ export function createTransactionRepository(db: SqlDatabase): TransactionReposit
           endExclusive,
         );
         return rows.map(toTransaction);
+      }),
+
+    listRange: (from, to) =>
+      guard('list', async () => {
+        if (compareMonths(from, to) > 0) return [];
+        const [start] = monthRange(from);
+        const [, endExclusive] = monthRange(to);
+        const rows = await db.getAllAsync<Pick<Row, 'type' | 'amount_cents' | 'date' | 'category'>>(
+          'SELECT type, amount_cents, date, category FROM transactions WHERE date >= ? AND date < ? ORDER BY date ASC, id ASC',
+          start,
+          endExclusive,
+        );
+        return rows.map((r) => ({
+          type: r.type,
+          amountCents: r.amount_cents,
+          date: r.date,
+          category: r.category,
+        }));
       }),
 
     getById,

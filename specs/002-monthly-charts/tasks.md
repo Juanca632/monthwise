@@ -54,7 +54,7 @@ acceptance tests that need a past month select it through the harness's `selectM
 
 **Purpose**: the one new dependency, working in Expo Go and in Jest.
 
-- [ ] T001 Install `react-native-svg` with `npx expo install react-native-svg` (plan,
+- [x] T001 Install `react-native-svg` with `npx expo install react-native-svg` (plan,
   Dependencies). `npm ls react-native-svg` must show exactly `15.15.4` (SDK 57's
   `bundledNativeModules.json`); if npm resolves another version anywhere in the tree, pin it in
   `package.json` `overrides` and as the direct dependency, like `react-native-gesture-handler`.
@@ -74,12 +74,12 @@ T010's placeholder starts before T015.**
 
 ### Domain (pure TypeScript)
 
-- [ ] T002 [P] Add `addMonths(ym, delta)` (delta may be negative, crosses years), `daysInMonth(ym)`
+- [x] T002 [P] Add `addMonths(ym, delta)` (delta may be negative, crosses years), `daysInMonth(ym)`
   (28..31, leap years by the 001 rule in `lastDayOf`) and `compareMonths(a, b)` (<0, 0, >0) to
   `src/domain/month.ts` (contracts/insights-domain.md). Unit tests in `tests/unit/month.test.ts`:
   ±1, ±12, ±25 months across year ends; February 2000 (29), 2100 (28), 2024 (29), 2026 (28);
   equal, earlier and later months.
-- [ ] T003 [P] Implement `percentOf(partCents, wholeCents): Percent` in `src/domain/percent.ts`
+- [x] T003 [P] Implement `percentOf(partCents, wholeCents): Percent` in `src/domain/percent.ts`
   (research R4): `|rounded| = floor((200·|part| + whole) / (2·whole))` in integers, sign of `part`
   applied after, `sign` = sign of `part`, and "`rounded` is never -0". Unit tests in
   `tests/unit/percent.test.ts` with literal expectations: 37.5 % → 38, -37.5 % → -38, -7.5 % → -8,
@@ -87,7 +87,7 @@ T010's placeholder starts before T015.**
   with `Object.is(rounded, 0)`, `percentOf(0, 5)` → `{ 0, 0 }`, 15 % exact, and FR-022's largest
   case (`percentOf(599_999_999_994, 599_999_999_994)` → 100, `percentOf(1, 599_999_999_994)` →
   `{ 0, 1 }`).
-- [ ] T004 [P] Create `src/domain/ledger.ts` with `LedgerRow`
+- [x] T004 [P] Create `src/domain/ledger.ts` with `LedgerRow`
   (`{ type: TransactionType; amountCents: number; date: IsoDate; category: string }`) and
   `rowsInMonth(rows, ym): LedgerRow[]` (rows whose date is in `ym`, order kept), used by
   `useInsights` to split one range read. Unit tests in `tests/unit/ledger.test.ts`: month edges
@@ -95,13 +95,13 @@ T010's placeholder starts before T015.**
 
 ### Formatting (UI edge)
 
-- [ ] T005 [P] Add to `src/format/money.ts`: `formatSignedDifference(cents, tag)` (`+` above 0,
+- [x] T005 [P] Add to `src/format/money.ts`: `formatSignedDifference(cents, tag)` (`+` above 0,
   minus below, no sign at 0: `+60,00 €`, `-30,00 €`, `0,00 €`, with the minus glyph `Intl` gives,
   as 001's `formatSignedMoney`) and `spokenSignedDifference(cents, tag)` ("plus 60,00 €", "minus
   30,00 €", "0,00 €"). The saved amount uses 001's `formatMoney` and `spokenMoney` (minus only).
   Unit tests in `tests/unit/money.test.ts` for `es-ES`, `en-GB`, `en-US` and `es-US` (always `€`),
   including 999.999.999,99 € and -5.999.999.999,94 €.
-- [ ] T006 [P] Create `src/format/percent.ts`: `formatChangePercent(p: Percent | 'new')`
+- [x] T006 [P] Create `src/format/percent.ts`: `formatChangePercent(p: Percent | 'new')`
   (`+30%`, `-38%`, `+<1%`, `-<1%`, `0%`, `New`), `formatRate(p: Percent | null)` (`15%`, `-8%`,
   `<1%`, `-<1%`, `0%`, `No income`), and their spoken forms `spokenChangePercent` and
   `spokenRate` exactly as contracts/ui-screens.md, Notation ("plus 30 percent", "minus less than 1
@@ -110,7 +110,7 @@ T010's placeholder starts before T015.**
 
 ### Storage
 
-- [ ] T007 Add `listRange(from, to)` to `src/data/transactionRepository.ts` (and the
+- [x] T007 Add `listRange(from, to)` to `src/data/transactionRepository.ts` (and the
   `TransactionRepository` interface) per contracts/transaction-repository.md: the SQL given there,
   slim rows mapped to `LedgerRow`, `[]` when `from` is after `to`, failures thrown as
   `StorageError('list')` through `guard`. Integration tests in
@@ -121,7 +121,7 @@ T010's placeholder starts before T015.**
 
 ### Reference data (SC-001)
 
-- [ ] T008 [P] Create `tests/fixtures/insightsReference.ts` (SC-001): at least 100
+- [x] T008 [P] Create `tests/fixtures/insightsReference.ts` (SC-001): at least 100
   `TransactionInput`s over seven consecutive months, April to October 2026, with a fixed `today`
   of `2026-10-12`, including: a 31-day month against a 30-day one (October/September), a month
   without data (June), a month with more expenses than income (August), a month with expenses but

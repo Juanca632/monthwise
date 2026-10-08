@@ -84,6 +84,11 @@ export function formatSignedMoney(cents: number, type: TransactionType, tag: str
   return join(currencyParts(type === 'income' ? abs : -abs, tag, 'always'));
 }
 
+/** Differences (pace, category changes): `+` above 0, minus below, no sign at 0 (`0,00 €`). */
+export function formatSignedDifference(cents: number, tag: string): string {
+  return join(currencyParts(cents, tag, cents === 0 ? 'auto' : 'always'));
+}
+
 /** The form accepts `,` or `.`; any other decimal sign (e.g. Arabic `٫`) maps to `.`. */
 export function formSeparator(tag: string): ',' | '.' {
   const decimal = new Intl.NumberFormat(tag, { numberingSystem: 'latn' })
@@ -101,6 +106,13 @@ export function formatAmountForInput(cents: number, tag: string): string {
 /** Screen readers can skip a lone `-`, so negatives are read with the word "minus" (FR-031). */
 export function spokenMoney(cents: number, tag: string): string {
   const amount = formatMoney(Math.abs(cents), tag);
+  return cents < 0 ? `minus ${amount}` : amount;
+}
+
+/** Spoken form of `formatSignedDifference`: "plus 60,00 €", "minus 30,00 €", "0,00 €". */
+export function spokenSignedDifference(cents: number, tag: string): string {
+  const amount = formatMoney(Math.abs(cents), tag);
+  if (cents > 0) return `plus ${amount}`;
   return cents < 0 ? `minus ${amount}` : amount;
 }
 

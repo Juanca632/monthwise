@@ -147,6 +147,7 @@ describe('with EXPO_PUBLIC_DEV_TOOLS=1', () => {
     flag.setSimulateStorageError(true);
     const calls = [
       repo.listByMonth(sept),
+      repo.listRange(sept, sept),
       repo.getById(created.id),
       repo.create(input, 2),
       repo.update(created.id, input),

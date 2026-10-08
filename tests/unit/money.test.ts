@@ -4,7 +4,9 @@ import {
   formatMoney,
   formatSignedMoney,
   formSeparator,
+  formatSignedDifference,
   spokenMoney,
+  spokenSignedDifference,
 } from '@/format/money';
 
 // Expected strings are the Hermes outputs recorded in device-checks.md.
@@ -108,5 +110,40 @@ describe('currencyPosition', () => {
     ['es-US', 'before'],
   ])('%s → %s', (tag, position) => {
     expect(currencyPosition(tag)).toBe(position);
+  });
+});
+
+describe('formatSignedDifference (002)', () => {
+  it.each([
+    ['es-ES', 6_000, `+60,00${NBSP}€`],
+    ['es-ES', -3_000, `-30,00${NBSP}€`],
+    ['es-ES', 0, `0,00${NBSP}€`],
+    ['es-ES', 50, `+0,50${NBSP}€`],
+    ['es-ES', -1, `-0,01${NBSP}€`],
+    ['es-ES', 99_999_999_999, `+999.999.999,99${NBSP}€`],
+    ['es-ES', -599_999_999_994, `-5.999.999.999,94${NBSP}€`],
+    ['en-GB', 123_400, '+€1,234.00'],
+    ['en-GB', -123_400, '-€1,234.00'],
+    ['en-GB', 0, '€0.00'],
+    ['en-US', -5_050, '-€50.50'],
+    ['en-US', 0, '€0.00'],
+    ['es-US', 1_250, '+€12.50'],
+    ['es-US', -599_999_999_994, '-€5,999,999,999.94'],
+  ])('%s %d → %s', (tag, cents, expected) => {
+    expect(formatSignedDifference(cents, tag)).toBe(expected);
+  });
+});
+
+describe('spokenSignedDifference (002)', () => {
+  it('says "plus" and "minus" instead of signs, nothing at 0', () => {
+    expect(spokenSignedDifference(6_000, 'es-ES')).toBe(`plus 60,00${NBSP}€`);
+    expect(spokenSignedDifference(-3_000, 'es-ES')).toBe(`minus 30,00${NBSP}€`);
+    expect(spokenSignedDifference(0, 'es-ES')).toBe(`0,00${NBSP}€`);
+    expect(spokenSignedDifference(-599_999_999_994, 'es-ES')).toBe(
+      `minus 5.999.999.999,94${NBSP}€`,
+    );
+    expect(spokenSignedDifference(99_999_999_999, 'en-GB')).toBe('plus €999,999,999.99');
+    expect(spokenSignedDifference(-123_400, 'en-US')).toBe('minus €1,234.00');
+    expect(spokenSignedDifference(1_250, 'es-US')).toBe('plus €12.50');
   });
 });
