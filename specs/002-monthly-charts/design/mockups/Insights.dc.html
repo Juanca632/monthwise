@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Insights</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2F5BEA}a:hover{color:#1D34A6}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:inherit}
+.spin{animation:spin 900ms linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.detail{animation:detailIn 200ms cubic-bezier(.2,.8,.2,1) both}
+@keyframes detailIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.detail{animation:fadeOnly 200ms both}@keyframes fadeOnly{from{opacity:0}to{opacity:1}}}
+</style>
+</helmet>
+<div style="width: 390px; height: {{rootH}}px; overflow: hidden; background: {{t.bg}}; color: {{t.text}}; font-family: Manrope, system-ui, sans-serif; font-variant-numeric: tabular-nums;">
+
+  <header style="padding: 52px 16px 8px; display: flex; align-items: center; gap: 12px;">
+    <button type="button" aria-label="Back" style="width: 48px; height: 48px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {{t.surface}};">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.text}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <div style="display: flex; flex-direction: column;">
+      <h1 style="margin: 0; font-size: 14px; font-weight: 500; color: {{t.textMuted}};">Insights</h1>
+      <button type="button" aria-label="{{v.title}}" aria-description="Changes the month" style="min-height: 48px; display: inline-flex; align-items: center; gap: 8px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">
+        {{v.title}}
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.textMuted}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+    </div>
+  </header>
+
+  <sc-if value="{{isError}}" hint-placeholder-val="{{ false }}">
+    <div style="margin: 24px 16px 0; padding: 32px 24px; border-radius: 20px; background: {{t.surface}}; display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center;">
+      <div style="font-size: 15px; font-weight: 500;">Couldn't load your data.</div>
+      <button type="button" style="min-height: 48px; padding: 0 24px; border-radius: 999px; background: {{t.fieldFill}}; border: 1px solid {{t.fieldBorder}}; font-size: 15px; font-weight: 600;">Try again</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{showPace}}" hint-placeholder-val="{{ true }}">
+    <h2 style="margin: 0; padding: 16px 24px 8px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Spending pace</h2>
+    <section style="margin: 0 16px; padding: 16px; border-radius: 20px; background: {{t.surface}}; box-shadow: {{t.tileShadow}}; display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 17px; font-weight: 600; line-height: 24px;">{{v.sentence}}</div>
+      <div aria-hidden="true" style="display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; font-weight: 500; color: {{t.textMuted}};">
+        <span style="display: inline-flex; align-items: center; gap: 8px;"><svg width="18" height="6" viewBox="0 0 18 6"><line x1="1.5" y1="3" x2="16.5" y2="3" stroke="{{t.accent}}" stroke-width="3" stroke-linecap="round"></line></svg>{{v.selName}}</span>
+        <sc-if value="{{pace.hasPrev}}" hint-placeholder-val="{{ true }}">
+          <span style="display: inline-flex; align-items: center; gap: 8px;"><svg width="18" height="6" viewBox="0 0 18 6"><line x1="0" y1="3" x2="18" y2="3" stroke="{{t.prev}}" stroke-width="2" stroke-dasharray="6 4"></line></svg>{{v.prevName}}</span>
+        </sc-if>
+      </div>
+      <div style="position: relative; width: 326px; height: 204px; margin-top: 4px;">
+        <svg aria-hidden="true" width="326" height="204" viewBox="0 0 326 204" style="display: block;">
+          <defs>
+            <linearGradient id="paceArea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="{{t.accent}}" stop-opacity="0.22"></stop>
+              <stop offset="1" stop-color="{{t.accent}}" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
+          <line x1="0" y1="68" x2="326" y2="68" stroke="{{t.grid}}" stroke-width="1"></line>
+          <line x1="0" y1="124" x2="326" y2="124" stroke="{{t.grid}}" stroke-width="1"></line>
+          <rect x="{{pace.bandX}}" y="12" width="{{pace.bandW}}" height="168" rx="3" fill="{{t.band}}" opacity="{{pace.dayOpacity}}"></rect>
+          <path d="{{pace.prevPath}}" fill="none" stroke="{{t.prev}}" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round"></path>
+          <path d="{{pace.selArea}}" fill="url(#paceArea)"></path>
+          <path d="{{pace.selPath}}" fill="none" stroke="{{t.accent}}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+          <line x1="0" y1="180" x2="326" y2="180" stroke="{{t.axis}}" stroke-width="1"></line>
+          <line x1="{{pace.guideX}}" y1="12" x2="{{pace.guideX}}" y2="180" stroke="{{t.text}}" stroke-opacity="0.32" stroke-width="1" opacity="{{pace.dayOpacity}}"></line>
+          <circle cx="{{pace.endX}}" cy="{{pace.endY}}" r="4.5" fill="{{t.accent}}" stroke="{{t.surface}}" stroke-width="2"></circle>
+          <circle cx="{{pace.prevMX}}" cy="{{pace.prevMY}}" r="5" fill="{{t.surface}}" stroke="{{t.prev}}" stroke-width="2.5" opacity="{{pace.prevMOpacity}}"></circle>
+          <circle cx="{{pace.selMX}}" cy="{{pace.selMY}}" r="6" fill="{{t.accent}}" stroke="{{t.surface}}" stroke-width="2.5" opacity="{{pace.selMOpacity}}"></circle>
+          <line x1="5.3" y1="180" x2="5.3" y2="184" stroke="{{t.axis}}"></line>
+          <line x1="78.9" y1="180" x2="78.9" y2="184" stroke="{{t.axis}}"></line>
+          <line x1="152.5" y1="180" x2="152.5" y2="184" stroke="{{t.axis}}"></line>
+          <line x1="226.1" y1="180" x2="226.1" y2="184" stroke="{{t.axis}}"></line>
+          <line x1="299.7" y1="180" x2="299.7" y2="184" stroke="{{t.axis}}"></line>
+          <text x="5.3" y="200" text-anchor="middle" font-size="13" font-weight="500" fill="{{t.textMuted}}">1</text>
+          <text x="78.9" y="200" text-anchor="middle" font-size="13" font-weight="500" fill="{{t.textMuted}}">8</text>
+          <text x="152.5" y="200" text-anchor="middle" font-size="13" font-weight="500" fill="{{t.textMuted}}">15</text>
+          <text x="226.1" y="200" text-anchor="middle" font-size="13" font-weight="500" fill="{{t.textMuted}}">22</text>
+          <text x="299.7" y="200" text-anchor="middle" font-size="13" font-weight="500" fill="{{t.textMuted}}">29</text>
+        </svg>
+        <div style="position: absolute; left: 0; top: 0; width: 326px; height: 180px; display: flex;">
+          <sc-for list="{{pace.days}}" as="d" hint-placeholder-count="31">
+            <button type="button" aria-label="{{d.label}}" aria-pressed="{{d.selected}}" onClick="{{d.pick}}" style="flex: 1; height: 180px;"></button>
+          </sc-for>
+        </div>
+      </div>
+      <sc-if value="{{det.open}}" hint-placeholder-val="{{ true }}">
+        <div class="detail" style="padding: 12px 16px; border-radius: 16px; background: {{t.muted}}; display: flex; flex-direction: column; gap: 4px;">
+          <div style="font-size: 14px; font-weight: 600;">{{det.dayText}}</div>
+          <sc-if value="{{det.showSel}}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500;"><svg aria-hidden="true" width="18" height="6" viewBox="0 0 18 6"><line x1="1.5" y1="3" x2="16.5" y2="3" stroke="{{t.accent}}" stroke-width="3" stroke-linecap="round"></line></svg>{{det.selText}}</div>
+          </sc-if>
+          <sc-if value="{{det.showPrev}}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500;"><svg aria-hidden="true" width="18" height="6" viewBox="0 0 18 6"><line x1="0" y1="3" x2="18" y2="3" stroke="{{t.prev}}" stroke-width="2" stroke-dasharray="6 4"></line></svg>{{det.prevText}}</div>
+          </sc-if>
+          <sc-if value="{{det.showDiff}}" hint-placeholder-val="{{ true }}">
+            <div style="font-size: 15px; font-weight: 600; padding-left: 26px;">{{det.diffText}}</div>
+          </sc-if>
+        </div>
+      </sc-if>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{isLoading}}" hint-placeholder-val="{{ false }}">
+    <h2 style="margin: 0; padding: 16px 24px 8px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Categories vs last month</h2>
+    <div style="margin: 0 16px; height: 140px; border-radius: 20px; background: {{t.surface}}; box-shadow: {{t.tileShadow}}; display: flex; align-items: center; justify-content: center;">
+      <div class="spin" role="progressbar" aria-label="Loading" style="width: 28px; height: 28px; border-radius: 50%; border: 3px solid {{t.accentTrack}}; border-top-color: {{t.accent}}; box-sizing: border-box;"></div>
+    </div>
+    <h2 style="margin: 0; padding: 16px 24px 8px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Savings trend</h2>
+    <div style="margin: 0 16px; height: 140px; border-radius: 20px; background: {{t.surface}}; box-shadow: {{t.tileShadow}}; display: flex; align-items: center; justify-content: center;">
+      <div class="spin" role="progressbar" aria-label="Loading" style="width: 28px; height: 28px; border-radius: 50%; border: 3px solid {{t.accentTrack}}; border-top-color: {{t.accent}}; box-sizing: border-box;"></div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isReady}}" hint-placeholder-val="{{ true }}">
+    <h2 style="margin: 0; padding: 16px 24px 8px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Categories vs last month</h2>
+    <section style="margin: 0 16px; padding: 16px; border-radius: 20px; background: {{t.surface}}; box-shadow: {{t.tileShadow}}; display: flex; flex-direction: column;">
+      <sc-if value="{{cat.comparedBy}}" hint-placeholder-val="{{ true }}">
+        <div style="font-size: 13px; font-weight: 500; color: {{t.textMuted}}; margin-bottom: 12px;">{{cat.comparedBy}}</div>
+      </sc-if>
+      <sc-if value="{{cat.emptyText}}" hint-placeholder-val="{{ false }}">
+        <div style="font-size: 15px; font-weight: 500; color: {{t.textMuted}};">{{cat.emptyText}}</div>
+      </sc-if>
+      <sc-if value="{{cat.hasRows}}" hint-placeholder-val="{{ true }}">
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.3fr); gap: 8px; padding: 0 0 8px 16px; font-size: 13px; font-weight: 500; color: {{t.textMuted}};">
+          <div>{{cat.col1}}</div><div>{{cat.col2}}</div><div>{{cat.col3}}</div>
+        </div>
+        <sc-for list="{{cat.rows}}" as="r" hint-placeholder-count="5">
+          <div role="group" aria-label="{{r.a11y}}" style="padding: 12px 0; border-top: 1px solid {{t.divider}}; display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; flex: none; background: {{r.color}};"></span><span style="font-size: 15px; font-weight: 600;">{{r.label}}</span></div>
+            <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.3fr); gap: 8px; padding-left: 16px; align-items: center;">
+              <div style="font-size: 15px; font-weight: 500;">{{r.thisText}}</div>
+              <div style="font-size: 15px; font-weight: 500; color: {{t.textMuted}};">{{r.lastText}}</div>
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px;">
+                <span style="font-size: 15px; font-weight: 600;">{{r.changeText}}</span>
+                <span style="padding: 2px 6px; border-radius: 8px; font-size: 12px; font-weight: 600; color: {{r.pillFg}}; background: {{r.pillBg}};">{{r.pctText}}</span>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </sc-if>
+    </section>
+
+    <h2 style="margin: 0; padding: 16px 24px 8px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Savings trend</h2>
+    <section style="margin: 0 16px; padding: 16px; border-radius: 20px; background: {{t.surface}}; box-shadow: {{t.tileShadow}}; display: flex; flex-direction: column; gap: 8px;">
+      <sc-if value="{{tr.empty}}" hint-placeholder-val="{{ false }}">
+        <div style="font-size: 15px; font-weight: 500; color: {{t.textMuted}};">No data yet</div>
+      </sc-if>
+      <sc-if value="{{tr.has}}" hint-placeholder-val="{{ true }}">
+        <div aria-label="{{tr.headlineA11y}}" style="font-size: 17px; font-weight: 600; line-height: 24px;">{{tr.headline}}</div>
+        <div aria-hidden="true" style="display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; font-weight: 500; color: {{t.textMuted}};">
+          <span style="display: inline-flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 12px; border-radius: 3px 3px 0 0; background: {{t.income}};"></span>Income</span>
+          <span style="display: inline-flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 12px; box-sizing: border-box; border-radius: 3px 3px 0 0; border: 2px solid {{t.prev}}; background: {{t.prevFill}};"></span>Expenses</span>
+          <span style="display: inline-flex; align-items: center; gap: 8px;"><svg width="10" height="14" viewBox="0 0 10 14"><line x1="5" y1="5" x2="5" y2="14" stroke="{{t.accent}}" stroke-width="2"></line><circle cx="5" cy="5" r="4" fill="{{t.accent}}"></circle></svg>Saved</span>
+        </div>
+        <div style="position: relative; display: flex; margin-top: 8px;">
+          <sc-for list="{{tr.cols}}" as="c" hint-placeholder-count="6">
+            <button type="button" aria-label="{{c.full}}" aria-pressed="{{c.open}}" aria-description="{{c.value}}" onClick="{{c.pick}}" style="flex: 1; min-width: 48px; padding: 8px 0; border-radius: 12px; background: {{c.bg}}; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+              <span style="position: relative; display: block; width: 100%; height: 160px;">
+                <sc-if value="{{c.none}}" hint-placeholder-val="{{ false }}">
+                  <span style="position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; color: {{t.textMuted}}; text-align: center;">No data</span>
+                </sc-if>
+                <sc-if value="{{c.has}}" hint-placeholder-val="{{ true }}">
+                  <span aria-hidden="true" style="position: absolute; left: calc(50% - 19px); width: 12px; top: {{c.incTop}}px; height: {{c.incH}}px; border-radius: 4px 4px 0 0; background: {{t.income}};"></span>
+                  <span aria-hidden="true" style="position: absolute; left: calc(50% - 5px); width: 12px; box-sizing: border-box; top: {{c.expTop}}px; height: {{c.expH}}px; border-radius: 4px 4px 0 0; border: 2px solid {{t.prev}}; border-bottom: 0; background: {{t.prevFill}};"></span>
+                  <span aria-hidden="true" style="position: absolute; left: calc(50% + 12px); width: 2px; top: {{c.stemTop}}px; height: {{c.stemH}}px; background: {{c.savedColor}};"></span>
+                  <span aria-hidden="true" style="position: absolute; left: calc(50% + 8px); width: 10px; height: 10px; border-radius: 50%; top: {{c.dotTop}}px; background: {{c.savedColor}};"></span>
+                </sc-if>
+              </span>
+              <span style="font-size: 13px; font-weight: {{c.labelWeight}}; color: {{c.labelColor}};">{{c.short}}</span>
+            </button>
+          </sc-for>
+          <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: {{tr.zeroTop}}px; height: 1px; background: {{t.axis}}; pointer-events: none;"></div>
+        </div>
+        <sc-if value="{{td.open}}" hint-placeholder-val="{{ true }}">
+          <div class="detail" style="margin-top: 4px; padding: 12px 16px; border-radius: 16px; background: {{t.muted}}; display: flex; flex-direction: column; gap: 4px;">
+            <div style="font-size: 14px; font-weight: 600;">{{td.name}}</div>
+            <sc-if value="{{td.has}}" hint-placeholder-val="{{ true }}">
+              <div style="font-size: 15px; font-weight: 500;">{{td.income}}</div>
+              <div style="font-size: 15px; font-weight: 500;">{{td.expenses}}</div>
+              <div style="font-size: 15px; font-weight: 500;">{{td.saved}}</div>
+              <div style="font-size: 15px; font-weight: 500;">{{td.rate}}</div>
+            </sc-if>
+            <sc-if value="{{td.none}}" hint-placeholder-val="{{ false }}">
+              <div style="font-size: 15px; font-weight: 500;">No data</div>
+            </sc-if>
+            <sc-if value="{{td.view}}" hint-placeholder-val="{{ true }}">
+              <button type="button" style="align-self: flex-start; margin-top: 8px; min-height: 48px; padding: 0 12px 0 16px; border-radius: 999px; background: {{t.surface}}; color: {{t.accent}}; display: inline-flex; align-items: center; gap: 4px; font-size: 15px; font-weight: 600;">
+                View month
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{t.accent}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            </sc-if>
+          </div>
+        </sc-if>
+      </sc-if>
+    </section>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"variant":{"editor":"enum","options":["current","past","loading","error","empty"],"default":"current"},"$preview":{"width":390,"height":1800}}'>
+const rgba = (hex, a) => {
+  const n = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return 'rgba(' + n.join(', ') + ', ' + a + ')';
+};
+const CATS = {
+  light: { food: '#C2410C', transport: '#1864AB', housing: '#6741D9', bills: '#0B7285', health: '#C92A2A', shopping: '#A61E4D', leisure: '#237032' },
+  dark: { food: '#FF922B', transport: '#4DABF7', housing: '#9775FA', bills: '#3BC9DB', health: '#FF6B6B', shopping: '#F06595', leisure: '#69DB7C' },
+};
+const TOK = {
+  light: {
+    bg: '#F2F3F7', surface: '#FFFFFF', muted: '#F1F3F6', text: '#0E1116', textMuted: '#5B6472',
+    accent: '#2F5BEA', accentTrack: rgba('#2F5BEA', 0.18), prev: '#7D8696', prevFill: rgba('#7D8696', 0.16),
+    income: '#0B6B5E', incomeSoft: '#E3F4EE', error: '#B3362A', errorSoft: rgba('#B3362A', 0.12),
+    grid: rgba('#0E1116', 0.07), axis: rgba('#0E1116', 0.28), band: rgba('#2F5BEA', 0.1), divider: rgba('#0E1116', 0.06),
+    fieldFill: rgba('#0E1116', 0.06), fieldBorder: '#7D8696', tileShadow: '0 2px 8px ' + rgba('#0E1116', 0.06),
+    cat: CATS.light,
+  },
+  dark: {
+    bg: '#07080A', surface: '#1B1D24', muted: '#262A33', text: '#F2F4F7', textMuted: '#B0B8C6',
+    accent: '#7D96FF', accentTrack: rgba('#7D96FF', 0.22), prev: '#7D8696', prevFill: rgba('#7D8696', 0.24),
+    income: '#45D3A8', incomeSoft: '#12332C', error: '#FF8A7A', errorSoft: rgba('#FF8A7A', 0.18),
+    grid: rgba('#FFFFFF', 0.07), axis: rgba('#FFFFFF', 0.28), band: rgba('#7D96FF', 0.16), divider: rgba('#FFFFFF', 0.07),
+    fieldFill: rgba('#FFFFFF', 0.06), fieldBorder: rgba('#FFFFFF', 0.38), tileShadow: 'none',
+    cat: CATS.dark,
+  },
+};
+
+const OCT = [702.40, 731.90, 750.30, 798.60, 841.40, 880.00, 955.10, 1012.30, 1061.80, 1149.20, 1210.00, 1284.60];
+const SEP = [688.00, 720.50, 741.10, 790.00, 832.40, 861.90, 920.30, 968.10, 1010.00, 1062.70, 1131.80, 1199.60, 1240.10, 1268.40, 1322.00, 1350.30, 1381.20, 1430.00, 1462.90, 1501.10, 1540.80, 1566.20, 1590.00, 1612.40, 1648.90, 1672.00, 1690.30, 1708.70, 1721.40, 1730.00];
+const AUG = [761.54, 785.82, 831.07, 850.94, 917.16, 955.79, 969.03, 1046.29, 1099.26, 1126.86, 1199.70, 1232.81, 1249.36, 1306.76, 1350.90, 1381.81, 1449.13, 1470.10, 1506.52, 1558.39, 1587.09, 1651.10, 1674.28, 1717.32, 1765.89, 1784.65, 1854.18, 1886.19, 1925.92, 1952.41, 1980.00];
+const FULL = { Apr: 'April', May: 'May', Jun: 'June', Jul: 'July', Aug: 'August', Sep: 'September', Oct: 'October' };
+
+const V = {
+  current: {
+    title: 'October 2026', selName: 'October', prevName: 'September', sel: OCT, prev: SEP,
+    sentence: '85,00 € more than last month by day 12', current: true,
+    comparedBy: 'Compared by day 12', cols: ['This month', 'Last month', 'Change'],
+    cats: [['leisure', 'Leisure', 125.90, 52.40], ['shopping', 'Shopping', 40, 0], ['housing', 'Housing', 650, 650], ['food', 'Food', 372.30, 380], ['transport', 'Transport', 96.40, 117.20]],
+    trend: [['May', 2450, 2050], ['Jun'], ['Jul', 2450, 2890], ['Aug', 2600, 1980], ['Sep', 2450, 1730], ['Oct', 2450, 1284.60]],
+    screenMonth: 'Oct', day: 8, open: 'Jul', rootH: 1800,
+  },
+  past: {
+    title: 'September 2026', selName: 'September', prevName: 'August', sel: SEP, prev: AUG,
+    sentence: '250,00 € less than August', current: false,
+    comparedBy: '', cols: ['September', 'August', 'Change'],
+    cats: [['food', 'Food', 540.20, 512], ['transport', 'Transport', 179.40, 158], ['bills', 'Bills', 150, 150], ['housing', 'Housing', 650, 650], ['shopping', 'Shopping', 0, 130], ['leisure', 'Leisure', 210.40, 380]],
+    trend: [['Apr', 2450, 2210], ['May', 2450, 2050], ['Jun'], ['Jul', 2450, 2890], ['Aug', 2600, 1980], ['Sep', 2450, 1730]],
+    screenMonth: 'Sep', day: 31, open: 'Jun', rootH: 1800,
+  },
+  empty: {
+    title: 'October 2026', selName: 'October', prevName: 'September', sel: Array(12).fill(0), prev: null,
+    sentence: 'No spending to compare yet', current: true, comparedBy: '', cols: [], cats: [], trend: [],
+    screenMonth: 'Oct', day: null, open: null, rootH: 844,
+  },
+};
+
+const c100 = (v) => Math.round(v * 100);
+const money = (c) => {
+  const a = Math.abs(c);
+  const int = String(Math.floor(a / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return int + ',' + String(a % 100).padStart(2, '0') + ' €';
+};
+const signed = (c) => (c > 0 ? '+' : c < 0 ? '-' : '') + money(c);
+const savedText = (c) => (c < 0 ? '-' : '') + money(c);
+const spokenSigned = (c) => (c > 0 ? 'plus ' : c < 0 ? 'minus ' : '') + money(c);
+const roundAway = (r) => Math.sign(r) * Math.round(Math.abs(r));
+const change = (a, b) => {
+  if (b === 0) return a > 0 ? 'New' : '0%';
+  const r = ((a - b) / b) * 100;
+  const k = roundAway(r);
+  if (k === 0) return r === 0 ? '0%' : r > 0 ? '+<1%' : '-<1%';
+  return (k > 0 ? '+' : '-') + Math.abs(k) + '%';
+};
+const rate = (s, i) => {
+  if (i === 0) return 'No income';
+  const r = (s / i) * 100;
+  const k = roundAway(r);
+  if (k === 0) return r === 0 ? '0%' : r > 0 ? '<1%' : '-<1%';
+  return (k < 0 ? '-' : '') + Math.abs(k) + '%';
+};
+const spokenPct = (p) => {
+  if (p === 'New') return 'new';
+  if (p === 'No income') return 'no income';
+  let s = p.replace('%', '');
+  let out = '';
+  if (s[0] === '+') { out = 'plus '; s = s.slice(1); } else if (s[0] === '-') { out = 'minus '; s = s.slice(1); }
+  return out + (s === '<1' ? 'less than 1' : s) + ' percent';
+};
+
+const W = 326, TOP = 12, H = 168, DAYW = W / 31;
+const dayX = (d) => +((d - 0.5) * DAYW).toFixed(1);
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {};
+  }
+  renderVals() {
+    const t = this.props.dark ? TOK.dark : TOK.light;
+    const variant = this.props.variant ?? 'current';
+    const isLoading = variant === 'loading';
+    const isError = variant === 'error';
+    const v = V[variant] ?? V.current;
+    const day = isLoading ? null : this.state.day !== undefined ? this.state.day : v.day;
+    const open = this.state.open !== undefined ? this.state.open : v.open;
+
+    // Pace chart
+    const sel = v.sel.map(c100);
+    const prev = v.prev ? v.prev.map(c100) : null;
+    const yMax = Math.max(1, ...sel, ...(prev ?? [0])) * 1.08;
+    const y = (c) => +(TOP + (1 - c / yMax) * H).toFixed(1);
+    const path = (vals) => vals.map((c, i) => (i ? 'L' : 'M') + dayX(i + 1) + ' ' + y(c)).join(' ');
+    const selPath = path(sel);
+    const lastX = dayX(sel.length);
+    const selArea = selPath + ' L' + lastX + ' 180 L' + dayX(1) + ' 180 Z';
+    const showSel = day !== null && day <= sel.length;
+    const prevIdx = prev && day !== null ? Math.min(day, prev.length) - 1 : -1;
+    const days = Array.from({ length: 31 }, (_, i) => ({
+      label: 'Day ' + (i + 1),
+      selected: day === i + 1,
+      pick: () => this.setState({ day: day === i + 1 ? null : i + 1 }),
+    }));
+    const pace = {
+      hasPrev: !!prev,
+      prevPath: prev ? path(prev) : '',
+      selPath,
+      selArea,
+      endX: lastX,
+      endY: y(sel[sel.length - 1]),
+      dayOpacity: day === null ? 0 : 1,
+      bandX: day === null ? 0 : +((day - 1) * DAYW).toFixed(1),
+      bandW: +DAYW.toFixed(1),
+      guideX: day === null ? 0 : dayX(day),
+      selMX: showSel ? dayX(day) : 0,
+      selMY: showSel ? y(sel[day - 1]) : 0,
+      selMOpacity: showSel ? 1 : 0,
+      prevMX: prevIdx >= 0 ? dayX(prevIdx + 1) : 0,
+      prevMY: prevIdx >= 0 ? y(prev[prevIdx]) : 0,
+      prevMOpacity: prevIdx >= 0 ? 1 : 0,
+      days,
+    };
+    const a = showSel ? sel[day - 1] : null;
+    const b = prevIdx >= 0 ? prev[prevIdx] : null;
+    const det = {
+      open: day !== null,
+      dayText: 'Day ' + day,
+      showSel,
+      selText: showSel ? v.selName + ': ' + money(a) : '',
+      showPrev: prevIdx >= 0,
+      prevText: prevIdx >= 0 ? v.prevName + ': ' + money(b) : '',
+      showDiff: showSel && prevIdx >= 0,
+      diffText: showSel && prevIdx >= 0 ? signed(a - b) + ' · ' + change(a, b) : '',
+    };
+
+    // Categories
+    const rows = v.cats
+      .map(([key, label, thisV, lastV]) => ({ key, label, a: c100(thisV), b: c100(lastV) }))
+      .sort((p, q) => (q.a - q.b) - (p.a - p.b) || p.label.localeCompare(q.label))
+      .map((r) => {
+        const d = r.a - r.b;
+        const pct = change(r.a, r.b);
+        const name1 = v.current ? 'this month' : v.selName;
+        const name2 = v.current ? 'last month' : v.prevName;
+        return {
+          label: r.label,
+          color: t.cat[r.key],
+          thisText: money(r.a),
+          lastText: money(r.b),
+          changeText: signed(d),
+          pctText: pct,
+          pillFg: d > 0 ? t.error : d < 0 ? t.income : t.textMuted,
+          pillBg: d > 0 ? t.errorSoft : d < 0 ? t.incomeSoft : t.muted,
+          a11y: r.label + ', ' + name1 + ' ' + money(r.a) + ', ' + name2 + ' ' + money(r.b) + ', ' + spokenSigned(d) + ', ' + spokenPct(pct),
+        };
+      });
+    const cat = {
+      comparedBy: v.comparedBy,
+      emptyText: rows.length ? '' : 'No spending to compare yet',
+      hasRows: rows.length > 0,
+      col1: v.cols[0] ?? '', col2: v.cols[1] ?? '', col3: v.cols[2] ?? '',
+      rows,
+    };
+
+    // Trend
+    const months = v.trend.map(([k, inc, exp]) => (inc === undefined ? { k, none: true } : { k, inc: c100(inc), exp: c100(exp), saved: c100(inc) - c100(exp) }));
+    const withData = months.filter((m) => !m.none);
+    const PH = 160;
+    const top = Math.max(1, ...withData.map((m) => Math.max(m.inc, m.exp))) * 1.04;
+    const bottom = Math.min(0, ...withData.map((m) => m.saved)) * 1.25;
+    const range = top - bottom;
+    const zeroY = (PH * top) / range;
+    const px = (c) => (PH * Math.abs(c)) / range;
+    const cols = months.map((m) => {
+      const isOpen = open === m.k;
+      const isScreen = m.k === v.screenMonth;
+      const base = {
+        short: m.k,
+        full: FULL[m.k],
+        open: isOpen,
+        bg: isOpen ? t.band : 'transparent',
+        labelWeight: isOpen || isScreen ? 700 : 500,
+        labelColor: isOpen ? t.accent : isScreen ? t.text : t.textMuted,
+        pick: () => this.setState({ open: isOpen ? null : m.k }),
+      };
+      if (m.none) return { ...base, none: true, has: false, value: 'No data' };
+      const sp = px(m.saved);
+      return {
+        ...base,
+        none: false,
+        has: true,
+        value: 'Income ' + money(m.inc) + ', expenses ' + money(m.exp) + ', saved ' + spokenSigned(m.saved).replace('plus ', '') + ', savings rate ' + spokenPct(rate(m.saved, m.inc)),
+        incTop: +(zeroY - px(m.inc)).toFixed(1), incH: +px(m.inc).toFixed(1),
+        expTop: +(zeroY - px(m.exp)).toFixed(1), expH: +px(m.exp).toFixed(1),
+        stemTop: +(m.saved >= 0 ? zeroY - sp : zeroY).toFixed(1), stemH: +sp.toFixed(1),
+        dotTop: +((m.saved >= 0 ? zeroY - sp : zeroY + sp) - 5).toFixed(1),
+        savedColor: m.saved < 0 ? t.error : t.accent,
+      };
+    });
+    const totSaved = withData.reduce((s, m) => s + m.saved, 0);
+    const totInc = withData.reduce((s, m) => s + m.inc, 0);
+    const n = withData.length;
+    const r = rate(totSaved, totInc);
+    const tr = {
+      empty: withData.length === 0,
+      has: withData.length > 0,
+      headline: 'Saved ' + savedText(totSaved) + ' in ' + n + (n === 1 ? ' month' : ' months') + ' · ' + r,
+      headlineA11y: 'Saved ' + spokenSigned(totSaved).replace('plus ', '') + ' in ' + n + (n === 1 ? ' month' : ' months') + ', ' + spokenPct(r),
+      cols,
+      zeroTop: +(8 + zeroY).toFixed(1),
+    };
+    const om = months.find((m) => m.k === open);
+    const td = {
+      open: !!om,
+      name: om ? FULL[om.k] : '',
+      has: !!om && !om.none,
+      none: !!om && !!om.none,
+      income: om && !om.none ? 'Income: ' + money(om.inc) : '',
+      expenses: om && !om.none ? 'Expenses: ' + money(om.exp) : '',
+      saved: om && !om.none ? 'Saved: ' + savedText(om.saved) : '',
+      rate: om && !om.none ? 'Savings rate: ' + rate(om.saved, om.inc) : '',
+      view: !!om && om.k !== v.screenMonth,
+    };
+
+    const heights = { loading: 1080, error: 844 };
+    return {
+      t, v, pace, det, cat, tr, td,
+      rootH: heights[variant] ?? v.rootH,
+      isError,
+      isLoading,
+      isReady: !isLoading && !isError,
+      showPace: !isError,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -169,6 +169,9 @@ The screen reads its data again when it gets focus, when the month changes and o
   July 0,00 €, plus 40,00 €, new`. The "no data" case: `Food, this month 260,00 €` or `Food,
   August 260,00 €`.
 - Rows are not tappable.
+- At large text sizes, or when an amount is too long for the columns (design.md, Categories),
+  the column titles move into each row, one above each value, with the same texts; the separate
+  title row is not drawn. The row's accessible label does not change.
 
 ### Section 3: Savings trend (FR-011 to FR-013)
 
@@ -177,6 +180,9 @@ The screen reads its data again when it gets focus, when the month changes and o
 | Every month shown has no data | `No data yet`; no chart, no headline |
 | Otherwise | Headline, then one column per month in calendar order with its short name (`May`) under it |
 
+- Legend under the headline: `Income`, `Expenses`, `Saved`, one Text each, naming the three
+  marks design.md draws per month. It is hidden from the screen reader: each month's value already
+  names them.
 - Headline: `Saved 1.800,00 € in 6 months · 15%`; `in 1 month` for one; the saved amount
   takes a minus when negative (`Saved -400,00 € in 1 month · No income`). Accessibility label:
   `Saved 1.800,00 € in 6 months, 15 percent` (spoken forms, `·` read as a comma).
@@ -205,7 +211,7 @@ The screen reads its data again when it gets focus, when the month changes and o
 | Insights | `Insights`, `Back`, `Spending pace`, `Categories vs last month`, `Savings trend`, `Try again`, `Couldn't load your data.` |
 | Pace detail | `Day N`, `<Month>: <amount>`, `<signed amount> · <change percent>` |
 | Categories | `This month`, `Last month`, `Change` (month names for a past month), `Compared by day N`, `New`, `No spending to compare yet`, `No data from last month to compare`, `No data from <Month> to compare` |
-| Trend | `Saved <saved amount> in N months · <rate>`, `No data`, `No data yet`, `Income: `, `Expenses: `, `Saved: `, `Savings rate: `, `View month` |
+| Trend | `Saved <saved amount> in N months · <rate>`, legend `Income`, `Expenses`, `Saved`, `No data`, `No data yet`, `Income: `, `Expenses: `, `Saved: `, `Savings rate: `, `View month` |
 | Card hint | "Opens Insights" |
 
 ## Accessibility and large text (FR-022, FR-023)
