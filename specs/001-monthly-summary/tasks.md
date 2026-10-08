@@ -844,7 +844,7 @@ labels are built from data, never from animated values; no new dependency beyond
   (single scrolling chip row), a decision point for the developer.
   Done in code (2026-10-06): `softwareKeyboardLayoutMode` is unset, so Expo's default
   `adjustResize` applies, and `useAnimatedKeyboard` takes over the insets, so the window does
-  not also resize. **Phone check pending** (the developer's final pass).
+  not also resize. Phone check passed (2026-10-08, device-checks.md).
 - [x] T072 (FR-009) Form motion: the Type indicator slides with the spring; a picked chip fills
   over 220 ms; on an invalid Save the first invalid field shakes 6 dp three times. Under reduce
   motion the indicator and chip swap and there is no shake. Tests: each animation's reduce-motion
@@ -867,7 +867,7 @@ labels are built from data, never from animated values; no new dependency beyond
   `NotFoundError`. Tests in `tests/component/toast.test.tsx`: shown and announced after save and
   delete; not after a failed save, a failed delete, or `NotFoundError` on remove; its bottom
   offset; no translate under reduce motion; gone after its time.
-- [ ] T071 **Design review done (2026-10-06); the developer's phone pass is pending** (checklist in
+- [X] T071 Design review done (2026-10-06); the developer passed the phone checks on 2026-10-08 (checklist in
   device-checks.md, "Glass and motion"). Check the implemented UI: run the `design-reviewer` agent on `src/ui/`, `src/app/`
   and `theme.ts` against design.md, and fix or accept its findings as for the docs. Then the
   developer checks on the phone: light and dark, largest font, TalkBack, "Remove animations",
