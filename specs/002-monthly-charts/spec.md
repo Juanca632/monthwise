@@ -26,7 +26,8 @@ expenses (004)."
 
 Terms used below:
 
-- **Selected month**: the month shown on the summary (feature 001, FR-014 and FR-021).
+- **Selected month**: the month shown on the summary and on the Insights screen (FR-029; 001
+  FR-014).
 - **Previous month**: the calendar month right before the selected month.
 - **Spent by day N**: the sum of a month's expenses dated from its day 1 to its day N, inclusive.
   Income never counts as spending.
@@ -163,11 +164,47 @@ User Story 1.
 5. **Given** July had expenses 400.00 and no income, **When** the user taps "July", **Then** it
    shows "Saved: -€400.00" and "Savings rate: No income".
 6. **Given** a month in the range has no data, **When** the user views the trend, **Then** that
-   month is marked "No data" rather than drawn as zero, and tapping it shows only its name and "No
-   data".
+   month is marked "No data" rather than drawn as zero, and tapping it shows its name, "No data"
+   and "View month" (unless it is the selected month).
 7. **Given** the selected month is February 2000, **When** the user views the trend, **Then** it
    shows only January and February 2000, and the headline says "in 2 months"; with January 2000
    selected it says "in 1 month".
+
+---
+
+### User Story 4 - Jump to any month (Priority: P2)
+
+On the summary and on the Insights screen, the month's name is one control ("October 2026"). Tapping
+it opens a month picker showing one year as a grid of its twelve months; the user picks a month and
+the screen shows it. A "This month" shortcut returns to the current month. From the six-month trend,
+the user can also jump straight to a month they tapped. This replaces the month-by-month arrows of
+feature 001 (001 FR-021), which made far months slow to reach and did not connect with the charts.
+
+**Why this priority**: it puts any past month a few taps away and ties the charts to the rest of
+the app, but the app still works on the current month without it.
+
+**Independent Test**: With transactions in several years, open the picker from the summary, change
+year, pick a month and check the summary shows it; open Insights, pick another month there, go back
+and check the summary shows that month; tap a trend month's "View month". Scenarios 1-5 need only
+the summary; scenario 6 depends on User Story 1 and scenario 7 on User Story 3.
+
+**Acceptance Scenarios**:
+
+1. **Given** the summary for October 2026 (the current month), **When** the user taps "October
+   2026", **Then** a month picker titled "Choose month" opens on 2026, with "October 2026" marked
+   as selected and "November 2026" and "December 2026" shown but unavailable.
+2. **Given** the picker on 2026, **When** the user taps "Previous year" twice and then "March
+   2024", **Then** the picker closes and the summary shows March 2024.
+3. **Given** the picker on 2000, **When** the user looks at "Previous year", **Then** it is shown
+   but disabled; likewise "Next year" is disabled on the current year.
+4. **Given** the summary for March 2024, **When** the user opens the picker and taps "This month",
+   **Then** the picker closes and the summary shows the current month.
+5. **Given** the picker is open, **When** the user closes it without choosing ("Close", the system
+   back action, or tapping outside it), **Then** the month on screen does not change.
+6. **Given** the Insights screen for October 2026, **When** the user picks August 2026 there,
+   **Then** Insights shows August 2026, and going back shows the summary for August 2026.
+7. **Given** the Insights screen with the detail of "September" open in the trend, **When** the user
+   taps "View month", **Then** Insights shows September for every section and no detail is open.
 
 ---
 
@@ -233,8 +270,8 @@ User Story 1.
 **Insights screen**
 
 - **FR-005**: The Insights screen MUST show, top to bottom, the full spending pace chart (FR-006),
-  the categories comparison (FR-008) and the six-month trend (FR-011), with the month's name as
-  its title and a way back to the summary.
+  the categories comparison (FR-008) and the six-month trend (FR-011), with the month control
+  (FR-026) as its title and a way back to the summary.
 - **FR-006**: The full pace chart MUST show the same two lines and sentence as the card (FR-002,
   FR-003) at a size where single days can be told apart. It spans day 1 to the last day of the
   longer of the two months, with day numbers marked, and each day is a tap target named "Day N".
@@ -268,7 +305,8 @@ User Story 1.
   trend shows "No data yet" instead of the chart and the headline.
 - **FR-013**: Tapping a month in the trend MUST show, without leaving the screen, its name and
   "Income: €I", "Expenses: €E", "Saved: €S" and "Savings rate: P%" ("Savings rate: No income" when
-  its income is 0). For a month with no data it shows its name and "No data" only.
+  its income is 0). For a month with no data it shows its name and "No data" instead. Either way
+  it also offers "View month" (FR-030), except for the selected month.
 - **FR-014**: No detail is shown when a chart first appears. Each chart shows at most one detail
   (FR-007 or FR-013); tapping another day or month replaces it, and tapping the same one again
   hides it.
@@ -314,6 +352,39 @@ User Story 1.
 - **FR-025**: This feature MUST NOT send any data off the device or log any financial data, as in
   001 FR-027; it stores nothing new.
 
+**Month selection** (replaces 001 FR-021's month-by-month navigation)
+
+- **FR-026**: The summary and the Insights screen MUST show the selected month's name and year
+  (for example "October 2026") as one control whose visible text is also its accessible name;
+  tapping it opens the month picker. The previous and next month buttons of feature 001 are
+  removed.
+- **FR-027**: The month picker, titled "Choose month", MUST show one year at a time: the year number
+  as visible text, "Previous year" and "Next year" controls that move exactly one year per tap, and
+  that year's twelve months, each named "<Month> <Year>" (for example "March 2024"; the visible
+  text may be the short month name). "Previous year" is shown disabled on 2000 and "Next year" on
+  the current year. The picker opens on the selected month's year with that month marked as
+  selected. Months after the current month are shown but unavailable and cannot be chosen.
+- **FR-028**: Choosing a month MUST close the picker and show that month on the screen it was
+  opened from. The picker MUST offer a "This month" action that does the same for the current
+  month, and a "Close" action. Closing the picker without choosing ("Close", the system back
+  action or tapping outside it) MUST leave the month unchanged. Choosing the month already
+  selected only closes the picker.
+- **FR-029**: The summary and the Insights screen MUST share the selected month: a month chosen on
+  either one is the month the other shows. Adding or editing a transaction keeps 001 FR-020 (the
+  summary moves to the saved transaction's month).
+- **FR-030**: The trend's month detail (FR-013) MUST offer "View month", which makes that month the
+  selected month; Insights then shows it in every section with no detail open. It is not offered
+  for the month already selected.
+- **FR-031**: Changing the month MUST hide any open chart detail (FR-014). When midnight starts a
+  new month, 001's rule applies to the shared selected month on both screens: if it was the
+  current month, it moves to the new month when the app returns to the foreground; a past month
+  stays.
+- **FR-032**: With the screen reader on, the month control MUST be announced as a button with its
+  name (FR-026) and a hint that it changes the month; each month in the picker MUST be announced by
+  its name (FR-027) and as selected or unavailable when it is; "Previous year", "Next year" (and
+  whether disabled), the shown year, "This month" and "Close" MUST be announced. Touch sizes
+  follow FR-023.
+
 ### Key Entities
 
 All derived from the transactions of feature 001 when a view is shown; nothing new is stored.
@@ -344,22 +415,28 @@ All derived from the transactions of feature 001 when a view is shown; nothing n
 - **SC-003**: In a test with at least 3 people who have two months of sample data, each one answers
   "Are you spending more or less than last month so far, and which category went up the most?"
   correctly within 30 seconds of opening the app, without help.
-- **SC-004**: On the reference phone at the largest text size, nothing in the card or the Insights
-  screen is cut off; with the screen reader on, a user can hear the pace sentence, any day's
-  amounts, every category row and every trend month.
+- **SC-004**: On the reference phone at the largest text size, nothing in the card, the month
+  picker or the Insights screen is cut off; with the screen reader on, a user can hear the pace
+  sentence, any day's amounts, every category row and every trend month, and can choose a month
+  in the picker.
 - **SC-005**: During a full test session covering all user stories, the app makes zero network
   requests, as checked with a network monitor.
+- **SC-006**: In the same session as SC-003, with sample data extended to span at least two years
+  and starting from the current month's summary, each participant opens March of two years before
+  the current year in at most 4 taps, and returns to the current month in at most 2 taps, without
+  help (no time limit).
 
 ## Assumptions
 
 - Single user per phone, Android only, English UI, EUR only, as in 001.
 - "Spending" means expenses only. Income is used only for saved amounts and savings rates.
-- The Insights screen shows the month it was opened for; changing months happens on the summary.
-  Insights has no month navigation of its own in this feature.
+- The month picker replaces 001's arrows on both screens. Moving to the next or previous month in
+  one tap (arrows or swiping) is not required by this feature.
 - The categories comparison and the six-month trend do not depend on today: for the current month
   they use all of the month's stored transactions, like the 001 totals.
-- Exact on-screen labels and screen-reader texts beyond the sentences quoted here are fixed in this
-  feature's UI contract during planning.
+- The texts quoted in this spec are exact. Any other on-screen label or screen-reader text is
+  fixed in this feature's UI contract (`contracts/`) during planning; design.md decides only the
+  look.
 - The pace compares by day of the month (day 12 with day 12), not by weekday.
 - Out of scope: savings goals, budgets and "on track" forecasts (003), recurring expenses (004),
   choosing other comparison periods or ranges, per-category pace, filtering transactions from a

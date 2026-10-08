@@ -31,8 +31,10 @@
 
 ## Notes
 
-- Defaults chosen without asking (candidates for `/speckit-clarify`): Insights has no month
-  navigation of its own; a previous month with no transactions shows "No data from last month to
-  compare" instead of comparing against 0; trend months with no data are marked "No data" instead
-  of drawn as zero; percents round half away from zero.
+- Defaults chosen without asking (candidates for `/speckit-clarify`): a previous month with no
+  transactions shows "No data from last month to compare" instead of comparing against 0; trend
+  months with no data are marked "No data" instead of drawn as zero; percents round half away from
+  zero.
+- User Story 4 (month picker) was added at the developer's request after the first review; it
+  supersedes 001 FR-021 (noted there).
 - Chart forms (line, bars, colors, motion) are left to `design.md`.

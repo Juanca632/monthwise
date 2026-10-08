@@ -146,6 +146,11 @@ values.
 From the current month the user moves back to earlier months, sees each month's own summary and
 transactions, adds a transaction they forgot in a past month, and returns to the current month.
 
+*Partly superseded by feature 002 (FR-026 to FR-029): months are chosen in a month picker instead
+of month-by-month buttons. Read "move to the previous month" and "return forward" in scenarios 1
+and 4 as choosing that month in the picker; scenario 2 becomes "months after the current one
+cannot be chosen, and no year before 2000 is offered".*
+
 **Why this priority**: Useful for reviewing and catching up on forgotten entries, but the app
 delivers value with the current month alone.
 
@@ -278,6 +283,8 @@ lands in that month.
 
 - **FR-021**: Users MUST be able to move back month by month to any month from January 2000 and
   forward again up to the current month; moving past the current month MUST NOT be possible.
+  *Superseded by feature 002 (FR-026 to FR-029): a month picker replaces the month-by-month
+  buttons; the January 2000 to current month range stays.*
 
 **Empty, loading and error states**
 
