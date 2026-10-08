@@ -246,7 +246,9 @@ layer instead of next to the code, so the tests of each layer are easy to find.
   settings, so they use made-up data only.
 - **Build variants**: `app.config.ts` reads `APP_VARIANT` (`development`, `preview`,
   `production`; unset means `production`). Every variant sets `allowBackup: false` and uses the
-  `withNoDataExtraction` plugin (research R11). `preview` and `production` block
+  `withNoDataExtraction` plugin (research R11), and blocks the permissions Expo's Android
+  template adds but the app never uses (`SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE`,
+  `WRITE_EXTERNAL_STORAGE`; found on the T052 APK). `preview` and `production` also block
   `android.permission.INTERNET`. The `preview` profile in `eas.json` also sets
   `EXPO_PUBLIC_DEV_TOOLS=1` (seed for the SC-004 check, simulated storage error). The
   `production` profile sets it to `0` explicitly, so the dev-tools branch is always compiled out.

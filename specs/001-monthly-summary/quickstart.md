@@ -40,7 +40,7 @@ npm run typecheck         # tsc --noEmit
 | Opens on current month; month limits    | Component tests: first render shows the current month; previous hidden on January 2000, next hidden on the current month | FR-014, FR-021 |
 | Database open fails / retry             | Component test with a failing `DatabaseProvider`      | FR-002, FR-024  |
 | Screen reader labels                    | Component tests assert the labels in `contracts/ui-screens.md` (totals, minus, breakdown, list item) | FR-031 |
-| Privacy config per variant              | Unit tests call `app.config.ts` for each `APP_VARIANT`: `allowBackup === false`; preview and production block `android.permission.INTERNET` | FR-027, SC-005 |
+| Privacy config per variant              | Unit tests call `app.config.ts` for each `APP_VARIANT`: `allowBackup === false`; every variant blocks the unused template permissions; preview and production block `android.permission.INTERNET` | FR-027, SC-005 |
 | Data extraction rules plugin            | Unit test runs `withNoDataExtraction` on a fixture manifest: `android:dataExtractionRules` set, the XML excludes every domain under `<cloud-backup>` and `<device-transfer>` | FR-027 |
 | Release logging silenced                | Unit test: with the preview and production flags, `console.*` writes nothing; `devLog` writes only in preview | FR-027 |
 | Month maths (ranges, last day, limits)  | Unit tests, month helpers                             | FR-003, FR-021  |
@@ -123,7 +123,7 @@ npx eas-cli build --platform android --profile production   # free plan, APK (lo
     can appear and are not part of this check.
   - The production bundle does not contain "Seed 1,000".
 - **SC-005**: run all manual scenarios with a network monitor (for example PCAPdroid) → zero
-  requests from Monthwise. The release manifest has no `INTERNET` permission.
+  requests from Monthwise. The release manifest has no `INTERNET`, `SYSTEM_ALERT_WINDOW` or external storage permission.
 - **FR-027**: the merged manifest of the APK has `android:allowBackup="false"` and
   `android:dataExtractionRules` pointing to rules that exclude everything for both
   `cloud-backup` and `device-transfer`. Check it with `aapt dump xmltree` on the APK, and with
