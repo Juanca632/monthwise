@@ -1,3 +1,4 @@
+import { StorageError } from '@/data/errors';
 import { openAndMigrate, SCHEMA_VERSION } from '@/data/migrations';
 
 import { openTestDatabase, type TestDatabase } from '../helpers/betterSqliteAdapter';
@@ -44,6 +45,33 @@ const insert = (row: Partial<Record<string, string | number | null>>) => {
 it('sets user_version to 1 on an empty database', async () => {
   expect(SCHEMA_VERSION).toBe(1);
   expect(await userVersion(db)).toBe(1);
+});
+
+it('rolls a failed migration back and reports migrate', async () => {
+  const fresh = tempDbFile();
+  const target = openTestDatabase(fresh.file);
+  // Fail on the version bump, after the schema statements already ran inside the transaction.
+  const failing = {
+    ...target,
+    execAsync: (sql: string) =>
+      sql.startsWith('PRAGMA user_version =')
+        ? Promise.reject(new Error('disk full'))
+        : target.execAsync(sql),
+  };
+  try {
+    const error = await openAndMigrate(failing).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(StorageError);
+    expect((error as StorageError).code).toBe('migrate');
+    expect(target.raw.inTransaction).toBe(false);
+    expect(await userVersion(target)).toBe(0);
+    const table = await target.getFirstAsync(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'transactions'",
+    );
+    expect(table).toBeNull();
+  } finally {
+    target.close();
+    fresh.cleanup();
+  }
 });
 
 it('uses WAL journal mode', async () => {

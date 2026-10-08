@@ -47,3 +47,7 @@ yarn-error.*
 
 # test coverage
 coverage/
+
+# Stryker mutation testing
+.stryker-tmp/
+reports/

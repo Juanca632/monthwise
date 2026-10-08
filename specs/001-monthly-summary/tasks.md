@@ -658,7 +658,7 @@ own transactions and totals. Add one from a past month and check that it lands i
 - [X] T051 [P] Update `AGENTS.md`: replace the "Status" and "Setup and commands" TBDs with the
   stack (Expo SDK 57), `npm start` (and why not `npx expo start`), `npm test`, `npm run lint`,
   `npm run typecheck`, the project structure summary from plan.md and the EAS build commands.
-- [ ] T052 Verification on the `preview` APK. First time only: `npx eas-cli login` and
+- [X] T052 Verification on the `preview` APK (done 2026-10-08; results in validation-results.md and perf-results.md; the failed delete is not reachable with the dev tool, see there). First time only: `npx eas-cli login` and
   `npx eas-cli init`, then add the returned `extra.eas.projectId` to `app.config.ts`, merged with
   `extra.variant`. Then run `npx eas-cli build --platform android --profile preview`; the
   developer installs it.
@@ -844,7 +844,7 @@ labels are built from data, never from animated values; no new dependency beyond
   (single scrolling chip row), a decision point for the developer.
   Done in code (2026-10-06): `softwareKeyboardLayoutMode` is unset, so Expo's default
   `adjustResize` applies, and `useAnimatedKeyboard` takes over the insets, so the window does
-  not also resize. **Phone check pending** (the developer's final pass).
+  not also resize. Phone check passed (2026-10-08, device-checks.md).
 - [x] T072 (FR-009) Form motion: the Type indicator slides with the spring; a picked chip fills
   over 220 ms; on an invalid Save the first invalid field shakes 6 dp three times. Under reduce
   motion the indicator and chip swap and there is no shake. Tests: each animation's reduce-motion
@@ -867,7 +867,7 @@ labels are built from data, never from animated values; no new dependency beyond
   `NotFoundError`. Tests in `tests/component/toast.test.tsx`: shown and announced after save and
   delete; not after a failed save, a failed delete, or `NotFoundError` on remove; its bottom
   offset; no translate under reduce motion; gone after its time.
-- [ ] T071 **Design review done (2026-10-06); the developer's phone pass is pending** (checklist in
+- [X] T071 Design review done (2026-10-06); the developer passed the phone checks on 2026-10-08 (checklist in
   device-checks.md, "Glass and motion"). Check the implemented UI: run the `design-reviewer` agent on `src/ui/`, `src/app/`
   and `theme.ts` against design.md, and fix or accept its findings as for the docs. Then the
   developer checks on the phone: light and dark, largest font, TalkBack, "Remove animations",
@@ -1002,6 +1002,13 @@ developer's reviews of 2026-10-06 and 2026-10-07, then quickstart scenario 14.
   order), `tests/unit/todayAndMonth.test.tsx` (same month).
 - [x] T090 `jest.config.js` caps `maxWorkers` at 4, so `npm test` fits in WSL2's memory.
 
+### Block 8k: mutation testing (developer, 2026-10-08)
+
+- [X] T091 Run Stryker (`npx stryker run`, `stryker.config.json`) over `src/domain/` and
+  `src/data/` before the production APK (T053). Review every surviving mutant: add the missing
+  test for each real gap, and list the equivalent or harmless ones. Record the score before and
+  after in `specs/001-monthly-summary/mutation-results.md`.
+
 ---
 
 ## Dependencies & Execution Order
@@ -1076,6 +1083,7 @@ Task: "T035 [P] [US1] MonthHeader (title) in src/ui/MonthHeader.tsx"
 | 8h | T077–T078 | Add next to Transactions; 5 latest on the summary and See all (FR-002, FR-017) |
 | 8i | T079 | New form opens without the keyboard (FR-003, SC-001) |
 | 8j | T080–T090 | Phone review fine-tuning: look, dialog, motion rhythm, performance |
+| 8k | T091 | Mutation testing of domain and data (Stryker) |
 | 9 | T052–T054 | APK verification and final check |
 
 Commits: one or more Conventional Commits per block, proposed to the developer and made only

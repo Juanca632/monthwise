@@ -159,6 +159,27 @@ it('wraps failures on a closed database in StorageError', async () => {
   db = openTestDatabase(temp.file);
 });
 
+// The code is the only thing reportError logs, so each operation must name itself.
+it.each([
+  ['list', (r: TransactionRepository) => r.listByMonth({ year: 2026, month: 9 })],
+  ['get', (r: TransactionRepository) => r.getById(1)],
+  ['create', (r: TransactionRepository) => r.create(input(), 1)],
+  ['update', (r: TransactionRepository) => r.update(1, input())],
+  ['remove', (r: TransactionRepository) => r.remove(1)],
+])('reports a failed %s with its own code', async (code, run) => {
+  db.close();
+  const error = await run(repo).catch((e: unknown) => e);
+  expect(error).toBeInstanceOf(StorageError);
+  expect((error as StorageError).code).toBe(code);
+  db = openTestDatabase(temp.file);
+});
+
+it('names NotFoundError without any row data', () => {
+  const error = new NotFoundError();
+  expect(error.name).toBe('NotFoundError');
+  expect(error.message).toBe('not_found');
+});
+
 it('SC-002: a script of creates, updates and removes matches the hand-calculated summary', async () => {
   const september = { year: 2026, month: 9 };
   let now = 1_000;

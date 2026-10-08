@@ -11,6 +11,8 @@ describe('parseAmount', () => {
     ['12.', 1200],
     ['0,01', 1],
     ['007', 700],
+    // Leading zeros do not count towards the six integer digits.
+    ['0000001234', 123400],
     ['999999,99', 99999999],
     ['  12,5 ', 1250],
   ])('parses %j as %d cents', (input, cents) => {

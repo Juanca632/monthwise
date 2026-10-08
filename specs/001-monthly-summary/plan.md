@@ -92,6 +92,7 @@ adds nothing over the smooth glows (design.md, Glass surfaces).
 | `better-sqlite3`, `@types/better-sqlite3` | dev | Real SQLite for repository tests on Node | `expo-sqlite` cannot run inside Jest (R10). |
 | `typescript`, `@types/react` | dev (template) | Type checking | Shipped by the `blank-typescript` template (R2). |
 | `@types/jest` | dev | Types for `describe`/`expect` in tests | Needed for `tsc` to type-check the tests. |
+| `@stryker-mutator/core`, `@stryker-mutator/jest-runner` | dev | Mutation testing of `src/domain/` and `src/data/` (`npx stryker run`, `stryker.config.json`) | Approved by the developer on 2026-10-08: the same AI writes code and tests, so a non-AI check measures whether the tests catch real bugs in the money and storage logic (T091). Not run in CI; reports go to the git-ignored `reports/`. |
 | `eslint`, `eslint-config-expo` | dev | Lint | Installed by `npx expo lint` (R14). |
 
 ## Project Structure
@@ -246,7 +247,9 @@ layer instead of next to the code, so the tests of each layer are easy to find.
   settings, so they use made-up data only.
 - **Build variants**: `app.config.ts` reads `APP_VARIANT` (`development`, `preview`,
   `production`; unset means `production`). Every variant sets `allowBackup: false` and uses the
-  `withNoDataExtraction` plugin (research R11). `preview` and `production` block
+  `withNoDataExtraction` plugin (research R11), and blocks the permissions Expo's Android
+  template adds but the app never uses (`SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE`,
+  `WRITE_EXTERNAL_STORAGE`; found on the T052 APK). `preview` and `production` also block
   `android.permission.INTERNET`. The `preview` profile in `eas.json` also sets
   `EXPO_PUBLIC_DEV_TOOLS=1` (seed for the SC-004 check, simulated storage error). The
   `production` profile sets it to `0` explicitly, so the dev-tools branch is always compiled out.
