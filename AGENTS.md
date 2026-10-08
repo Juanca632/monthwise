@@ -30,6 +30,14 @@ network calls.
 - Features with UI get a `design.md` (visual design, approved by the developer from mockups)
   before UI tasks are implemented. After writing or changing it, run the `design-reviewer` agent
   (`.claude/agents/design-reviewer.md`) the same way.
+- From feature `002`, each user story's phase in `/speckit-implement` starts with the
+  `spec-tester` agent (`.claude/agents/spec-tester.md`): it reads only `spec.md` and
+  `contracts/`, never the code, and writes black-box acceptance tests in
+  `tests/acceptance/NNN/`. The phase ends with them green. Never change an acceptance test to
+  match the code: a failing one is either a bug or a spec/contract gap, and gaps go to the
+  developer (fix the spec or contract first, then the test). `/speckit-tasks` adds one task per
+  story for it, and `plan.md` must give `contracts/` enough public surface (module paths, screen
+  texts, accessibility labels) to test each story without the code.
 - The developer reviews the output of each step before moving to the next.
 - **Fine-tuning mode**: after a phone test, small UI tweaks that stay within spec.md and plan.md
   (look, spacing, text, motion feel) are made in code only, with their related tests, and the
@@ -86,7 +94,8 @@ src/
 ├── state/    # React contexts: selected month, summary notices
 ├── lib/      # app variant, logging rules, error reporting (codes only)
 └── dev/      # preview-only dev tools, never in production builds
-tests/        # unit/, integration/ (real SQL on better-sqlite3), component/, fixtures/, helpers/
+tests/        # unit/, integration/ (real SQL on better-sqlite3), component/, acceptance/ (spec-tester),
+              # fixtures/, helpers/
 plugins/      # Expo config plugins
 specs/        # Spec Kit artifacts per feature
 ```
