@@ -2,6 +2,12 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 type Variant = 'development' | 'preview' | 'production';
 
+const UNUSED_TEMPLATE_PERMISSIONS = [
+  'android.permission.SYSTEM_ALERT_WINDOW',
+  'android.permission.READ_EXTERNAL_STORAGE',
+  'android.permission.WRITE_EXTERNAL_STORAGE',
+];
+
 // Fails closed: an unset or mistyped APP_VARIANT gives the most locked-down build (plan, Key Design Notes).
 function resolveVariant(raw: string | undefined): Variant {
   return raw === 'development' || raw === 'preview' ? raw : 'production';
@@ -14,6 +20,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: 'Monthwise',
     slug: 'monthwise',
+    owner: 'juanca632',
     scheme: 'monthwise',
     version: '1.0.0',
     orientation: 'portrait',
@@ -29,8 +36,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         monochromeImage: './assets/android-icon-monochrome.png',
       },
       predictiveBackGestureEnabled: false,
-      // Development keeps INTERNET because Expo Go and the dev server need it.
-      ...(variant === 'development' ? {} : { blockedPermissions: ['android.permission.INTERNET'] }),
+      // Expo's template asks for these, but the app never uses them. Development keeps INTERNET
+      // because Expo Go and the dev server need it.
+      blockedPermissions: [
+        ...UNUSED_TEMPLATE_PERMISSIONS,
+        ...(variant === 'development' ? [] : ['android.permission.INTERNET']),
+      ],
     },
     plugins: [
       'expo-router',
@@ -50,6 +61,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ],
       './plugins/withNoDataExtraction',
     ],
-    extra: { variant },
+    extra: { variant, eas: { projectId: 'ae92f6e2-d60d-4f92-b1cf-9bd9cffe660b' } },
   };
 };

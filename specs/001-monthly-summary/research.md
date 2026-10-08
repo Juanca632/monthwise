@@ -163,6 +163,9 @@ in beta (`next` tag) and is not used.
   - The release variant blocks the `INTERNET` permission (`android.blockedPermissions`), so the
     published app physically cannot make network requests. Development builds keep it, because
     they need it to talk to the dev server.
+  - Every variant also blocks the permissions Expo's Android template declares but the app never
+    uses: `SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`. They were
+    never granted, but a privacy-first app should not ask for them (found on the T052 APK).
   - No `expo-updates`, analytics or crash reporting packages are installed.
   - Errors go through one `reportError(code)` helper that writes only an error code to logcat, in
     development and preview builds only, and never amounts, notes or categories. In preview and

@@ -88,25 +88,25 @@ below 4.5:1 (light 3.8:1 even at 85 % opacity).
 The `design-reviewer` pass over `src/ui/`, `src/app/` and `theme.ts` ran on 2026-10-06 with no
 critical or major findings; its minor findings were fixed or listed below. The phone checks are
 the developer's single final pass (blocks 8b–8f were built back to back without stopping); each
-one gets a result here.
+one gets a result here. The developer passed every check on the phone on 2026-10-08.
 
 | Check | Result |
 | --- | --- |
-| Light and dark: ambient glows (position, banding), card glass and the tone crossfade (positive ↔ negative) | Pending |
-| Card shadows: no white rectangle around the balance and breakdown cards (shadow on a wrapper) | Pending |
-| Ripples: month arrows and close are circles; first and last list row and Dismiss stay inside their card's corners | Pending |
-| Form borders: chips, Type track, Date and Note; focusing Note or a date error moves nothing | Pending |
-| Press scale and its spring (not too bouncy); entrance on a cold start; month slide; counting totals | Pending |
-| Sheet: opens over the summary, X / back / drag close it, "Discard changes?" on a dirty form, a second back while closing does nothing, Discard really closes | Pending |
-| Row changes: new row grows in, edited row flashes inside its card, deleted row slides out | Pending |
-| Keyboard (SC-001, default font, 360 × 640 dp or this phone): amount, all expense chips and Save fit above it; footer moves with it, not twice | Pending |
-| Type indicator, chip fill, invalid shake | Pending |
-| Haptics, and whether Android's touch-feedback setting silences them | Pending |
-| Toast over the closing sheet, "Saved" and "Deleted" | Pending |
-| Largest font: nothing cut off (balance, stat pills, form) | Pending |
-| TalkBack: summary labels, the Date field read once or twice (review finding), the failure message announced, the summary behind an open sheet not reachable | Pending |
-| "Remove animations": nothing moves; sheet closes at once; drag is off | Pending |
-| A seeded 1,000-row month scrolls smoothly; rough cold-start feel with the new libraries | Pending |
+| Light and dark: ambient glows (position, banding), card glass and the tone crossfade (positive ↔ negative) | Passed (2026-10-08) |
+| Card shadows: no white rectangle around the balance and breakdown cards (shadow on a wrapper) | Passed (2026-10-08) |
+| Ripples: month arrows and close are circles; first and last list row and Dismiss stay inside their card's corners | Passed (2026-10-08) |
+| Form borders: chips, Type track, Date and Note; focusing Note or a date error moves nothing | Passed (2026-10-08) |
+| Press scale and its spring (not too bouncy); entrance on a cold start; month slide; counting totals | Passed (2026-10-08) |
+| Sheet: opens over the summary, X / back / drag close it, "Discard changes?" on a dirty form, a second back while closing does nothing, Discard really closes | Passed (2026-10-08) |
+| Row changes: new row grows in, edited row flashes inside its card, deleted row slides out | Passed (2026-10-08) |
+| Keyboard (SC-001, default font, 360 × 640 dp or this phone): amount, all expense chips and Save fit above it; footer moves with it, not twice | Passed (2026-10-08) |
+| Type indicator, chip fill, invalid shake | Passed (2026-10-08) |
+| Haptics, and whether Android's touch-feedback setting silences them | Passed (2026-10-08) |
+| Toast over the closing sheet, "Saved" and "Deleted" | Passed (2026-10-08) |
+| Largest font: nothing cut off (balance, stat pills, form) | Passed (2026-10-08) |
+| TalkBack: summary labels, the Date field read once or twice (review finding), the failure message announced, the summary behind an open sheet not reachable | Passed (2026-10-08) |
+| "Remove animations": nothing moves; sheet closes at once; drag is off | Passed (2026-10-08) |
+| A seeded 1,000-row month scrolls smoothly; rough cold-start feel with the new libraries | Passed (2026-10-08) |
 
 Known minor items left for the fine-tuning pass: sizes such as 56, 52, 64, 40 and the 1.5 dp
 segment border are written in a few files instead of shared tokens; the chip's inner highlight

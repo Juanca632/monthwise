@@ -35,6 +35,7 @@ describe('month', () => {
   it('handles the January 2000 limit', () => {
     expect(isMinMonth(MIN_MONTH)).toBe(true);
     expect(isMinMonth({ year: 2000, month: 2 })).toBe(false);
+    expect(isMinMonth({ year: 2001, month: 1 })).toBe(false);
     expect(previous({ year: 2000, month: 2 })).toEqual(MIN_MONTH);
   });
 

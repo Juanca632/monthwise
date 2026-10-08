@@ -31,6 +31,19 @@ describe('app.config', () => {
     },
   );
 
+  it.each([undefined, 'development', 'preview', 'production', 'bogus'])(
+    'blocks the unused template permissions for APP_VARIANT=%s',
+    (variant) => {
+      expect(configFor(variant).android?.blockedPermissions).toEqual(
+        expect.arrayContaining([
+          'android.permission.SYSTEM_ALERT_WINDOW',
+          'android.permission.READ_EXTERNAL_STORAGE',
+          'android.permission.WRITE_EXTERNAL_STORAGE',
+        ]),
+      );
+    },
+  );
+
   it('keeps INTERNET in development, which needs the dev server', () => {
     expect(configFor('development').android?.blockedPermissions ?? []).not.toContain(INTERNET);
   });
