@@ -216,13 +216,13 @@ tap or drag a day, screen reader days.
 sentence and lines match a hand calculation; tap the card → Insights for the same month; tap or
 drag a day → both amounts for that day.
 
-- [ ] T016 [US1] Run the `spec-tester` agent (`model: "sonnet"`) for `specs/002-monthly-charts/`
+- [x] T016 [US1] Run the `spec-tester` agent (`model: "sonnet"`) for `specs/002-monthly-charts/`
   and `US1`. Tell it that `paceChart.*` in the harness is not wired until T029 (its tests may call
   it; they fail until then) and that past months are reached with `selectMonth`. It writes
   `tests/acceptance/002/US1.test.tsx` from spec.md and contracts/ only; add the file to
   `pending.js`. Read its report; show any "Contract gaps" to the developer and fix the spec or
   contract first.
-- [ ] T017 [P] [US1] Implement `computePace` and `dayDetail` in `src/domain/pace.ts`
+- [x] T017 [P] [US1] Implement `computePace` and `dayDetail` in `src/domain/pace.ts`
   (contracts/insights-domain.md, data-model.md "Pace"): cumulative expense series; line end
   "Past month: its last day. Current month: the later of today's day and the day of its latest row
   dated after today. Any type counts for the line's length; a later-dated income only extends the
@@ -233,7 +233,7 @@ drag a day → both amounts for that day.
   numbers (1-7, 9, 10), each spec Edge Case that touches the pace (30/31 March vs February,
   later-dated expense and later-dated income, January 2000, months of different lengths, a new
   `today` the next day changes the comparison day), and the T008 literals.
-- [ ] T018 [P] [US1] Implement `src/ui/charts/geometry.ts` (pure; every function carries the
+- [x] T018 [P] [US1] Implement `src/ui/charts/geometry.ts` (pure; every function carries the
   `'worklet'` directive so gesture callbacks can call it on the UI thread):
   `dayAtX(x, width, days)` per contracts/ui-screens.md (day N covers `[(N-1)·w/D, N·w/D)`, below 0
   → 1, at or beyond `w` → D; width 0 → day 1), `xOfDay`, `lineScale(maxCents, height)` (0..max, 0
@@ -242,7 +242,7 @@ drag a day → both amounts for that day.
   value and below for the most negative. Unit tests in `tests/unit/geometry.test.ts`: `width = 310`,
   `days = 31` (x = 75 → 8, 79.99 → 8, 80 → 9, -5 → 1, 310 → 31), an all-zero series, and
   `barScale` for all-positive, all-negative, mixed and all-zero values.
-- [ ] T019 [P] [US1] Implement the `chartSelection` reducer in `src/ui/charts/selection.ts`
+- [x] T019 [P] [US1] Implement the `chartSelection` reducer in `src/ui/charts/selection.ts`
   (research R5): state `{ selected: number | null; touch: { downDay: number; dragging: boolean } |
   null }`, events `down(day)`, `move(day)`, `up()`, `cancel()`, `activate(day)`, `reset()`. Rules:
   `up()` without a move to another day is a tap on the touch-down day (select, or clear if already
@@ -252,14 +252,14 @@ drag a day → both amounts for that day.
   `tests/unit/selection.test.ts`: US1 scenarios 11 and 13, a drag that returns to the touch-down
   day, a drag ending on the selected day, a cancel after down, a tap on a selected day after a
   drag, `activate` toggling.
-- [ ] T020 [P] [US1] Create `src/format/insights.ts` with the pace texts: `paceSentence(sentence,
+- [x] T020 [P] [US1] Create `src/format/insights.ts` with the pace texts: `paceSentence(sentence,
   tag)` (FR-003's four rules; previous month names from 001's English month names),
   `dayDetailLines(detail, pace, tag)` (`Day 8`, `October: 120,00 €`, `September: 100,00 €`,
   `+20,00 € · +20%`), `daySpokenValue` (the lines after "Day N", spoken, joined by ", ") and the
   card label `Spending pace, <sentence>`. Unit tests in `tests/unit/insightsText.test.ts` with
   literal strings from contracts/ui-screens.md (es-ES), including negatives spoken as "minus".
   Depends on T017's types.
-- [ ] T021 [US1] Extend `src/hooks/useMonthSummary.ts` (research R3): in the same load, read
+- [x] T021 [US1] Extend `src/hooks/useMonthSummary.ts` (research R3): in the same load, read
   `listByMonth(selected)` and `listRange(previous, previous)` with `Promise.all` (skip the second
   on January 2000, using `[]`); keep the previous rows under the same month key; compute `pace`
   with `computePace(selected, rows, previousRows, today)` in a `useMemo`, `today` from
@@ -268,7 +268,7 @@ drag a day → both amounts for that day.
   `tests/component/useMonthSummary.test.tsx`: both reads in one load, an error in the second read
   shows the error state, overlapping month changes keep only the newest result, January 2000 makes
   one read, a new `today` (foreground) recomputes the pace.
-- [ ] T022 [P] [US1] Create `src/state/handedPace.ts` (like `openedTransaction.ts`):
+- [x] T022 [P] [US1] Create `src/state/handedPace.ts` (like `openedTransaction.ts`):
   `handOffPace(pace, pressedAt: number)` stores the pace with its month and the press time (used
   by T054's timing); `takePace(month)` returns `{ pace, pressedAt }` only when the month matches,
   otherwise `null`; `dropPace()` clears it. Unit tests in `tests/unit/handedPace.test.ts`.

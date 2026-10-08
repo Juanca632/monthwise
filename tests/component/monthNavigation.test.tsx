@@ -101,7 +101,9 @@ function slowMonth(db: TestDatabase, slowMonthStart: string) {
   const gate = new Promise<void>((resolve) => (release = resolve));
   const getAllAsync = db.getAllAsync.bind(db);
   db.getAllAsync = async <T,>(sql: string, ...params: SqlParam[]): Promise<T[]> => {
-    if (params[0] === slowMonthStart) await gate;
+    // Only the month's own list (newest first): since 002 the next month's load also reads this
+    // month, as its previous month, and that read must not wait.
+    if (params[0] === slowMonthStart && sql.includes('ORDER BY date DESC')) await gate;
     return getAllAsync<T>(sql, ...params);
   };
   return { release };

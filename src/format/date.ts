@@ -60,7 +60,12 @@ export function formatSpokenDate(iso: IsoDate): string {
 
 /** Month header, e.g. "October 2026". */
 export function monthTitle(ym: YearMonth): string {
-  return `${MONTH_NAMES[ym.month - 1]} ${ym.year}`;
+  return `${monthName(ym)} ${ym.year}`;
+}
+
+/** The month alone, e.g. "September" (002 legends, sentences and details). */
+export function monthName(ym: YearMonth): string {
+  return MONTH_NAMES[ym.month - 1];
 }
 
 /** Days between two calendar dates, counted in UTC so time zones and DST never shift them. */
