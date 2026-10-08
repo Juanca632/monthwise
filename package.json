@@ -47,6 +47,7 @@
     "start": "APP_VARIANT=development expo start",
     "android": "APP_VARIANT=development expo start --android",
     "test": "jest",
+    "test:acceptance": "jest tests/acceptance --testPathIgnorePatterns /node_modules/",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit"
   },

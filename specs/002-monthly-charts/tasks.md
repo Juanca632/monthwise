@@ -143,17 +143,17 @@ T010's placeholder starts before T015.**
 
 ### App shell and test harness
 
-- [ ] T009 [P] Implement `useScreenReader(): boolean` in `src/hooks/useScreenReader.ts` (research
+- [x] T009 [P] Implement `useScreenReader(): boolean` in `src/hooks/useScreenReader.ts` (research
   R6): `AccessibilityInfo.isScreenReaderEnabled()` on mount, then the `screenReaderChanged` event;
   `false` until the first answer. Unit tests in `tests/unit/useScreenReader.test.tsx` with a mocked
   `AccessibilityInfo` (initial true and false, a change event, unsubscribe on unmount).
-- [ ] T010 Add a placeholder Insights route: `src/app/insights.tsx` renders the screen header from
+- [x] T010 Add a placeholder Insights route: `src/app/insights.tsx` renders the screen header from
   contracts/ui-screens.md (**Back** button, `Insights` header label, the selected month's title
   text, unstyled beyond 001's tokens; design.md restyles it in T028) and nothing else yet; **Back**
   and Android's back call `router.back()`. Register `<Stack.Screen name="insights" />` in
   `src/app/_layout.tsx` with Android's default push, like `transactions`. Component test in
   `tests/component/insights.test.tsx` (header texts and roles, Back).
-- [ ] T011 Build the app harness `tests/helpers/app.tsx` exactly as contracts/test-harness.md
+- [x] T011 Build the app harness `tests/helpers/app.tsx` exactly as contracts/test-harness.md
   (research R9). It installs on import the mocks every 001 component suite uses (see
   `tests/component/monthNavigation.test.tsx`: controllable `useToday`/`getToday` with
   foreground events, `expo-localization` region, `expo-font`, safe-area mock, `expo-sqlite`
@@ -167,12 +167,12 @@ T010's placeholder starts before T015.**
   repository's reads to throw `StorageError('list')`; `settle` flushes promises inside `act`.
   `paceChart.*` and `tapOutsidePicker` are declared now and throw "not wired yet" until T029 and
   T051 wire them; `paceChart.width` is 310.
-- [ ] T012 Harness self-tests in `tests/component/appHarness.test.tsx` for what exists now: the
+- [x] T012 Harness self-tests in `tests/component/appHarness.test.tsx` for what exists now: the
   summary renders `today`'s month with seeded rows; `add` after render shows on the summary;
   `failReads(true)` and a refocus show "Couldn't load your data."; `setToday` across a month end
   moves the summary to the new month (001 rule); `selectMonth` shows that month on the summary;
   a push to Insights and `back()` switch `screen`; the stubs throw "not wired yet".
-- [ ] T013 Prepare acceptance tests: create `tests/acceptance/002/README.md` (black box, never
+- [x] T013 Prepare acceptance tests: create `tests/acceptance/002/README.md` (black box, never
   edited to match code, gaps to the developer) and `tests/acceptance/002/pending.js`, a list of
   story files still in progress (empty at first). In `jest.config.js`, add the listed files to
   `testPathIgnorePatterns` so `npm test` (and CI) stays green while a story is open. Add the script

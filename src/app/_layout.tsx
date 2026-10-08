@@ -151,8 +151,9 @@ export default function RootLayout() {
                     >
                       <Stack.Screen name="index" />
                       {/* Android's own push and pop, which follows "Remove animations"
-                          (design.md, All transactions, Motion). */}
+                          (design.md, All transactions, Motion; 002's Insights too). */}
                       <Stack.Screen name="transactions" />
+                      <Stack.Screen name="insights" />
                       <Stack.Screen name="transaction/new" options={FORM_SHEET} />
                       <Stack.Screen name="transaction/[id]" options={FORM_SHEET} />
                     </Stack>
