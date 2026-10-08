@@ -617,9 +617,9 @@ phone check listed (unless the developer chooses to chain blocks, as in 001's Ph
 
 | Block | Tasks | What the developer checks |
 | --- | --- | --- |
-| 1 | T001–T008 | `react-native-svg` line in Expo Go; domain, formatting and `listRange` tests green; review the money logic |
-| 2 | T009–T013 | No phone check (no entry point yet); harness self-tests green |
-| 3 | T014–T015 | Approves the mockups and design.md (design-reviewer findings shown) |
+| 1 | T014–T015 | Approves the mockups and design.md (design-reviewer findings shown) |
+| 2 | T001–T008 | `react-native-svg` line in Expo Go; domain, formatting and `listRange` tests green; review the money logic |
+| 3 | T009–T013 | No phone check (no entry point yet); harness self-tests green |
 | 4a | T016–T022 | US1 acceptance tests written (gaps resolved); pace logic, selection logic and summary reads tested |
 | 4b | T023–T030 | MVP: card on the summary, Insights with the full pace chart, tap, drag and vertical scroll on the chart (T023 phone checks), TalkBack days |
 | 5 | T031–T036 | Categories vs last month |
@@ -635,7 +635,9 @@ they ask.
 
 ### MVP first
 
-1. Blocks 1-3 (Setup, Foundational, design).
+1. Block 1, design first (developer, 2026-10-08): the mockups and design.md are where the
+   developer decides most, and a design change found now only touches docs. Then blocks 2 and 3
+   (Setup and Foundational), which do not depend on the design.
 2. Blocks 4a and 4b (US1). **Stop and validate** on the phone: the card already tells the user
    whether they spend more or less than last month, and Insights shows the full pace.
 
