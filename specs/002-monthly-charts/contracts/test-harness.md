@@ -56,7 +56,9 @@ rendered tree with React Native Testing Library's `screen` as usual.
 
 Only the screen on top of the fake stack is rendered (the month picker renders over it), so
 queries never find a lower screen's texts. A popped-to screen mounts again and loads as on
-focus. Push transitions end at once in the harness (the Insights read starts right after the
+focus, passing through its loading state; the real app keeps the summary mounted under Insights
+and reloads it without that state, so tests do not assert on loading right after `back()`. Push
+transitions end at once in the harness (the Insights read starts right after the
 push); the "no read before the transition ends" rule is covered by a component test, not here.
 Screen-reader day elements of the pace chart exist only after `setScreenReader(true)` or with
 `screenReader: true`. Activating one with the screen reader is `fireEvent.press` on it (or

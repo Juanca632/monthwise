@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-08
 
-**Status**: Draft
+**Status**: Approved
 
 **Input**: User description: "Monthly charts and insights that help the user save money, not just
 see what is left. 1) On the existing monthly summary screen, below the current summary (Revolut

@@ -149,7 +149,7 @@ T010's placeholder starts before T015.**
   `AccessibilityInfo` (initial true and false, a change event, unsubscribe on unmount).
 - [ ] T010 Add a placeholder Insights route: `src/app/insights.tsx` renders the screen header from
   contracts/ui-screens.md (**Back** button, `Insights` header label, the selected month's title
-  text, unstyled beyond 001's tokens; design.md restyles it in T029) and nothing else yet; **Back**
+  text, unstyled beyond 001's tokens; design.md restyles it in T028) and nothing else yet; **Back**
   and Android's back call `router.back()`. Register `<Stack.Screen name="insights" />` in
   `src/app/_layout.tsx` with Android's default push, like `transactions`. Component test in
   `tests/component/insights.test.tsx` (header texts and roles, Back).
@@ -336,7 +336,9 @@ drag a day → both amounts for that day.
   handed pace only for its month, newest read wins over a slower older one, a same-month focus
   reload keeps data (no loading), a failed read gives `error` and `reportError('list')` only,
   `retry` shows loading then data, a failed database open is reopened by `retry`, a new `today`
-  changes the comparison day on the next focus (spec Edge Cases, date change).
+  changes the comparison day on the next focus (spec Edge Cases, date change), and with Insights
+  open on the current month, `setToday` to the next month moves Insights to the new month when
+  the app returns to the foreground, while a past month stays (FR-031).
 - [ ] T028 [US1] Build the Spending pace section in `src/app/insights.tsx` with design.md's
   header look: a vertical `ScrollView` from `react-native-gesture-handler` (the ref shared with
   `PaceChart`) under the header; the section title `Spending pace` (role `header`), the full
@@ -552,6 +554,9 @@ year, pick a month; pick another on Insights and go back; tap a trend month's **
 - [ ] T061 SC-003 and SC-006 usability sessions (at least three people, run by the developer on the
   preview APK with sample data over two years); results in
   `specs/002-monthly-charts/validation-results.md`.
+- [ ] T062 When the developer asks, open the pull request from `002-monthly-charts` into `develop`
+  and confirm CI is green (`npm test`, `npm run lint`, `npm run typecheck`,
+  `npm audit --audit-level=critical`); the feature is done only then (constitution II).
 
 ---
 
@@ -621,7 +626,7 @@ phone check listed (unless the developer chooses to chain blocks, as in 001's Ph
 | 6 | T037–T043 | Savings trend, details, View month |
 | 7 | T044–T052 | Month picker on both screens; arrows gone |
 | 8 | T053–T058 | Seed, timing, SC-001 end to end, design review, Stryker, docs |
-| 9 | T059–T061 | Phone pass, preview APK (SC-002, SC-005), usability sessions |
+| 9 | T059–T062 | Phone pass, preview APK (SC-002, SC-005), usability sessions, PR with CI green |
 
 Commits: one or more Conventional Commits per block, proposed to the developer and made only when
 they ask.
