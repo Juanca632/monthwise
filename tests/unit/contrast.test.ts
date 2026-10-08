@@ -139,3 +139,44 @@ describe.each(schemes)('%s form (flat look on formBackground)', (scheme) => {
     expect(ratio(parse(c.onError), parse(c.error))).toBeGreaterThanOrEqual(TEXT);
   });
 });
+
+describe.each(schemes)('%s charts on a card (002 design.md, Contrast)', (scheme) => {
+  const c = palettes[scheme];
+  const card = parse(c.surface);
+
+  it('lines, bars and the trend zero line stand out from the card (≥ 3:1)', () => {
+    for (const mark of [c.chartPrevious, c.chartCurrent, c.income, c.error]) {
+      expect(ratio(parse(mark), card)).toBeGreaterThanOrEqual(INDICATOR);
+    }
+    expect(ratio(blend(c.surface, c.chartZero), card)).toBeGreaterThanOrEqual(INDICATOR);
+  });
+
+  it('percent pills keep their text readable', () => {
+    expect(ratio(parse(c.error), blend(c.surface, c.errorSoft))).toBeGreaterThanOrEqual(TEXT);
+    expect(ratio(parse(c.income), parse(c.incomeSoft))).toBeGreaterThanOrEqual(TEXT);
+    expect(ratio(parse(c.textMuted), parse(c.insetFill))).toBeGreaterThanOrEqual(TEXT);
+  });
+
+  it('detail boxes and picker cells keep text, muted text and accent readable', () => {
+    for (const ink of [c.text, c.textMuted, c.accent]) {
+      expect(ratio(parse(ink), parse(c.insetFill))).toBeGreaterThanOrEqual(TEXT);
+    }
+  });
+
+  it("the open trend month's label stays readable on its band", () => {
+    expect(ratio(parse(c.accent), blend(c.surface, c.chartBand))).toBeGreaterThanOrEqual(TEXT);
+  });
+
+  it('day labels, legends and View month stay readable on the card', () => {
+    expect(ratio(parse(c.textMuted), card)).toBeGreaterThanOrEqual(TEXT);
+    expect(ratio(parse(c.accent), card)).toBeGreaterThanOrEqual(TEXT);
+  });
+
+  it('the selected picker month keeps onAccent readable on accent', () => {
+    expect(ratio(parse(c.onAccent), parse(c.accent))).toBeGreaterThanOrEqual(TEXT);
+  });
+
+  it('chartCurrent is the accent', () => {
+    expect(c.chartCurrent).toBe(c.accent);
+  });
+});

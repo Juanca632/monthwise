@@ -59,6 +59,25 @@ export type Palette = {
    * the lighter surface already lifts them (fine-tuning 2026-10-06). Empty means no shadow.
    */
   tileShadow: string;
+  // Charts (002 design.md, Color). The current month is the strong mark; what it is compared with
+  // is quiet, and the two are told apart by style, never by color alone (FR-002).
+  /** The selected month's line, markers and positive saved marks: an alias of `accent`. */
+  chartCurrent: string;
+  /** The top of the fill under the selected month's line; it fades to 0 % at the baseline. */
+  chartArea: string;
+  /** The previous month's dashed line and marker; the expenses bar's outline. */
+  chartPrevious: string;
+  expensesFill: string;
+  chartGrid: string;
+  chartAxis: string;
+  /** The trend's zero line: it carries meaning (saved below zero), so it keeps 3:1. */
+  chartZero: string;
+  chartBand: string;
+  chartGuide: string;
+  /** The one "inset on a card" fill: detail boxes, picker cells and buttons, the neutral pill. */
+  insetFill: string;
+  /** The percent pill of a category that went up. */
+  errorSoft: string;
 };
 
 /** `#RRGGBB` at an opacity, written the way design.md gives it ("`#2F5BEA` at 22 %"). */
@@ -73,6 +92,9 @@ const DARK_GLASS_SHADOW = `0 20px 40px ${withAlpha('#000000', 0.35)}`;
 const verticalGradient = (top: string, bottom: string) =>
   `linear-gradient(180deg, ${top}, ${bottom})`;
 
+// One source for the accent, which the charts' current-month tokens alias (002 design.md).
+const ACCENT: Record<Scheme, string> = { light: '#2F5BEA', dark: '#7D96FF' };
+
 export const palettes: Record<Scheme, Palette> = {
   light: {
     // A plain grouped background; white sections sit on it (fine-tuning 2026-10-06).
@@ -86,7 +108,7 @@ export const palettes: Record<Scheme, Palette> = {
     divider: '#EEF0F3',
     text: '#0E1116',
     textMuted: '#5B6472',
-    accent: '#2F5BEA',
+    accent: ACCENT.light,
     onAccent: '#FFFFFF',
     onError: '#FFFFFF',
     accentSoft: '#EAF0FF',
@@ -116,6 +138,18 @@ export const palettes: Record<Scheme, Palette> = {
     bottomFade: verticalGradient(withAlpha('#F2F3F7', 0), withAlpha('#F2F3F7', 0.6)),
     rowFlash: withAlpha('#2F5BEA', 0.22),
     tileShadow: `0 2px 8px ${withAlpha('#0E1116', 0.06)}`,
+    chartCurrent: ACCENT.light,
+    chartArea: withAlpha(ACCENT.light, 0.22),
+    chartPrevious: '#7D8696',
+    expensesFill: withAlpha('#7D8696', 0.16),
+    chartGrid: withAlpha('#0E1116', 0.07),
+    chartAxis: withAlpha('#0E1116', 0.28),
+    chartZero: withAlpha('#0E1116', 0.5),
+    chartBand: withAlpha(ACCENT.light, 0.1),
+    chartGuide: withAlpha('#0E1116', 0.32),
+    // Equal to surfaceMuted on purpose: in light it already reads as an inset on a white card.
+    insetFill: '#F1F3F6',
+    errorSoft: withAlpha('#B3362A', 0.12),
   },
   dark: {
     // Near-black and plain; sections are clearly lighter, as in professional dark apps: what is
@@ -131,7 +165,7 @@ export const palettes: Record<Scheme, Palette> = {
     divider: '#2A2D36',
     text: '#F2F4F7',
     textMuted: '#B0B8C6',
-    accent: '#7D96FF',
+    accent: ACCENT.dark,
     onAccent: '#0D0F13',
     onError: '#0D0F13',
     accentSoft: '#1E2640',
@@ -160,6 +194,18 @@ export const palettes: Record<Scheme, Palette> = {
     bottomFade: verticalGradient(withAlpha('#07080A', 0), withAlpha('#07080A', 0.6)),
     rowFlash: withAlpha('#7D96FF', 0.22),
     tileShadow: '',
+    chartCurrent: ACCENT.dark,
+    chartArea: withAlpha(ACCENT.dark, 0.22),
+    chartPrevious: '#7D8696',
+    expensesFill: withAlpha('#7D8696', 0.24),
+    chartGrid: withAlpha('#FFFFFF', 0.07),
+    chartAxis: withAlpha('#FFFFFF', 0.28),
+    chartZero: withAlpha('#FFFFFF', 0.5),
+    chartBand: withAlpha(ACCENT.dark, 0.16),
+    chartGuide: withAlpha('#F2F4F7', 0.32),
+    // Lighter than surface: the dark surfaceMuted is darker than a card and would vanish on it.
+    insetFill: '#262A33',
+    errorSoft: withAlpha('#FF8A7A', 0.18),
   },
 };
 
@@ -326,6 +372,8 @@ const TYPE_SPECS = {
   avatarInitial: { size: 15, weight: 700 },
   labelStrong: { size: 14, weight: 600 },
   caption: { size: 13, weight: 400, numeric: true },
+  // Chart legends, day and month labels (002); Medium stays readable on the chart tints.
+  legend: { size: 13, weight: 500, numeric: true },
   statLabel: { size: 14, weight: 500 },
   pill: { size: 12, weight: 600, numeric: true },
 } satisfies Record<string, TypeSpec>;
@@ -374,6 +422,46 @@ export const radii = {
   segment: 12,
   pill: 8,
   full: 999,
+} as const;
+
+/** Chart sizes in dp (002 design.md, Chart geometry); fractions that are not sizes live in
+ * `ui/charts/geometry.ts`. */
+export const chart = {
+  cardHeight: 64,
+  /** The card chart's plot runs from y 4 to 60. */
+  cardInset: 4,
+  /** The full pace chart and its touch area: `paceTop` + `pacePlot`. */
+  paceHeight: 180,
+  paceTop: 12,
+  pacePlot: 168,
+  trendPlot: 160,
+  /** Under the trend plot, so a saved dot at 0 on a bottom zero line is never clipped. */
+  trendBottomInset: 6,
+  currentWidth: 3,
+  previousWidth: 2,
+  previousDash: [6, 4],
+  markerCurrent: 6,
+  markerPrevious: 5,
+  endDot: 4.5,
+  ringCurrent: 2.5,
+  ringEnd: 2,
+  previousRing: 2.5,
+  bandRadius: 3,
+  tickLength: 4,
+  barWidth: 12,
+  barRadius: 4,
+  expensesOutline: 2,
+  /** Each trend mark's x from the column's center. */
+  barOffsets: { income: -19, expenses: -5, saved: 12 },
+  stemWidth: 2,
+  savedDot: 10,
+  lineSwatch: { width: 18, height: 6 },
+  barSwatch: { width: 10, height: 12 },
+  savedSwatch: { width: 10, height: 14 },
+  /** The scales' headroom: pace lines, trend top, trend bottom (below zero). */
+  yHeadroom: 1.08,
+  trendTopHeadroom: 1.04,
+  trendBottomHeadroom: 1.25,
 } as const;
 
 /** FR-031: every tappable element is at least 48 × 48 dp. */

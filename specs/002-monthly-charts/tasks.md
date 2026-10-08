@@ -183,7 +183,7 @@ T010's placeholder starts before T015.**
 
 ### Visual design
 
-- [ ] T014 [P] Design for 002 (AGENTS.md): build HTML mockups in
+- [x] T014 [P] Design for 002 (AGENTS.md): build HTML mockups in
   `specs/002-monthly-charts/design/mockups/`, following 001's design.md (glass surfaces, Manrope,
   palettes, 48 dp touch, large text), for: the summary with the Spending pace card (ready with two
   lines, one line, loading; light and dark), Insights (ready with a day detail open, the category
@@ -198,7 +198,7 @@ T010's placeholder starts before T015.**
   the month-change motion now that there are no arrows: plan, Open Items), large-text rules
   (research R11) and 002's performance rules. Run the `design-reviewer` agent on it (two rounds
   at most) and show the findings to the developer before approval.
-- [ ] T015 Add design.md's 002 tokens to `src/ui/theme.ts` (chart line and bar colors per palette,
+- [x] T015 Add design.md's 002 tokens to `src/ui/theme.ts` (chart line and bar colors per palette,
   dash pattern, stroke widths, chart heights) and extend `tests/unit/contrast.test.ts` with each
   new color pair design.md says must meet contrast.
 
