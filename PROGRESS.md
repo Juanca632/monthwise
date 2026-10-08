@@ -25,6 +25,11 @@ commit (CLAUDE.md, "Session handoff").
        the data changes.
      - The developer writes one piece per feature (a component or hook) and Claude reviews it, for
        learning React Native.
+     - Less up-front planning (developer feels too much time goes to planning and decisions):
+       plan only what the code or data needs; visual and motion details are settled on the phone
+       in fine-tuning, not in the plan; Claude picks sensible defaults and asks only real
+       decisions (libraries, data model, money, cost); every session reads only the doc
+       sections its task needs.
      - Keep: integer cents, money unit tests, the reference sets, the `spec-tester`, CI.
   1. Run the block 4a reviewer (Sonnet, read-only) on the commit
      `feat: add the 002 pace logic, chart geometry, selection and pace texts (US1)`, tasks
