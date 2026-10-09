@@ -52,6 +52,11 @@ jest.mock('expo-localization', () => ({
 }));
 
 jest.mock('@/lib/devLog', () => ({ devLog: jest.fn(), logTiming: jest.fn() }));
+// React Native's Jest mock reports a font scale of 2 (large text); a phone's default is 1.0.
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+  __esModule: true,
+  default: () => ({ width: 390, height: 844, scale: 3, fontScale: 1 }),
+}));
 // The real expo-font needs expo-asset, which npm nests under expo/ where Jest cannot resolve it.
 jest.mock('expo-font', () => ({ isLoaded: () => true, loadAsync: jest.fn() }));
 jest.mock('react-native-safe-area-context', () =>

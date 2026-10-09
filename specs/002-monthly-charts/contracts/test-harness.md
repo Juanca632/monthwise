@@ -3,7 +3,8 @@
 The public surface black-box tests (`tests/acceptance/002/`) use to drive the app without
 reading `src/` (research R9). It renders the real summary, Insights and month picker over real
 SQL (better-sqlite3 through `tests/helpers/betterSqliteAdapter.ts`), and owns every mock those
-screens need (today, region, fonts, safe area, router, `expo-sqlite`). It is built in the Setup
+screens need (today, region, fonts, safe area, router, `expo-sqlite`), and renders at the phone's
+default font scale (1.0). It is built in the Setup
 phase and has its own tests, so it exists before any `spec-tester` run. Two members are wired
 later, when what they drive exists: `paceChart.*` in US1 and `tapOutsidePicker` in US4. Until
 then they throw "not wired yet", so a test that uses them fails until its story is built.

@@ -13,6 +13,7 @@ import { useInsights } from '@/hooks/useInsights';
 import { useRegion } from '@/hooks/useRegion';
 import { haptics } from '@/lib/haptics';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
+import { CategoryChanges } from '@/ui/CategoryChanges';
 import { ChartDetail } from '@/ui/ChartDetail';
 import { PaceChart } from '@/ui/charts/PaceChart';
 import { chartSelection, initialChartSelection, type ChartSelectionEvent } from '@/ui/charts/selection';
@@ -33,7 +34,8 @@ export default function InsightsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { selected } = useSelectedMonth();
-  const { status, pace, retry } = useInsights();
+  const { status, pace, categories, retry } = useInsights();
+  const { tag } = useRegion();
   // Shared with the pace chart's pan, so a vertical swipe that starts on the chart still scrolls.
   const scrollRef = useRef(null);
 
@@ -67,8 +69,10 @@ export default function InsightsScreen() {
         ) : (
           <>
             <PaceSection pace={pace} scrollRef={scrollRef} />
-            {/* Their content comes with US2 (T034) and US3 (T041). */}
-            <Section title="Categories vs last month">{status === 'loading' && <LoadingCard />}</Section>
+            <Section title="Categories vs last month">
+              <CategoryChanges comparison={categories} selected={selected} tag={tag} />
+            </Section>
+            {/* Its content comes with US3 (T041). */}
             <Section title="Savings trend">{status === 'loading' && <LoadingCard />}</Section>
           </>
         )}

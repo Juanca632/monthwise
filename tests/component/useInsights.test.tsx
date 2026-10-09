@@ -228,3 +228,21 @@ it('follows the current month into the next one on a rollover, while a past mont
   past.rerender({});
   expect(past.result.current.month.selected).toEqual(SEP);
 });
+
+it('returns the categories with the pace, recomputed after a focus reload', async () => {
+  const { repository, calls } = controlledRepository();
+  mockDb = dbValue({ repository });
+  const { result } = renderInsights();
+  expect(result.current.insights.categories).toBeNull();
+  await endTransition();
+  await settle(() => calls[0].resolve([expense('2026-10-02', 7_000), expense('2026-09-04', 10_000)]));
+  expect(result.current.insights.categories).toMatchObject({
+    kind: 'changes',
+    comparisonDay: 15,
+    rows: [{ category: 'food', currentCents: 7_000, previousCents: 10_000, changeCents: -3_000 }],
+  });
+
+  focus();
+  await settle(() => calls[1].resolve([expense('2026-10-02', 7_000), expense('2026-10-03', 5_000), expense('2026-09-04', 10_000)]));
+  expect(result.current.insights.categories).toMatchObject({ rows: [{ currentCents: 12_000, changeCents: 2_000 }] });
+});

@@ -394,11 +394,11 @@ each row's amounts, change, percent and order match a hand calculation.
   left out; `comparisonDay` null for a past month. Unit tests in
   `tests/unit/categoryChanges.test.ts`: US2 scenarios 1-9 with literal cents and percents, a
   later-dated row excluded, February as previous month by day 30, and the T008 literals.
-- [ ] T034 [US2] Return `categories: CategoryComparison | null` (null while loading) from
+- [x] T034 [US2] Return `categories: CategoryComparison | null` (null while loading) from
   `src/hooks/useInsights.ts`, computed from the same read. Extend
   `tests/component/useInsights.test.tsx`: categories ready with the pace, recomputed after a
   focus reload.
-- [ ] T035 [US2] Implement `src/ui/CategoryChanges.tsx` (design.md): title `Categories vs last
+- [x] T035 [US2] Implement `src/ui/CategoryChanges.tsx` (design.md): title `Categories vs last
   month` (role `header`), the three cases of contracts/ui-screens.md Section 2, one accessible
   element per row with the row label, rows that stack amounts under the name when they do not fit
   (research R11), not tappable, its own loading state. Add it below the pace section in
@@ -406,7 +406,7 @@ each row's amounts, change, percent and order match a hand calculation.
   `Compared by day 12` label for the current month and its absence for a past month and in the
   no-data and no-spending cases, column titles for a past month, row labels with "minus" and
   "new", loading state, font scale 2 with 999.999.999,99 € rows, dark palette.
-- [ ] T036 [US2] Remove `US2.test.tsx` from `pending.js` and run it until green (rules as T030).
+- [x] T036 [US2] Remove `US2.test.tsx` from `pending.js` and run it until green (rules as T030).
 
 **Checkpoint**: US1 and US2 work; Insights shows the pace and the categories.
 

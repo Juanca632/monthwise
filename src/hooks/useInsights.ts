@@ -5,6 +5,7 @@ import { useDatabase } from '@/data/DatabaseProvider';
 import { StorageError } from '@/data/errors';
 import { rowsInMonth, type LedgerRow } from '@/domain/ledger';
 import { addMonths, compareMonths, MIN_MONTH, previous, type YearMonth } from '@/domain/month';
+import { compareCategories, type CategoryComparison } from '@/domain/categoryChanges';
 import { computePace, type Pace } from '@/domain/pace';
 import { reportError } from '@/lib/reportError';
 import { dropPace, takePace } from '@/state/handedPace';
@@ -18,6 +19,8 @@ export type Insights = {
   rows: readonly LedgerRow[];
   /** From the read when ready; until then the pace the summary card handed over, if any. */
   pace: Pace | null;
+  /** `null` until the read answers. */
+  categories: CategoryComparison | null;
   retry(): void;
 };
 
@@ -106,14 +109,19 @@ export function useInsights(): Insights {
   const ready = status === 'ready' && data !== null;
   const rows = ready ? data.rows : NO_ROWS;
   // `today` is a dependency so a new day moves the comparison day on the next focus.
+  const months = useMemo(
+    () => (ready ? { current: rowsInMonth(rows, selected), previous: rowsInMonth(rows, previous(selected)) } : null),
+    [ready, rows, selected],
+  );
   const readPace = useMemo(
-    () =>
-      ready
-        ? computePace(selected, rowsInMonth(rows, selected), rowsInMonth(rows, previous(selected)), today)
-        : null,
-    [ready, rows, selected, today],
+    () => (months ? computePace(selected, months.current, months.previous, today) : null),
+    [months, selected, today],
+  );
+  const categories = useMemo(
+    () => (months ? compareCategories(selected, months.current, months.previous, today) : null),
+    [months, selected, today],
   );
   const pace = readPace ?? (status === 'loading' ? (takePace(selected)?.pace ?? null) : null);
 
-  return { status, rows, pace, retry };
+  return { status, rows, pace, categories, retry };
 }

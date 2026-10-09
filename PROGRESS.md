@@ -11,15 +11,17 @@ commit (CLAUDE.md, "Session handoff").
   complete in code; its acceptance tests are green and out of `pending.js`.
 - Next:
   1. Done (2026-10-09): block 4b phone check, all fine.
-  2. Block 5 (T031-T036): Categories vs last month (US2). Done: T031 (US2 acceptance tests,
-     in `pending.js`), T032, T033. Next: T034 (`useInsights` categories), T035 (UI), T036.
+  2. Block 5 (T031-T036, US2 categories) done in code, acceptance tests green. Its code reviewer
+     (money logic: `src/domain/categoryChanges.ts`, `useInsights`) runs before the phone check.
+  3. Phone check of block 5, then block 6 (T037-T043, US3 savings trend).
 - Notes:
   - From 2026-10-09 Claude writes all the code (AGENTS.md); T024 was written by Claude.
   - US1 acceptance gaps accepted on 2026-10-09: the month control checks moved to US4 (T044 says
     so); the edge-case test's day-16 September amount corrected to 80,00 € (by day 16, FR-007).
   - gesture-handler 2.32's `fireGestureHandler` never calls `onTouches*`, so tests drive the pace
     pan's touch callbacks directly (`tests/helpers/paceGesture.ts`).
-  - Insights' Categories and Savings trend sections show only their titles until US2 and US3.
+  - Insights' Savings trend section shows only its title until US3.
+  - The harness now renders at font scale 1.0 (React Native's Jest mock says 2); contract updated.
 
 ## Open decisions
 
@@ -34,7 +36,8 @@ commit (CLAUDE.md, "Session handoff").
 ## Phone checks pending
 
 - 001: APK verification T052-T053.
-- 002: none open (block 4b checked 2026-10-09).
+- 002, block 5: the Categories vs last month card on Insights (current and past month, no data,
+  no spending); at large text the values stack under their titles; colors of the percent pills.
 
 ## Environment notes
 

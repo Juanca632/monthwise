@@ -58,7 +58,7 @@ function MonthSpy() {
 }
 
 function renderInsights(insights: Partial<Insights> = {}) {
-  mockInsights = { status: 'ready', rows: [], pace: PACE, retry: jest.fn(), ...insights };
+  mockInsights = { status: 'ready', rows: [], pace: PACE, categories: null, retry: jest.fn(), ...insights };
   const view = render(
     <SelectedMonthProvider>
       <MonthSpy />
