@@ -272,7 +272,7 @@ drag a day → both amounts for that day.
   `handOffPace(pace, pressedAt: number)` stores the pace with its month and the press time (used
   by T054's timing); `takePace(month)` returns `{ pace, pressedAt }` only when the month matches,
   otherwise `null`; `dropPace()` clears it. Unit tests in `tests/unit/handedPace.test.ts`.
-- [ ] T023 [US1] Implement `src/ui/charts/PaceChart.tsx` (design.md, research R5, R6): SVG lines
+- [x] T023 [US1] Implement `src/ui/charts/PaceChart.tsx` (design.md, research R5, R6): SVG lines
   for `pace.selected` and `pace.previous` (when not null) with design.md's line styles, the legend
   with each month name, and two variants: `compact` (card: no axis, no touch) and `full` (axis
   marks `1`, `8`, `15`, `22`, `29`; touch; selected-day mark). In `full`:
@@ -308,13 +308,13 @@ drag a day → both amounts for that day.
   button slot (US3's **View month**), appear and disappear motion per design.md with
   `useReduceMotion`. Tests in `tests/component/chartDetail.test.tsx`: lines as separate texts,
   the action button's role and 48 dp size, no motion with reduce motion.
-- [ ] T025 [US1] Implement `src/ui/PaceCard.tsx` (design.md): loading (title `Spending pace` and
+- [x] T025 [US1] Implement `src/ui/PaceCard.tsx` (design.md): loading (title `Spending pace` and
   an `ActivityIndicator` labelled `Loading`, not pressable); ready (title, compact `PaceChart`,
   sentence); one accessible `button` with label `Spending pace, <sentence>` and hint "Opens
   Insights"; children not focusable. Tests in `tests/component/paceCard.test.tsx`: both states,
   label and hint, each FR-003 sentence, pressable only when ready, ≥ 48 dp, dark palette, font
   scale 2 with a 999.999.999,99 € difference (the sentence wraps, nothing has `numberOfLines`).
-- [ ] T026 [US1] Put the card on the summary in `src/app/index.tsx`: after the Totals card and the
+- [x] T026 [US1] Put the card on the summary in `src/app/index.tsx`: after the Totals card and the
   "Couldn't open this transaction." banner, before the breakdown; loading → loading card; error →
   no card; ready → ready card, including a month with no transactions (FR-001). On press:
   `handOffPace(pace, performance.now())` and `router.push('/insights')`. Entrance and month-change

@@ -55,7 +55,7 @@ function planFor(motion: SummaryMotion | null, on: readonly Moment[], slot: numb
 type Props = {
   /** Which moments this content animates in. */
   on: readonly Moment[];
-  /** Its place in the entrance order: card 0, breakdown 1, then Add and the rows. */
+  /** Its place in the entrance order: card 0, pace card 1, breakdown 2, then the rows. */
   slot?: number;
   /** False keeps the wrapper (so a row never remounts when its index changes) but never animates. */
   enabled?: boolean;

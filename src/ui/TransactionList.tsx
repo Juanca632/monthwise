@@ -150,7 +150,7 @@ const ListCell = memo(function ListCell({ item, index, tag, change, onPress }: C
   return (
     // Only the first screen's items can animate (SC-004). Every item keeps the same wrapper, so
     // one crossing index 8 after a delete is not remounted.
-    <Appear on={['entrance', 'month']} slot={2 + index} enabled={index < MAX_ANIMATED_ROWS}>
+    <Appear on={['entrance', 'month']} slot={3 + index} enabled={index < MAX_ANIMATED_ROWS}>
       {item.kind === 'day' ? (
         <DayHeader date={item.date} netCents={item.netCents} first={item.first} tag={tag} />
       ) : (

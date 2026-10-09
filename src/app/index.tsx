@@ -4,9 +4,11 @@ import { AccessibilityInfo, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { YearMonth } from '@/domain/month';
+import type { Pace } from '@/domain/pace';
 import { useMonthSummary } from '@/hooks/useMonthSummary';
 import { useRegion } from '@/hooks/useRegion';
 import { haptics } from '@/lib/haptics';
+import { handOffPace } from '@/state/handedPace';
 import { handOffTransaction } from '@/state/openedTransaction';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
 import { useSheetOpener } from '@/state/SheetTransitionContext';
@@ -15,6 +17,7 @@ import { Appear, SummaryMotionProvider, type SummaryMotion } from '@/ui/Appear';
 import { Breakdown } from '@/ui/Breakdown';
 import { BehindSheet } from '@/ui/BehindSheet';
 import { MonthHeader } from '@/ui/MonthHeader';
+import { PaceCard } from '@/ui/PaceCard';
 import { useRowChanges } from '@/ui/RowMotion';
 import { StateMessage } from '@/ui/StateMessage';
 import { spacing } from '@/ui/theme';
@@ -60,7 +63,7 @@ export default function SummaryScreen() {
   const { tag } = useRegion();
   const notice = useSummaryNotice();
   const sheetOpener = useSheetOpener();
-  const { status, rows, summary, retry } = useMonthSummary();
+  const { status, rows, summary, pace, retry } = useMonthSummary();
   const router = useRouter();
   const motion = useSummaryMotion();
   // The totals come from the stored rows; the list may still show a deleted row leaving.
@@ -93,6 +96,15 @@ export default function SummaryScreen() {
             balanceCents: summary.balanceCents,
           };
 
+  // The card's lines draw in with the summary's first data, never after a month change; a
+  // same-month reload keeps the card mounted, so it never draws in again (design.md, Motion).
+  const revealPace = motion.monthChange === null;
+
+  const openInsights = (shown: Pace) => {
+    handOffPace(shown, performance.now());
+    router.push('/insights');
+  };
+
   const addTransaction = () => {
     haptics.add();
     sheetOpener.set('summary');
@@ -118,9 +130,23 @@ export default function SummaryScreen() {
                   action={{ label: 'Dismiss', onPress: notice.dismiss }}
                 />
               )}
+              {/* Hidden on error: the balance card's own error covers it (002 contract). */}
+              {status === 'loading' && (
+                <Appear on={['entrance']} slot={1}>
+                  <PaceCard tag={tag} content={{ kind: 'loading' }} />
+                </Appear>
+              )}
+              {status === 'ready' && pace && (
+                <Appear on={['entrance', 'month']} slot={1}>
+                  <PaceCard
+                    tag={tag}
+                    content={{ kind: 'ready', pace, onPress: () => openInsights(pace), reveal: revealPace }}
+                  />
+                </Appear>
+              )}
               {/* Ready months only: an empty month shows its own line instead (FR-022). */}
               {status === 'ready' && rows.length > 0 && (
-                <Appear on={['entrance', 'month']} slot={1}>
+                <Appear on={['entrance', 'month']} slot={2}>
                   <Breakdown items={summary.breakdown} tag={tag} />
                 </Appear>
               )}
@@ -133,7 +159,7 @@ export default function SummaryScreen() {
           // Loading and error show only the card; an empty month gets its own line (FR-022).
           empty={
             status === 'ready' ? (
-              <Appear on={['entrance', 'month']} slot={1}>
+              <Appear on={['entrance', 'month']} slot={2}>
                 <StateMessage
                   variant="card"
                   icon="credit-card"

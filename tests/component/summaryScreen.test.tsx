@@ -99,7 +99,8 @@ it('shows the loading indicator and Add, with no zeros, while the database opens
   mockOpen.mockImplementation(() => new Promise(() => {}));
   renderSummary();
 
-  expect(screen.getByLabelText('Loading')).toBeTruthy();
+  // The balance card's and the pace card's (002).
+  expect(screen.getAllByLabelText('Loading')).toHaveLength(2);
   expect(addButton()).toBeTruthy();
   expect(screen.queryByText(eur('0,00'))).toBeNull();
   expect(screen.queryByText('No transactions this month yet.')).toBeNull();
@@ -125,7 +126,7 @@ it('shows the error state with Try again and Add when the database fails to open
   // Try again reopens the database, then loads the month.
   await databaseWith([]);
   fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
-  expect(screen.getByLabelText('Loading')).toBeTruthy();
+  expect(screen.getAllByLabelText('Loading')).toHaveLength(2);
   // findBy waits inside act() until the reopened database has loaded and the list has settled.
   expect(await screen.findByText('No transactions this month yet.')).toBeTruthy();
 });
@@ -265,5 +266,64 @@ describe('Add next to "Transactions" and See all (FR-002, FR-017)', () => {
     await flush();
     expect(screen.getAllByLabelText(/^Expense, Food, /)).toHaveLength(5);
     expect(screen.queryByRole('button', { name: 'See all transactions' })).toBeNull();
+  });
+});
+
+describe('Spending pace card (002 FR-001 to FR-004, FR-018)', () => {
+  // The default text matcher collapses whitespace, so es-ES's no-break space before the € matches.
+  const card = (sentence: string) => screen.getByRole('button', { name: `Spending pace, ${sentence}` });
+
+  beforeEach(() => {
+    jest.requireActual<typeof import('@/state/handedPace')>('@/state/handedPace').dropPace();
+  });
+
+  it('sits after the balance card and before the breakdown', async () => {
+    await databaseWith([expense(18_500, '2026-10-05', 'food'), expense(10_000, '2026-09-03', 'food')]);
+    renderSummary();
+    await flush();
+    const texts = screen
+      .getAllByText(/./, { includeHiddenElements: true })
+      .map((t) => [t.props.children].flat().join(''));
+    const at = (text: string) => texts.indexOf(text);
+    expect(at('Spending pace')).toBeGreaterThan(at('October 2026'));
+    expect(at('Spending pace')).toBeLessThan(at('Spending by category'));
+    expect(card('85,00 € more than last month by day 15')).toBeTruthy();
+  });
+
+  it('shows on a month with no transactions', async () => {
+    await databaseWith([]);
+    renderSummary();
+    await flush();
+    expect(card('No spending to compare yet')).toBeTruthy();
+  });
+
+  it('is not shown when the summary fails to load', async () => {
+    const db = await databaseWith([]);
+    db.raw.exec('DROP TABLE transactions');
+    renderSummary();
+    await flush();
+    expect(screen.queryByText('Spending pace', { includeHiddenElements: true })).toBeNull();
+  });
+
+  it('hands its pace to Insights and opens it when pressed', async () => {
+    await databaseWith([expense(18_500, '2026-10-05', 'food'), expense(10_000, '2026-09-03', 'food')]);
+    renderSummary();
+    await flush();
+    fireEvent.press(card('85,00 € more than last month by day 15'));
+    expect(mockPush).toHaveBeenCalledWith('/insights');
+    const { takePace } = jest.requireActual<typeof import('@/state/handedPace')>('@/state/handedPace');
+    expect(takePace({ year: 2026, month: 10 })?.pace.sentence).toMatchObject({ kind: 'more', differenceCents: 8_500 });
+  });
+
+  it('updates its sentence on a focus reload after an add', async () => {
+    const db = await databaseWith([expense(10_000, '2026-09-03', 'food')]);
+    renderSummary();
+    await flush();
+    expect(card('100,00 € less than last month by day 15')).toBeTruthy();
+
+    await createTransactionRepository(db).create(expense(12_000, '2026-10-04', 'food'), 99);
+    act(() => mockFocus.current!());
+    await flush();
+    expect(card('20,00 € more than last month by day 15')).toBeTruthy();
   });
 });

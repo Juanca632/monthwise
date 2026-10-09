@@ -7,7 +7,8 @@ commit (CLAUDE.md, "Session handoff").
 ## Now
 
 - Feature: `002` Monthly charts, branch `002-monthly-charts` (pushed to `origin`).
-- Done: blocks 1-3 and block 4a (T001-T022, see `specs/002-monthly-charts/tasks.md`).
+- Done: blocks 1-3, block 4a (T001-T022) and, of block 4b, T023, T025 and T026 (see
+  `specs/002-monthly-charts/tasks.md`).
 - Next:
   0. Done (2026-10-09): lighter workflow in `AGENTS.md` ("How we work"), `CLAUDE.md`, the
      `sdd-reviewer` and `design-reviewer` agents, and the plan and tasks templates. No
@@ -18,9 +19,12 @@ commit (CLAUDE.md, "Session handoff").
      `dayDetail` guard for days below 1. Accepted MINORs: the two hook reads are not one SQL
      snapshot (a later focus refetch corrects it), no unmount guard (same as 001), a month after
      today is treated as past (unreachable: the picker stops at today).
-  2. Block 4b (T023-T030): pace chart, card on the summary, Insights pace section, harness
-     `paceChart.*`, then remove `US1.test.tsx` from `tests/acceptance/002/pending.js` and make it
-     green (35 of 36 fail today, as expected: no UI yet).
+  2. Block 4b, remaining: T024 (`ChartDetail.tsx`, the developer writes it; Claude reviews),
+     T027 (`useInsights`), T028 (Insights pace section, needs T024), T029 (harness `paceChart.*`,
+     reusing `tests/helpers/paceGesture.ts`), T030 (remove `US1.test.tsx` from
+     `tests/acceptance/002/pending.js` and make it green). UI block: no code reviewer.
+     Note: gesture-handler 2.32's `fireGestureHandler` never calls `onTouches*`, so tests drive the
+     pace pan's touch callbacks directly (`tests/helpers/paceGesture.ts`), as T029 allows.
 
 ## Open decisions
 
