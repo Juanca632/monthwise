@@ -10,9 +10,9 @@ commit (CLAUDE.md, "Session handoff").
 - Done: blocks 1-3, 4a and 4b (T001-T030, see `specs/002-monthly-charts/tasks.md`). US1 is
   complete in code; its acceptance tests are green and out of `pending.js`.
 - Next:
-  1. Phone check of block 4b (developer, Expo Go): see "Phone checks pending" below. Fix what
-     comes up in fine-tuning mode (AGENTS.md).
-  2. Block 5 (T031-T036): Categories vs last month (US2), starting with the `spec-tester` (T031).
+  1. Done (2026-10-09): block 4b phone check, all fine.
+  2. Block 5 (T031-T036): Categories vs last month (US2). Done: T031 (US2 acceptance tests,
+     in `pending.js`), T032, T033. Next: T034 (`useInsights` categories), T035 (UI), T036.
 - Notes:
   - From 2026-10-09 Claude writes all the code (AGENTS.md); T024 was written by Claude.
   - US1 acceptance gaps accepted on 2026-10-09: the month control checks moved to US4 (T044 says
@@ -34,11 +34,7 @@ commit (CLAUDE.md, "Session handoff").
 ## Phone checks pending
 
 - 001: APK verification T052-T053.
-- 002, block 4b: the card on the summary (look, loading, tap opens Insights); Insights pace
-  section; on the chart: a tap selects and a second tap hides, a drag follows the finger, a
-  vertical swipe that starts on the chart scrolls with no visible delay, after a tap the screen
-  still scrolls, a horizontal drag does not scroll, no worklet error; TalkBack reads each day;
-  the reveal motion and haptics. If the scroll waits noticeably, see T023's alternative.
+- 002: none open (block 4b checked 2026-10-09).
 
 ## Environment notes
 

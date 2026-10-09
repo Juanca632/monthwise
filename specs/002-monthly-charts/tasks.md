@@ -376,15 +376,15 @@ drag a day → both amounts for that day.
 **Independent Test**: four categories over two months (one up, one down, one new, one gone) →
 each row's amounts, change, percent and order match a hand calculation.
 
-- [ ] T031 [US2] Run the `spec-tester` agent (`model: "sonnet"`) for `US2`
+- [x] T031 [US2] Run the `spec-tester` agent (`model: "sonnet"`) for `US2`
   (`tests/acceptance/002/US2.test.tsx`, past months through `selectMonth`); add it to
   `pending.js`; handle its report as in T016.
-- [ ] T032 [P] [US2] Add the categories texts to `src/format/insights.ts`: column titles (`This
+- [x] T032 [P] [US2] Add the categories texts to `src/format/insights.ts`: column titles (`This
   month`/`Last month`/`Change` for the current month; the month names and `Change` for a past
   month), `Compared by day N`, the sentences, row cells and row labels exactly as
   contracts/ui-screens.md Section 2 (current and past month, `New`, "no data" rows). Unit tests in
   `tests/unit/insightsText.test.ts`. Depends on T033's types (write the type first).
-- [ ] T033 [P] [US2] Implement `compareCategories` in `src/domain/categoryChanges.ts`
+- [x] T033 [P] [US2] Implement `compareCategories` in `src/domain/categoryChanges.ts`
   (contracts/insights-domain.md, data-model.md "CategoryComparison"): kinds in order `noSpending`,
   `noPreviousData` (this month only, "by the comparison day for the current month", largest
   first, ties by label), `changes` (rows with current or previous above 0, `changeCents` =
