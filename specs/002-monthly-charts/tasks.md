@@ -323,7 +323,7 @@ drag a day → both amounts for that day.
   reload after an add updates the sentence (FR-018). In the same task, fix the 001 suites the card
   or the second read break (run `npm test`), only where 002's contracts changed the expectation,
   never by weakening a 001 rule.
-- [ ] T027 [US1] Implement `src/hooks/useInsights.ts` (research R3): status
+- [x] T027 [US1] Implement `src/hooks/useInsights.ts` (research R3): status
   `loading | error | ready`; one read `listRange(trendStart(selected), selected)` that starts on
   the navigator's `transitionEnd` for the first load (`useNavigation().addListener`), then on focus
   (FR-018), on a month change and on `retry` (which shows loading, and reopens the database if it
