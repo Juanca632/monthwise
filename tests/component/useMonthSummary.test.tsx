@@ -174,7 +174,7 @@ it('discards a slow reply for a month that is no longer selected', async () => {
   mockDb = dbValue({ repository });
   const { result } = renderSummary();
 
-  act(() => result.current.month.goPrevious());
+  act(() => result.current.month.setSelected({ year: 2026, month: 9 }));
   expect(calls.map((c) => c.month)).toEqual([
     { year: 2026, month: 10 },
     { year: 2026, month: 9 },

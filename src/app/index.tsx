@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { YearMonth } from '@/domain/month';
+import { compareMonths } from '@/domain/month';
 import type { Pace } from '@/domain/pace';
 import { useMonthSummary } from '@/hooks/useMonthSummary';
 import { useRegion } from '@/hooks/useRegion';
@@ -36,8 +36,6 @@ if (process.env.EXPO_PUBLIC_DEV_TOOLS === '1') {
   DevTools = require('@/dev/DevTools').DevTools;
 }
 
-const monthIndex = (m: YearMonth) => m.year * 12 + m.month;
-
 /** The clock the summary's entrance and month-change motion run on (ui/Appear.tsx). */
 function useSummaryMotion(): SummaryMotion {
   const { selected } = useSelectedMonth();
@@ -51,8 +49,8 @@ function useSummaryMotion(): SummaryMotion {
     if (from === selected) return;
     // Recorded right after the render that changes the month, which shows it loading; the new
     // month's content mounts later, when its query returns, and reads this. An earlier month
-    // means the left (previous) button, so its content comes in from the left.
-    setMonthChange({ at: Date.now(), from: monthIndex(selected) < monthIndex(from) ? 'left' : 'right' });
+    // comes in from the left, a later one from the right (002 design.md, Motion).
+    setMonthChange({ at: Date.now(), from: compareMonths(selected, from) < 0 ? 'left' : 'right' });
   }, [selected]);
   return useMemo(() => ({ entranceStart, monthChange }), [entranceStart, monthChange]);
 }

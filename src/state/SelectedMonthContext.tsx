@@ -1,24 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
-import {
-  isCurrentMonth,
-  isMinMonth,
-  monthOf,
-  next,
-  previous,
-  type IsoDate,
-  type YearMonth,
-} from '@/domain/month';
+import { monthOf, type IsoDate, type YearMonth } from '@/domain/month';
 import { useToday } from '@/hooks/useToday';
 
 export type SelectedMonthValue = {
   selected: YearMonth;
   today: IsoDate;
+  /** The month picker only offers January 2000 to the current month (002 FR-027). */
   setSelected(month: YearMonth): void;
-  canGoPrevious: boolean;
-  canGoNext: boolean;
-  goPrevious(): void;
-  goNext(): void;
 };
 
 const SelectedMonthContext = createContext<SelectedMonthValue | null>(null);
@@ -42,26 +31,16 @@ export function SelectedMonthProvider({ children }: { children: ReactNode }) {
     }
   }, [today]);
 
-  const value = useMemo<SelectedMonthValue>(() => {
-    // FR-021: January 2000 is the first month and the current month the last.
-    const canGoPrevious = !isMinMonth(selected);
-    const canGoNext = !isCurrentMonth(selected, today);
-    return {
+  const value = useMemo<SelectedMonthValue>(
+    () => ({
       selected,
       today,
       // The same month keeps the same object: a save in the month on screen must not look like a
       // month change, which reloaded the summary a second time after every save.
       setSelected: (month) => setSelected((current) => (sameMonth(current, month) ? current : month)),
-      canGoPrevious,
-      canGoNext,
-      goPrevious: () => {
-        if (canGoPrevious) setSelected(previous(selected));
-      },
-      goNext: () => {
-        if (canGoNext) setSelected(next(selected));
-      },
-    };
-  }, [selected, today]);
+    }),
+    [selected, today],
+  );
 
   return <SelectedMonthContext.Provider value={value}>{children}</SelectedMonthContext.Provider>;
 }

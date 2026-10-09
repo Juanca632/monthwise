@@ -8,6 +8,7 @@ import type { TransactionInput } from '@/domain/validation';
 import { SelectedMonthProvider } from '@/state/SelectedMonthContext';
 import { SummaryNoticeProvider } from '@/state/SummaryNoticeContext';
 
+import { pickMonth } from '../helpers/monthPicker';
 import { ignoreListBatchingWarnings } from '../helpers/listWarnings';
 import { openTestDatabase } from '../helpers/betterSqliteAdapter';
 
@@ -105,19 +106,19 @@ it('rises in on the cold start, and only the first screen of rows', async () => 
   for (const node of moving()) expect(offset(node)).toEqual({ opacity: 1, x: 0, y: 0 });
 });
 
-it('slides the new month in from the side of the button tapped', async () => {
+it('slides an earlier month in from the left and a later one from the right', async () => {
   await renderSummary([...OCTOBER, expense(500, '2026-09-10')]);
   wait(2000);
 
-  fireEvent.press(screen.getByRole('button', { name: 'Previous month, September 2026' }));
+  await pickMonth({ year: 2026, month: 9 });
   await flush();
-  // The card's numbers, the breakdown and the row come in from the left.
+  // An earlier month comes in from the left (002 design.md, Motion): the card's numbers, the breakdown and the row come in from the left.
   const fromLeft = moving().map(offset).filter((o) => o.opacity === 0);
   expect(fromLeft.length).toBeGreaterThanOrEqual(3);
   for (const o of fromLeft) expect(o).toEqual({ opacity: 0, x: -18, y: 0 });
 
   wait(2000);
-  fireEvent.press(screen.getByRole('button', { name: 'Next month, October 2026' }));
+  await pickMonth({ year: 2026, month: 10 });
   await flush();
   const fromRight = moving().map(offset).filter((o) => o.opacity === 0);
   expect(fromRight.length).toBeGreaterThanOrEqual(3);
@@ -128,7 +129,7 @@ it('plays one light haptic for Add and for each month change (design.md, Haptics
   await renderSummary(OCTOBER);
   fireEvent.press(screen.getByRole('button', { name: 'Add transaction' }));
   expect(mockHaptics.add).toHaveBeenCalledTimes(1);
-  fireEvent.press(screen.getByRole('button', { name: 'Previous month, September 2026' }));
+  await pickMonth({ year: 2026, month: 9 });
   await flush();
   expect(mockHaptics.monthChange).toHaveBeenCalledTimes(1);
 });

@@ -6,8 +6,7 @@ import { AccessibilityInfo } from 'react-native';
 
 import type { TransactionInput } from '@/domain/validation';
 
-// The harness's own guarantees (contracts/test-harness.md). The month picker comes with US4,
-// with the member that drives it.
+// The harness's own guarantees (contracts/test-harness.md).
 
 const eur = (amount: string) => `${amount} €`;
 const expense = (amountCents: number, date: string, note: string | null = null): TransactionInput => ({
@@ -25,7 +24,8 @@ const income = (amountCents: number, date: string): TransactionInput => ({
   note: null,
 });
 
-const monthHeader = (name: string) => screen.queryByRole('header', { name });
+// The month control on the summary (002 FR-026).
+const monthHeader = (name: string) => screen.queryByRole('button', { name });
 // Pushes the way a screen's own button does; the summary's entry point to Insights comes in US1.
 const push = (path: string) => act(async () => require('expo-router').useRouter().push(path));
 
@@ -83,7 +83,8 @@ describe('app harness', () => {
     await push('/insights');
     expect(app.screen).toBe('insights');
     expect(screen.getByRole('header', { name: 'Insights' })).toBeTruthy();
-    expect(monthHeader('October 2026')).toBeNull();
+    // Only the top screen renders: the summary's Add is not there (Insights has its own month control).
+    expect(screen.queryByRole('button', { name: 'Add transaction' })).toBeNull();
     await app.back();
     expect(app.screen).toBe('summary');
     expect(monthHeader('October 2026')).toBeTruthy();
@@ -106,9 +107,14 @@ describe('app harness', () => {
     subscription.remove();
   });
 
-  it('keeps the picker member as a stub until US4 wires it', async () => {
+  it('tapOutsidePicker closes the open month picker, and fails when none is open', async () => {
     const app = await renderApp({ today: '2026-10-12' });
-    await expect(app.tapOutsidePicker()).rejects.toThrow('not wired yet');
+    await expect(app.tapOutsidePicker()).rejects.toThrow('not open');
+    fireEvent.press(screen.getByRole('button', { name: 'October 2026' }));
+    await app.settle();
+    expect(screen.getByRole('header', { name: 'Choose month' })).toBeTruthy();
+    await app.tapOutsidePicker();
+    expect(screen.queryByRole('header', { name: 'Choose month' })).toBeNull();
   });
 });
 

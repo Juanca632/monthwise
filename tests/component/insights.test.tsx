@@ -82,7 +82,7 @@ describe('Insights header', () => {
   it('names the screen, shows the selected month, and goes back', () => {
     renderInsights();
     expect(screen.getByRole('header', { name: 'Insights' })).toBeTruthy();
-    expect(text('October 2026')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'October 2026' })).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'Back' }));
     expect(mockBack).toHaveBeenCalledTimes(1);
   });
@@ -157,6 +157,19 @@ describe('Pace day detail (FR-007, FR-014)', () => {
     await touchPaceChart([{ x: dayX(8) }]);
     expect(text('Day 8')).toBeTruthy();
     act(() => month.current!.setSelected({ year: 2026, month: 9 }));
+    expect(screen.queryByText(/^Day \d+$/)).toBeNull();
+  });
+});
+
+describe('Insights month control (FR-026, FR-031)', () => {
+  it('choosing a month on Insights changes the shared month and hides the open detail', async () => {
+    renderInsights();
+    await touchPaceChart([{ x: dayX(8) }]);
+    expect(text('Day 8')).toBeTruthy();
+    fireEvent.press(screen.getByRole('button', { name: 'October 2026' }));
+    act(() => fireEvent.press(screen.getByRole('button', { name: 'August 2026' })));
+    expect(month.current!.selected).toEqual({ year: 2026, month: 8 });
+    expect(screen.getByRole('button', { name: 'August 2026' })).toBeTruthy();
     expect(screen.queryByText(/^Day \d+$/)).toBeNull();
   });
 });

@@ -10,6 +10,7 @@ import {
   monthOf,
   monthRange,
   next,
+  pickerYear,
   previous,
   toIsoDate,
 } from '@/domain/month';
@@ -106,5 +107,37 @@ describe('month arithmetic (002)', () => {
     expect(compareMonths(ym(2026, 10), ym(2026, 9))).toBeGreaterThan(0);
     expect(compareMonths(ym(2025, 12), ym(2026, 1))).toBeLessThan(0);
     expect(compareMonths(ym(2027, 1), ym(2026, 12))).toBeGreaterThan(0);
+  });
+});
+
+describe('pickerYear (FR-027)', () => {
+  const ym = (year: number, month: number) => ({ year, month });
+  const flags = (p: ReturnType<typeof pickerYear>, key: 'selected' | 'available') =>
+    p.months.map((m) => m[key]);
+
+  it('the current year: months after the current one are unavailable, no next year', () => {
+    const p = pickerYear(2026, ym(2026, 10), '2026-10-12');
+    expect(p.months.map((m) => m.month)).toEqual(Array.from({ length: 12 }, (_, i) => ym(2026, i + 1)));
+    expect(flags(p, 'available')).toEqual([...Array(10).fill(true), false, false]);
+    expect(flags(p, 'selected').indexOf(true)).toBe(9);
+    expect(p).toMatchObject({ year: 2026, canGoPrevious: true, canGoNext: false });
+  });
+
+  it('2000: no previous year', () => {
+    const p = pickerYear(2000, ym(2026, 10), '2026-10-12');
+    expect(p).toMatchObject({ canGoPrevious: false, canGoNext: true });
+    expect(flags(p, 'available').every(Boolean)).toBe(true);
+    expect(flags(p, 'selected').some(Boolean)).toBe(false);
+  });
+
+  it('a past year: every month available, both directions open', () => {
+    const p = pickerYear(2024, ym(2024, 3), '2026-10-12');
+    expect(p).toMatchObject({ canGoPrevious: true, canGoNext: true });
+    expect(flags(p, 'available').every(Boolean)).toBe(true);
+    expect(flags(p, 'selected').indexOf(true)).toBe(2);
+  });
+
+  it('a selected month in another year marks nothing in the shown year', () => {
+    expect(flags(pickerYear(2025, ym(2026, 10), '2026-10-12'), 'selected').some(Boolean)).toBe(false);
   });
 });

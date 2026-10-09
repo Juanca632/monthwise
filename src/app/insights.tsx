@@ -8,13 +8,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { dayDetail, type Pace } from '@/domain/pace';
 import type { Trend } from '@/domain/trend';
-import { monthTitle } from '@/format/date';
 import { dayDetailLines, paceSentence, trendDetailLines, trendHeadline, trendHeadlineLabel } from '@/format/insights';
 import { useInsights } from '@/hooks/useInsights';
 import { useRegion } from '@/hooks/useRegion';
 import { haptics } from '@/lib/haptics';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
 import { CategoryChanges } from '@/ui/CategoryChanges';
+import { MonthControl } from '@/ui/MonthControl';
 import { ChartDetail } from '@/ui/ChartDetail';
 import { PaceChart } from '@/ui/charts/PaceChart';
 import { TrendChart } from '@/ui/charts/TrendChart';
@@ -61,8 +61,7 @@ export default function InsightsScreen() {
             <Text accessibilityRole="header" style={[type.label, { color: colors.textMuted }]}>
               Insights
             </Text>
-            {/* Becomes the month control with US4 (T049). */}
-            <Text style={[type.heading, { color: colors.text }]}>{monthTitle(selected)}</Text>
+            <MonthControl variant="title" />
           </View>
         </View>
 

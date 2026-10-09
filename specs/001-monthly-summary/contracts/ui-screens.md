@@ -4,6 +4,11 @@ What each screen shows and accepts. Routes follow Expo Router's file-based routi
 `src/app/` (research R6). All text is English (FR-029). Amounts and numeric dates use the
 phone's region (research R7).
 
+> **Note (002)**: feature 002 replaced the summary's month arrows ("Previous month, …", "Next
+> month, …") and the month header with a single month control that opens a month picker. See
+> [002's contract](../../002-monthly-charts/contracts/ui-screens.md) (Month control, Month
+> picker). This file keeps 001 as it shipped.
+
 ## Routes
 
 | Route                | File                               | Presentation  | Purpose                      |

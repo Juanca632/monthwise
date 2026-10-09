@@ -43,7 +43,7 @@ it('clears the notice on month navigation', () => {
   const { result } = renderBoth();
   act(() => result.current.notice.show('open_failed'));
 
-  act(() => result.current.month.goPrevious());
+  act(() => result.current.month.setSelected({ year: 2026, month: 9 }));
   expect(result.current.notice.notice).toBeNull();
 });
 

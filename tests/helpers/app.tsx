@@ -148,10 +148,6 @@ export type AppHandle = {
   unmount(): void;
 };
 
-const notWiredYet = (member: string, task: string) => async () => {
-  throw new Error(`${member} is not wired yet (${task})`);
-};
-
 /** The pace chart's touch width in tests: 10 dp per day (contracts/test-harness.md). */
 const PACE_CHART_WIDTH = 310;
 
@@ -365,7 +361,13 @@ export async function renderApp(options: RenderAppOptions): Promise<AppHandle> {
       }
       await settle();
     },
-    tapOutsidePicker: notWiredYet('tapOutsidePicker', 'T051'),
+    async tapOutsidePicker() {
+      // The scrim is not a screen reader element (contract), so it is found among hidden ones.
+      const scrim = screen.queryByTestId('month-picker-scrim', { includeHiddenElements: true });
+      if (!scrim) throw new Error('tapOutsidePicker(): the month picker is not open');
+      await act(async () => fireEvent.press(scrim));
+      await settle();
+    },
     async add(input) {
       const { id } = await repository.create(input, createdAt++);
       await refocus();

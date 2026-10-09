@@ -92,7 +92,7 @@ it('opens on the current month (FR-014)', async () => {
   await databaseWith([]);
   renderSummary();
   await flush();
-  expect(screen.getByRole('header', { name: 'October 2026' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'October 2026' })).toBeTruthy();
 });
 
 it('shows the loading indicator and Add, with no zeros, while the database opens (FR-002, FR-023)', () => {

@@ -469,17 +469,17 @@ values, the headline and the tapped details match a hand calculation.
 **Independent Test**: transactions in several years → open the picker from the summary, change
 year, pick a month; pick another on Insights and go back; tap a trend month's **View month**.
 
-- [ ] T044 [US4] Run the `spec-tester` agent (`model: "sonnet"`) for `US4`
+- [x] T044 [US4] Run the `spec-tester` agent (`model: "sonnet"`) for `US4`
   (`tests/acceptance/002/US4.test.tsx`); tell it `tapOutsidePicker` is not wired until T051; add
   it to `pending.js`; handle its report as in T016. Tell it to cover what US1's tests left to
   US4 (accepted 2026-10-09): the month control on Insights and on the summary (role `button`,
   label `October 2026`, hint "Changes the month") after opening Insights from the card.
-- [ ] T045 [P] [US4] Implement `pickerYear(year, selected, today)` in `src/domain/month.ts`
+- [x] T045 [P] [US4] Implement `pickerYear(year, selected, today)` in `src/domain/month.ts`
   (data-model.md "Month picker"): twelve months January first, `selected` flag, `available` when
   not after the current month, `canGoPrevious` false on 2000, `canGoNext` false on today's year.
   Unit tests in `tests/unit/month.test.ts`: 2000, the current year (October 2026: November and
   December unavailable), a past year, a selected month in another year.
-- [ ] T046 [US4] Implement `src/ui/MonthPicker.tsx` (research R7, design.md), built like 001's
+- [x] T046 [US4] Implement `src/ui/MonthPicker.tsx` (research R7, design.md), built like 001's
   `ConfirmDialog` (React Native `Modal`, scrim, fade with `useReduceMotion`): title `Choose month`,
   the shown year, `Previous year` and `Next year` (disabled as `pickerYear` says), the 3 × 4
   month grid (visible short name, label `March 2024`, `selected` and `disabled` states), `This
@@ -490,11 +490,11 @@ year, pick a month; pick another on Insights and go back; tap a trend month's **
   their disabled states, unavailable months, choosing, `This month`, `Close`, back, scrim,
   choosing the selected month, every label and state of FR-032, ≥ 48 dp targets, no motion with
   reduce motion, font scale 2, dark palette.
-- [ ] T047 [US4] Implement `src/ui/MonthControl.tsx` (role `button`, label `October 2026`, hint
+- [x] T047 [US4] Implement `src/ui/MonthControl.tsx` (role `button`, label `October 2026`, hint
   "Changes the month", chevron, ≥ 48 dp) that opens `MonthPicker` and applies `setSelected`. Tests
   in `tests/component/monthControl.test.tsx` (label, hint, opens, chooses, works in loading and
   error states).
-- [ ] T048 [US4] Replace the arrows in `src/ui/MonthHeader.tsx` with `MonthControl`; remove
+- [x] T048 [US4] Replace the arrows in `src/ui/MonthHeader.tsx` with `MonthControl`; remove
   `canGoPrevious`, `canGoNext`, `goPrevious` and `goNext` from
   `src/state/SelectedMonthContext.tsx` (FR-026); in `src/app/index.tsx` `useSummaryMotion`, derive
   the month-change direction with `compareMonths` (an earlier month comes from the left), unless
@@ -505,16 +505,16 @@ year, pick a month; pick another on Insights and go back; tap a trend month's **
   `tests/unit/todayAndMonth.test.tsx`) so they reach months through the picker and still check
   001's rules that remain (January 2000 is the first month, the current month the last, the
   rollover after midnight, month change in every state).
-- [ ] T049 [US4] Use `MonthControl` as the month title in `src/app/insights.tsx`'s header; changing
+- [x] T049 [US4] Use `MonthControl` as the month title in `src/app/insights.tsx`'s header; changing
   the month there resets both chart selections and drops the handed pace (FR-031). Tests in
   `tests/component/insights.test.tsx`: a month chosen on Insights shows in every section with no
   detail open, and going back shows it on the summary (FR-029).
-- [ ] T050 [P] [US4] Add a note at the top of `specs/001-monthly-summary/contracts/ui-screens.md`
+- [x] T050 [P] [US4] Add a note at the top of `specs/001-monthly-summary/contracts/ui-screens.md`
   (Summary screen) that 002 replaced the month arrows with the month control (link to 002's
   contract), without rewriting 001's history.
-- [ ] T051 [US4] Wire `tapOutsidePicker` in `tests/helpers/app.tsx` (press
+- [x] T051 [US4] Wire `tapOutsidePicker` in `tests/helpers/app.tsx` (press
   `month-picker-scrim`) and add its self-test to `tests/component/appHarness.test.tsx`.
-- [ ] T052 [US4] Remove `US4.test.tsx` from `pending.js` (now empty) and run it until green (rules
+- [x] T052 [US4] Remove `US4.test.tsx` from `pending.js` (now empty) and run it until green (rules
   as T030); then run `npm run test:acceptance` and `npm test`.
 
 **Checkpoint**: all four stories work; 001's arrows are gone.

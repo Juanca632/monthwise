@@ -18,8 +18,11 @@ commit (CLAUDE.md, "Session handoff").
   4. Block 6 (T037-T043, US3 savings trend) done, acceptance tests green. The trend was
      simplified first (developer, 2026-10-09): one saved bar per month, no legend. Code review
      (Sonnet, 2026-10-09): no CRITICAL or MAJOR; a year-boundary test added.
-  5. Then block 7 (T044-T052, US4 month picker). Its spec-tester (T044) must also cover the month
-     control checks that US1 and US3 left to US4.
+  5. Block 7 (T044-T052, US4 month picker) done: 001's arrows replaced by the month control and
+     picker on the summary and Insights; all four stories' acceptance tests green, `pending.js`
+     empty. Code review of `pickerYear` (src/domain/month.ts) runs before the phone check.
+  6. Then block 8 (T053-T058: seed, timing, SC-001 end to end, Stryker, docs) and block 9 (phone
+     pass, preview APK, PR).
 - Notes:
   - From 2026-10-09 Claude writes all the code (AGENTS.md); T024 was written by Claude.
   - US3 acceptance gaps accepted on 2026-10-09: month control checks moved to US4, as US1's; US1's
@@ -46,6 +49,8 @@ commit (CLAUDE.md, "Session handoff").
 ## Phone checks pending
 
 - 001: APK verification T052-T053.
+- 002, block 7: the month control on the balance card and on Insights, the picker (year arrows,
+  unavailable months, This month, Close, back, tap outside), the month change motion.
 - 002, block 6: the Savings trend card (headline, one bar per month, up in blue, down in red,
   "No data" months), tapping a month (detail, View month), the bars growing on first open.
 

@@ -270,7 +270,7 @@ describe('editing', () => {
     await flush();
 
     expect(month.current!.selected).toEqual({ year: 2026, month: 9 });
-    expect(screen.getByRole('header', { name: 'September 2026' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'September 2026' })).toBeTruthy();
     expect(screen.getByLabelText(/^Expense, Food, .*, 30 September 2026/)).toBeTruthy();
   });
 

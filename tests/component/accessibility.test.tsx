@@ -159,10 +159,11 @@ beforeEach(() => {
 });
 
 describe('summary announcements (contracts/ui-screens.md)', () => {
-  it('announces the month header and the previous-month button', async () => {
+  it('announces the month control, which replaced the month header and arrows (002 FR-026)', async () => {
     await renderSummary();
-    expect(screen.getByRole('header', { name: 'October 2026' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Previous month, September 2026' })).toBeTruthy();
+    const control = screen.getByRole('button', { name: 'October 2026' });
+    expect(control.props.accessibilityHint).toBe('Changes the month');
+    expect(screen.queryByRole('button', { name: /^Previous month, / })).toBeNull();
   });
 
   it('announces the three totals, the balance in words when negative', async () => {

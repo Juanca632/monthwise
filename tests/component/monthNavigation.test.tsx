@@ -5,11 +5,13 @@ import { DatabaseProvider } from '@/data/DatabaseProvider';
 import { openAndMigrate } from '@/data/migrations';
 import type { SqlParam } from '@/data/sqlDatabase';
 import { createTransactionRepository } from '@/data/transactionRepository';
+import { next, previous } from '@/domain/month';
 import type { TransactionInput } from '@/domain/validation';
 import { SelectedMonthProvider, useSelectedMonth, type SelectedMonthValue } from '@/state/SelectedMonthContext';
 import { SummaryNoticeProvider, useSummaryNotice, type SummaryNoticeValue } from '@/state/SummaryNoticeContext';
 
 import { ignoreListBatchingWarnings } from '../helpers/listWarnings';
+import { monthControl, openPicker, pickMonth } from '../helpers/monthPicker';
 import { openTestDatabase, type TestDatabase } from '../helpers/betterSqliteAdapter';
 
 /**
@@ -132,15 +134,14 @@ async function renderApp(rows: TransactionInput[], prepare?: (db: TestDatabase) 
   return db;
 }
 
-const header = (name: string) => screen.getByRole('header', { name });
-const previousButton = () => screen.queryByRole('button', { name: /^Previous month, / });
-const nextButton = () => screen.queryByRole('button', { name: /^Next month, / });
+// Since 002 the month is chosen in the month picker (FR-026); these keep 001's moves.
+const header = (name: string) => monthControl(name);
 const goPrevious = async () => {
-  fireEvent.press(previousButton()!);
+  await pickMonth(previous(month.current!.selected));
   await flush();
 };
 const goNext = async () => {
-  fireEvent.press(nextButton()!);
+  await pickMonth(next(month.current!.selected));
   await flush();
 };
 
@@ -166,23 +167,25 @@ beforeEach(() => {
   mockClock.today = '2026-10-15';
 });
 
-describe('limits (FR-021)', () => {
-  it('hides next on the current month and labels previous with the month it goes to', async () => {
+describe('limits (FR-021, now the picker\'s: 002 FR-027)', () => {
+  it('has no arrows; the current month is the last one the picker offers', async () => {
     await renderApp([]);
     expect(header('October 2026')).toBeTruthy();
-    expect(nextButton()).toBeNull();
-    expect(previousButton()!.props.accessibilityLabel).toBe('Previous month, September 2026');
+    expect(screen.queryByRole('button', { name: /^(Previous|Next) month, / })).toBeNull();
+    await openPicker();
+    expect(screen.getByRole('button', { name: 'November 2026' }).props.accessibilityState).toMatchObject({ disabled: true });
+    expect(screen.getByRole('button', { name: 'Next year' }).props.accessibilityState).toMatchObject({ disabled: true });
   });
 
-  it('hides previous on January 2000', async () => {
+  it('January 2000 is the first month', async () => {
     await renderApp([]);
     act(() => month.current!.setSelected({ year: 2000, month: 2 }));
     await flush();
     await goPrevious();
 
     expect(header('January 2000')).toBeTruthy();
-    expect(previousButton()).toBeNull();
-    expect(nextButton()!.props.accessibilityLabel).toBe('Next month, February 2000');
+    await openPicker();
+    expect(screen.getByRole('button', { name: 'Previous year' }).props.accessibilityState).toMatchObject({ disabled: true });
   });
 });
 
@@ -193,11 +196,9 @@ it('goes back to an empty past month and forward to the current month again', as
   expect(header('September 2026')).toBeTruthy();
   expect(screen.getAllByText(eur('0,00'))).toHaveLength(3);
   expect(screen.getByText('No transactions this month yet.')).toBeTruthy();
-  expect(nextButton()!.props.accessibilityLabel).toBe('Next month, October 2026');
 
   await goNext();
   expect(header('October 2026')).toBeTruthy();
-  expect(nextButton()).toBeNull();
   expect(screen.getByLabelText(`Expenses, ${eur('12,50')}`)).toBeTruthy();
 });
 
@@ -262,7 +263,6 @@ describe('back in the foreground in a new month', () => {
     await flush();
 
     expect(header('November 2026')).toBeTruthy();
-    expect(nextButton()).toBeNull();
   });
 
   it('leaves a past month where it is', async () => {
@@ -273,7 +273,6 @@ describe('back in the foreground in a new month', () => {
     await flush();
 
     expect(header('September 2026')).toBeTruthy();
-    expect(nextButton()!.props.accessibilityLabel).toBe('Next month, October 2026');
   });
 });
 

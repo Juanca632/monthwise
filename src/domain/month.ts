@@ -73,3 +73,31 @@ export function defaultFormDate(selected: YearMonth, today: IsoDate): IsoDate {
 export function toIsoDate(d: Date): IsoDate {
   return `${pad(d.getFullYear(), 4)}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
+
+export type PickerYear = {
+  year: number;
+  /** False on 2000: nothing exists before January 2000. */
+  canGoPrevious: boolean;
+  /** False on today's year: no month after the current one can be chosen. */
+  canGoNext: boolean;
+  /** Twelve, January first. */
+  months: { month: YearMonth; selected: boolean; available: boolean }[];
+};
+
+/** One year of the month picker (FR-027). */
+export function pickerYear(year: number, selected: YearMonth, today: IsoDate): PickerYear {
+  const current = monthOf(today);
+  return {
+    year,
+    canGoPrevious: year > MIN_MONTH.year,
+    canGoNext: year < current.year,
+    months: Array.from({ length: 12 }, (_, i) => {
+      const month = { year, month: i + 1 };
+      return {
+        month,
+        selected: compareMonths(month, selected) === 0,
+        available: compareMonths(month, current) <= 0 && compareMonths(month, MIN_MONTH) >= 0,
+      };
+    }),
+  };
+}

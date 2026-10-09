@@ -56,23 +56,6 @@ describe('SelectedMonthContext', () => {
     setClock(2026, 10, 5);
     const { result } = renderHook(() => useSelectedMonth(), { wrapper });
     expect(result.current.selected).toEqual({ year: 2026, month: 10 });
-    expect(result.current.canGoNext).toBe(false);
-    expect(result.current.canGoPrevious).toBe(true);
-  });
-
-  it('moves back and forward, never past the current month', () => {
-    setClock(2026, 1, 15);
-    const { result } = renderHook(() => useSelectedMonth(), { wrapper });
-
-    act(() => result.current.goNext());
-    expect(result.current.selected).toEqual({ year: 2026, month: 1 });
-
-    act(() => result.current.goPrevious());
-    expect(result.current.selected).toEqual({ year: 2025, month: 12 });
-    expect(result.current.canGoNext).toBe(true);
-
-    act(() => result.current.goNext());
-    expect(result.current.selected).toEqual({ year: 2026, month: 1 });
   });
 
   it('keeps the same object when set to the month already shown, so nothing reloads', () => {
@@ -85,15 +68,8 @@ describe('SelectedMonthContext', () => {
     expect(result.current.selected).toEqual({ year: 2026, month: 9 });
   });
 
-  it('never goes before January 2000', () => {
-    setClock(2026, 10, 5);
-    const { result } = renderHook(() => useSelectedMonth(), { wrapper });
-    act(() => result.current.setSelected({ year: 2000, month: 1 }));
-    expect(result.current.canGoPrevious).toBe(false);
-
-    act(() => result.current.goPrevious());
-    expect(result.current.selected).toEqual({ year: 2000, month: 1 });
-  });
+  // January 2000 as the first month and the current month as the last are the month picker's
+  // rules since 002 (pickerYear in tests/unit/month.test.ts, tests/component/monthPicker.test.tsx).
 
   it('follows the new current month on foreground if it showed the old one', () => {
     setClock(2026, 9, 30, 23);
@@ -109,12 +85,11 @@ describe('SelectedMonthContext', () => {
   it('keeps a past month on foreground after a month change', () => {
     setClock(2026, 9, 30, 23);
     const { result } = renderHook(() => useSelectedMonth(), { wrapper });
-    act(() => result.current.goPrevious());
+    act(() => result.current.setSelected({ year: 2026, month: 8 }));
 
     setClock(2026, 10, 1, 0);
     emit('active');
     expect(result.current.selected).toEqual({ year: 2026, month: 8 });
-    expect(result.current.canGoNext).toBe(true);
   });
 
   it('stays put when the day changes but the month does not', () => {
