@@ -339,7 +339,7 @@ drag a day → both amounts for that day.
   changes the comparison day on the next focus (spec Edge Cases, date change), and with Insights
   open on the current month, `setToday` to the next month moves Insights to the new month when
   the app returns to the foreground, while a past month stays (FR-031).
-- [ ] T028 [US1] Build the Spending pace section in `src/app/insights.tsx` with design.md's
+- [x] T028 [US1] Build the Spending pace section in `src/app/insights.tsx` with design.md's
   header look: a vertical `ScrollView` from `react-native-gesture-handler` (the ref shared with
   `PaceChart`) under the header; the section title `Spending pace` (role `header`), the full
   `PaceChart`, the sentence, and `ChartDetail` for the selected day from the `chartSelection`
