@@ -106,9 +106,9 @@ describe('fonts', () => {
   it('uses Manrope families when the font is loaded', () => {
     const { result } = renderHook(() => useTheme());
     expect(result.current.type.display).toEqual({
-      fontSize: 62,
+      fontSize: 40,
       fontFamily: 'Manrope_700Bold',
-      letterSpacing: -2,
+      letterSpacing: -1,
       fontVariant: ['tabular-nums'],
     });
     expect(result.current.type.body.fontFamily).toBe('Manrope_500Medium');

@@ -9,6 +9,7 @@ import {
   daySpokenValue,
   paceCardLabel,
   paceSentence,
+  paceSentenceParts,
   shortMonthName,
   trendDetailLines,
   trendHeadline,
@@ -311,5 +312,23 @@ describe('trend texts (Section 3)', () => {
     const jun: MonthTotals = { month: { year: 2026, month: 6 }, hasData: false, incomeCents: 0, expenseCents: 0, savedCents: 0, rate: null };
     expect(trendDetailLines(jun, ES)).toEqual(['June', 'No data']);
     expect(trendSpokenValue(jun, ES)).toBe('No data');
+  });
+});
+
+describe('paceSentenceParts (fine-tuning 2026-10-09)', () => {
+  it('splits the answer off a more or less sentence', () => {
+    const parts = paceSentenceParts({ kind: 'more', differenceCents: 8_500, comparisonDay: 12, previousMonth: SEP }, ES);
+    expect(parts).toEqual({ lead: `${eur('85,00')} more`, rest: ' than last month by day 12', tone: 'more' });
+    const less = paceSentenceParts({ kind: 'less', differenceCents: 20_000, comparisonDay: null, previousMonth: JUL }, ES);
+    expect(less).toEqual({ lead: `${eur('200,00')} less`, rest: ' than July', tone: 'less' });
+  });
+
+  it('keeps other sentences whole, with no tone', () => {
+    expect(paceSentenceParts({ kind: 'same', differenceCents: 0, comparisonDay: 12, previousMonth: SEP }, ES)).toEqual({
+      lead: '',
+      rest: 'Same as last month by day 12',
+      tone: null,
+    });
+    expect(paceSentenceParts({ kind: 'noSpending' }, ES).tone).toBeNull();
   });
 });

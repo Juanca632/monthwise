@@ -24,8 +24,8 @@ export type TotalsContent =
   | { kind: 'values'; incomeCents: number; expenseCents: number; balanceCents: number };
 
 type Props = {
-  /** The header row; it gets the card tone so its text matches the card. */
-  header(tone: CardTone): ReactNode;
+  /** An optional header row; it gets the card tone so its text matches the card. */
+  header?(tone: CardTone): ReactNode;
   content: TotalsContent;
   tag: string;
 };
@@ -78,7 +78,7 @@ export function Totals({ header, content, tag }: Props) {
         />
       }
     >
-      {header(tone)}
+      {header?.(tone)}
 
       {content.kind === 'loading' && (
         <View style={[styles.loading, bodyHeight !== null && { height: bodyHeight }]}>

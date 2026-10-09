@@ -35,6 +35,22 @@ export function paceSentence(sentence: PaceSentence, tag: string): string {
   }
 }
 
+export type SentenceParts = {
+  /** The part that carries the answer, `85,00 € more`, drawn in its tone; empty when none. */
+  lead: string;
+  rest: string;
+  /** `more` spent is `error`, `less` is `income` (fine-tuning 2026-10-09: color, not size). */
+  tone: 'more' | 'less' | null;
+};
+
+/** `paceSentence` split so the screen can color its answer; `lead + rest` is the same sentence. */
+export function paceSentenceParts(sentence: PaceSentence, tag: string): SentenceParts {
+  const text = paceSentence(sentence, tag);
+  if (sentence.kind !== 'more' && sentence.kind !== 'less') return { lead: '', rest: text, tone: null };
+  const lead = `${formatMoney(sentence.differenceCents, tag)} ${sentence.kind}`;
+  return { lead, rest: text.slice(lead.length), tone: sentence.kind };
+}
+
 /** The whole card is one button with this label. */
 export function paceCardLabel(sentence: PaceSentence, tag: string): string {
   return `Spending pace, ${paceSentence(sentence, tag)}`;

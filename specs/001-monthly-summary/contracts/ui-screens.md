@@ -25,7 +25,7 @@ the current month (FR-014). The forms set it after a successful save (FR-020).
 
 Layout from top to bottom: month header with previous/next controls, totals (income, expenses,
 balance), expense breakdown, then the "Transactions" title with **Add** next to it, and the
-month's 5 most recent transactions (FR-017). The title row with **Add** shows in every state,
+month's 3 most recent transactions (FR-017; 5 until 2026-10-09). The title row with **Add** shows in every state,
 including while the database opens (FR-002). When the month has more than 5 transactions,
 **See all** under the list opens `/transactions`. A Save tapped while the database is
 still opening waits in the saving state until it is open, at most 10 s; after that it counts as a failed open. Only if opening failed does the form
@@ -36,7 +36,7 @@ show the FR-025 save error.
 | loading | Database opening or migrating, or month query in progress | Header + loading indicator instead of totals; "Transactions" + **Add**; no list | FR-023          |
 | error   | Database failed to open or migrate, or the query threw `StorageError`; **Try again** reopens the database if it is not open, then reloads the month | Header + "Couldn't load your data." + **Try again**; "Transactions" + **Add**; no list | FR-024          |
 | empty   | Month has no transactions    | Totals at 0; "Transactions" + **Add**; "No transactions this month yet.". The breakdown section and its "No expenses" line are not shown. | FR-022 |
-| ready   | Month has transactions       | Totals, breakdown (or "No expenses this month."), "Transactions" + **Add**, the 5 most recent, **See all** when there are more | FR-015 to FR-017|
+| ready   | Month has transactions       | Totals, breakdown (or "No expenses this month."), "Transactions" + **Add**, the 3 most recent, **See all** when there are more | FR-015 to FR-017|
 
 - Previous is hidden on January 2000; next is hidden on the current month (FR-021). Month
   navigation works in every state, including loading and error. `useMonthSummary` discards any

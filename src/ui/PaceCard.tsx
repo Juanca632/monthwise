@@ -1,18 +1,20 @@
 import { Feather } from '@expo/vector-icons';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import type { Pace } from '@/domain/pace';
-import { paceCardLabel, paceSentence } from '@/format/insights';
+import { paceCardLabel } from '@/format/insights';
 
 import { PaceChart } from './charts/PaceChart';
 import { ShapePressable } from './glass';
+import { PaceSentence } from './PaceSentence';
+import { CardTitle } from './CardTitle';
 import { iconSize, minTouch, radii, spacing, useTheme } from './theme';
 
 export type PaceCardContent =
   | { kind: 'loading' }
   | { kind: 'ready'; pace: Pace; onPress: () => void; reveal?: boolean };
 
-/** One sentence line, the 64 dp chart and one legend line at scale 1.0 (design.md, Loading). */
+/** The ready card's height at scale 1.0: one sentence line, the 64 dp chart and one legend line. */
 const LOADING_MIN_HEIGHT = 122;
 const TITLE = 'Spending pace';
 
@@ -21,13 +23,15 @@ const TITLE = 'Spending pace';
  * one button that opens Insights; loading, it only holds its place and is not pressable.
  */
 export function PaceCard({ content, tag }: { content: PaceCardContent; tag: string }) {
-  const { colors, type } = useTheme();
+  const { colors } = useTheme();
   const card = [
     styles.card,
     { backgroundColor: colors.surface },
     colors.tileShadow !== '' && { boxShadow: colors.tileShadow },
   ];
-  const title = <Text style={[type.labelStrong, styles.title, { color: colors.textMuted }]}>{TITLE}</Text>;
+  // A small, quiet title inside the card: the sentence and its color stand out (fine-tuning
+  // 2026-10-09).
+  const title = <CardTitle title={TITLE} inside />;
 
   if (content.kind === 'loading') {
     return (
@@ -42,29 +46,34 @@ export function PaceCard({ content, tag }: { content: PaceCardContent; tag: stri
 
   const { pace, onPress, reveal } = content;
   return (
-    <ShapePressable
-      accessibilityRole="button"
-      accessibilityLabel={paceCardLabel(pace.sentence, tag)}
-      accessibilityHint="Opens Insights"
-      onPress={onPress}
-      style={card}
-    >
-      {/* One element for the screen reader: its label already says everything below. */}
-      <View style={styles.body} importantForAccessibility="no-hide-descendants">
-        <View style={styles.titleRow}>
-          {title}
-          <Feather name="chevron-right" size={iconSize.button} color={colors.textMuted} />
+    <>
+      <ShapePressable
+        accessibilityRole="button"
+        accessibilityLabel={paceCardLabel(pace.sentence, tag)}
+        accessibilityHint="Opens Insights"
+        onPress={onPress}
+        style={card}
+      >
+        {/* One element for the screen reader: its label already says everything below. */}
+        <View style={styles.body} importantForAccessibility="no-hide-descendants">
+          <View style={styles.sentenceRow}>
+            {/* Not a separate element here: the card's label starts with the title. */}
+            <View style={styles.sentence}>
+              {title}
+              <PaceSentence sentence={pace.sentence} tag={tag} />
+            </View>
+            <Feather name="chevron-right" size={iconSize.button} color={colors.textMuted} />
+          </View>
+          <PaceChart variant="compact" pace={pace} reveal={reveal} />
         </View>
-        <Text style={[type.title, { color: colors.text }]}>{paceSentence(pace.sentence, tag)}</Text>
-        <PaceChart variant="compact" pace={pace} reveal={reveal} />
-      </View>
-    </ShapePressable>
+      </ShapePressable>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    marginTop: spacing.sm,
+    marginTop: spacing.md,
     marginHorizontal: spacing.md,
     padding: spacing.md,
     borderRadius: radii.card,
@@ -72,7 +81,7 @@ const styles = StyleSheet.create({
     minHeight: minTouch,
   },
   body: { gap: spacing.xs },
-  titleRow: { flexDirection: 'row', alignItems: 'center' },
-  title: { flex: 1 },
+  sentenceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  sentence: { flex: 1, gap: spacing.xxs },
   loading: { minHeight: LOADING_MIN_HEIGHT, alignItems: 'center', justifyContent: 'center' },
 });

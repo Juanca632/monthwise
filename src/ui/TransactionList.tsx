@@ -15,8 +15,7 @@ import { Appear, MAX_ANIMATED_ROWS } from './Appear';
 import { durations, easeOut, PressableScale, useReduceMotion } from './motion';
 import { RowMotion, type RowChange } from './RowMotion';
 import { categoryLook } from './categoryLook';
-import { ShapePressable } from './glass';
-import { iconSize, insetHighlight, minTouch, radii, spacing, useTheme } from './theme';
+import { iconSize, minTouch, radii, spacing, useTheme } from './theme';
 
 type Props = {
   rows: readonly Transaction[];
@@ -196,36 +195,24 @@ function sameCell(a: CellProps, b: CellProps): boolean {
   );
 }
 
-/** The "Transactions" title with **Add** on its right (FR-002); shown in every summary state. */
-export function TransactionsTitle({ onAdd }: { onAdd(): void }) {
+/**
+ * **Add** (FR-002), on the right of the summary's small "Transactions" title: a text link in
+ * `accent`, the size of the title, like **See all** (fine-tuning 2026-10-09: a pill next to a
+ * small title looked out of proportion). Its touch area is still 48 dp tall.
+ */
+export function AddButton({ onAdd }: { onAdd(): void }) {
   const { colors, type } = useTheme();
   return (
-    <View style={styles.titleRow}>
-      <Text accessibilityRole="header" style={[type.heading, styles.flex, { color: colors.text }]}>
-        Transactions
-      </Text>
-      {/* A plain glass pill: translucent fill, bright rim and top highlight, no color of its own
-          (fine-tuning 2026-10-06). */}
-      {/* The soft shadow sits on a wrapper that does not clip; the pill clips its overlay. */}
-      <View style={[styles.addShadow, { boxShadow: colors.glassShadow }]}>
-        <ShapePressable
-          accessibilityRole="button"
-          accessibilityLabel="Add transaction"
-          onPress={onAdd}
-          style={[
-            styles.addButton,
-            {
-              backgroundColor: colors.glassFillStrong,
-              borderColor: colors.glassBorderStrong,
-              boxShadow: insetHighlight(colors.glassHighlight),
-            },
-          ]}
-        >
-          <Feather name="plus" size={iconSize.circle} color={colors.text} />
-          <Text style={[type.button, { color: colors.text }]}>Add</Text>
-        </ShapePressable>
-      </View>
-    </View>
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel="Add transaction"
+      onPress={onAdd}
+      android_ripple={{ color: colors.ripple, borderless: true }}
+      style={styles.addLink}
+    >
+      <Feather name="plus" size={iconSize.circle} color={colors.accent} />
+      <Text style={[type.labelStrong, { color: colors.accent }]}>Add</Text>
+    </PressableScale>
   );
 }
 
@@ -368,26 +355,12 @@ function TransactionRow({ row, tag, first, last, onPress }: RowProps) {
 }
 
 const styles = StyleSheet.create({
-  // 32 dp of air above, like the other section titles; Add sits on the right.
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingTop: spacing.xxxl,
-    paddingBottom: spacing.sm,
-    paddingLeft: spacing.xl,
-    paddingRight: spacing.md,
-  },
-  flex: { flex: 1 },
-  addShadow: { borderRadius: radii.full },
-  addButton: {
+  addLink: {
     minHeight: minTouch,
-    paddingHorizontal: spacing.md,
-    borderRadius: radii.full,
-    borderWidth: 1,
+    paddingHorizontal: spacing.xs,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: spacing.xxs,
   },
   seeAll: {
     alignSelf: 'flex-end',

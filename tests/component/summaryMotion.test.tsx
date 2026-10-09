@@ -97,9 +97,9 @@ const OCTOBER = Array.from({ length: 12 }, (_, i) => expense(100 * (i + 1), `202
 
 it('rises in on the cold start, and only the first screen of rows', async () => {
   await renderSummary(OCTOBER);
-  // The card, the pace card (002), the breakdown and the first 8 list items: the preview's 5 rows
-  // on 5 days make 10 items (day headers and rows), and only the first 8 animate.
-  expect(moving()).toHaveLength(11);
+  // The card, the pace card (002) and the breakdown, then the list: the preview's 3 rows on 3
+  // days make 6 items (day headers and rows), all within the 8 that may animate.
+  expect(moving()).toHaveLength(9);
   expect(offset(moving()[0])).toEqual({ opacity: 0, x: 0, y: 14 });
 
   wait(2000);

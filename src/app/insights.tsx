@@ -8,13 +8,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { dayDetail, type Pace } from '@/domain/pace';
 import type { Trend } from '@/domain/trend';
-import { dayDetailLines, paceSentence, trendDetailLines, trendHeadline, trendHeadlineLabel } from '@/format/insights';
+import { dayDetailLines, trendDetailLines, trendHeadline, trendHeadlineLabel } from '@/format/insights';
 import { useInsights } from '@/hooks/useInsights';
 import { useRegion } from '@/hooks/useRegion';
 import { haptics } from '@/lib/haptics';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
 import { CategoryChanges } from '@/ui/CategoryChanges';
 import { MonthControl } from '@/ui/MonthControl';
+import { PaceSentence } from '@/ui/PaceSentence';
 import { ChartDetail } from '@/ui/ChartDetail';
 import { PaceChart } from '@/ui/charts/PaceChart';
 import { TrendChart } from '@/ui/charts/TrendChart';
@@ -61,7 +62,7 @@ export default function InsightsScreen() {
             <Text accessibilityRole="header" style={[type.label, { color: colors.textMuted }]}>
               Insights
             </Text>
-            <MonthControl variant="title" />
+            <MonthControl />
           </View>
         </View>
 
@@ -84,7 +85,7 @@ export default function InsightsScreen() {
 }
 
 function PaceSection({ pace, scrollRef }: { pace: Pace | null; scrollRef: RefObject<null> }) {
-  const { colors, type } = useTheme();
+  const { colors } = useTheme();
   const { tag } = useRegion();
   const { selected } = useSelectedMonth();
   const [selection, dispatch] = useReducer(chartSelection, initialChartSelection);
@@ -116,7 +117,7 @@ function PaceSection({ pace, scrollRef }: { pace: Pace | null; scrollRef: RefObj
         <LoadingCard />
       ) : (
         <View style={[styles.card, styles.paceCard, cardLook(colors)]}>
-          <Text style={[type.title, { color: colors.text }]}>{paceSentence(pace.sentence, tag)}</Text>
+          <PaceSentence sentence={pace.sentence} tag={tag} />
           <PaceChart
             variant="full"
             pace={pace}

@@ -35,7 +35,7 @@
   `1.234,00 €`).
 - Q: The floating **Add** button covers the middle of the screen, and a long month makes the
   summary an endless list. → A: **Add** moves next to the "Transactions" title, which the
-  summary shows in every state. The summary lists only the month's 5 most recent transactions;
+  summary shows in every state. The summary lists only the month's 3 most recent transactions;
   **See all** opens a page with every transaction of the month, grouped by day.
 
 ### Session 2026-10-07 (developer's phone review)
@@ -263,7 +263,8 @@ lands in that month.
   and the share of total expenses as a whole percent (rounded half up, so 12.5% shows 13%; a
   non-zero share below 0.5% shows "<1%"), largest first, ties ordered alphabetically; categories
   with no expenses are omitted.
-- **FR-017**: The summary MUST list the selected month's 5 most recent transactions (counted as
+- **FR-017**: The summary MUST list the selected month's 3 most recent transactions (5 until the
+  developer's 2026-10-09 change, like Revolut; counted as
   transactions, so the last day shown may list only some of its transactions; its header's net
   still covers the whole day); when the month has more, a **See all** action opens a page
   listing all of them. Both lists show transactions

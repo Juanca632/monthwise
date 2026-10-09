@@ -41,7 +41,8 @@ The selected month stays shared app state (`SelectedMonthContext`), not a route 
 
 ## Month control (FR-026, FR-032)
 
-On the summary (in the balance card's header row, where 001's arrows and title were) and on
+On the summary (the screen's title, above the balance card, where it replaced 001's arrows and
+card title; moved out of the card on 2026-10-09) and on
 Insights (under its title). 001's "Previous month, …" and "Next month, …" buttons are removed.
 
 - Visible text: the selected month, `October 2026`, with a chevron.

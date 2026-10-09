@@ -104,26 +104,40 @@ Regular) only by weight: Medium stays readable on the chart tints and next to th
 
 ### Month control (FR-026)
 
-- **Balance card**: 001's header row (two arrows and a title) becomes one centered pill: minHeight
-  48, `paddingLeft` 20 and `paddingRight` 16 (the chevron's own side bearing evens them out), no
-  vertical padding, fully rounded, `monthButton` fill with a 1 dp `cardRim` border (the
-  dark tinted glass of 001's card controls). It holds the month (`monthTitle`, `cardInk`) and a
-  16 dp `chevron-down` in `cardInk`, 8 apart. The card's body (balance, pills) is unchanged.
+- **Summary** (developer, 2026-10-09: like Revolut, what you are looking at is chosen at the top,
+  not inside the balance card): the month is the screen's title, above the balance card, in the
+  same look as on Insights: the month (`heading`, `text`) with a 20 dp `chevron-down` in
+  `textMuted`, 8 apart, minHeight 48, left-aligned with the cards' content (24 dp). The balance
+  card no longer has a header row.
 - **Insights**: under the "Insights" label, the month (`heading`) with a 20 dp `chevron-down` in
   `textMuted`, 8 apart, minHeight 48, left-aligned with the label.
 - Both use 001's touch feedback for pressables with their own shape (pressed overlay and press
   scale) and work in every state.
 
+### Summary layout (fine-tuning 2026-10-09)
+
+Like Revolut: clean cards on the light grey background, each explained by its content. Only
+cards whose content does not explain itself (charts, the category tiles, the list) carry a small,
+quiet title (`labelStrong`, `textMuted`; `ui/CardTitle.tsx`), never a large section heading.
+Top to bottom: the month control as the screen's title (Month control); the balance card, whose
+amount is `display` at 40 (was 62, so it no longer drowns the rest); the Spending pace card;
+"Spending by category" over the tiles; "Transactions" with **+ Add** on its right as an `accent`
+text link the title's size (like **See all**, 48 dp touch area); the 3 most recent transactions.
+Cards sit 16 apart. `tileShadow` in light is a soft halo, `0 2px 12px` at 7 %, so cards lift off
+the grey; the tile carousel keeps room below for it.
+
 ### Spending pace card (summary)
 
-Between the balance card (or the 001 banner) and "Spending by category", 12 dp below the card
+Between the balance card (or the 001 banner) and "Spending by category", 16 dp below the card
 above, side margins 16. A `surface` card, radius 20, padding 16, gap 8, `tileShadow` in light.
 The whole card is one pressable (pressed overlay clipped to radius 20, press scale; no
 `android_ripple`).
 
-1. Title row: "Spending pace" (`labelStrong`, `textMuted`), then a 20 dp `chevron-right` in
-   `textMuted` on the right, which says the card opens something.
-2. The sentence (`title`, `text`), wrapping.
+1. A row: on the left, the small title "Spending pace" (`labelStrong`, `textMuted`) and, 4 dp
+   below, the sentence (`title`, `text`), wrapping; its answer, "85,00 € more" or "65,00 € less",
+   in `error` or `income` (color, not size, makes it stand out; the words still say it). On the
+   right, a 20 dp `chevron-right` in `textMuted`, which says the card opens something.
+2. (The sentence is part of row 1.)
 3. The **compact chart**, 4 dp below: full inner width, 64 dp tall (Chart geometry).
 4. The **legend**: one item per line drawn, wrapping (gap 4 × 16): an 18 × 6 dp swatch of the
    line's own style, 8 dp, the month name (`legend`, `textMuted`).

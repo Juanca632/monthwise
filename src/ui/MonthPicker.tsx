@@ -51,8 +51,10 @@ export function MonthPicker({ selected, today, onChoose, onClose }: Props) {
     shown.set(withTiming(1, { duration: durations.dialog, easing: easeOut, ...never }));
   }, [shown]);
   const backdrop = useAnimatedStyle(() => ({ opacity: shown.value }));
+  // The card turns opaque in the first half of the motion, so the screen behind never shows
+  // through it for long (fine-tuning 2026-10-09). Closing stays instant, as 001's dialog.
   const card = useAnimatedStyle(() => ({
-    opacity: shown.value,
+    opacity: Math.min(1, shown.value * 2),
     transform: [{ scale: reduceMotion ? 1 : OPEN_SCALE + (1 - OPEN_SCALE) * shown.value }],
   }));
 

@@ -58,10 +58,13 @@ describe('PaceCard, ready', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it('hides its parts from the screen reader', () => {
+  it('shows its small title inside the card, and hides the card parts from the screen reader', () => {
     renderReady(pace([expense('2026-10-05', 18_500)], [expense('2026-09-03', 10_000)]));
+    // The card's label starts with the title, so the title is not a separate element.
     expect(screen.queryByText('Spending pace')).toBeNull();
     expect(screen.getByText('Spending pace', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByText(/more than last month/)).toBeNull();
+    expect(screen.getByText(/more than last month/, { includeHiddenElements: true })).toBeTruthy();
     expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 
@@ -105,4 +108,18 @@ describe('PaceCard, ready', () => {
       expect(text.props.numberOfLines).toBeUndefined();
     }
   });
+});
+
+it('colors the answer: more in the error color, less in the income color', () => {
+  jest.spyOn(RN, 'useColorScheme').mockReturnValue('light');
+  renderReady(pace([expense('2026-10-05', 18_500)], [expense('2026-09-03', 10_000)]));
+  const more = screen.getByText(nbsp('85,00 € more'), { includeHiddenElements: true });
+  expect(RN.StyleSheet.flatten(more.props.style).color).toBe(palettes.light.error);
+});
+
+it('colors less in the income color', () => {
+  jest.spyOn(RN, 'useColorScheme').mockReturnValue('light');
+  renderReady(pace([expense('2026-10-05', 3_500)], [expense('2026-09-03', 10_000)]));
+  const less = screen.getByText(nbsp('65,00 € less'), { includeHiddenElements: true });
+  expect(RN.StyleSheet.flatten(less.props.style).color).toBe(palettes.light.income);
 });

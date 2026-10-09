@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, View } from 'react-native';
+import { AccessibilityInfo, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { compareMonths } from '@/domain/month';
@@ -16,16 +16,17 @@ import { useSummaryNotice } from '@/state/SummaryNoticeContext';
 import { Appear, SummaryMotionProvider, type SummaryMotion } from '@/ui/Appear';
 import { Breakdown } from '@/ui/Breakdown';
 import { BehindSheet } from '@/ui/BehindSheet';
-import { MonthHeader } from '@/ui/MonthHeader';
+import { CardTitle } from '@/ui/CardTitle';
+import { MonthControl } from '@/ui/MonthControl';
 import { PaceCard } from '@/ui/PaceCard';
 import { useRowChanges } from '@/ui/RowMotion';
 import { StateMessage } from '@/ui/StateMessage';
 import { spacing } from '@/ui/theme';
 import { Totals, type TotalsContent } from '@/ui/Totals';
-import { SeeAll, TransactionList, TransactionsTitle } from '@/ui/TransactionList';
+import { AddButton, SeeAll, TransactionList } from '@/ui/TransactionList';
 
-/** The summary shows this many of the month's most recent transactions (FR-017). */
-const PREVIEW_ROWS = 5;
+/** The summary shows this many of the month's most recent transactions (FR-017; 3 like Revolut). */
+const PREVIEW_ROWS = 3;
 const OPEN_FAILED = "Couldn't open this transaction.";
 
 // Expo inlines EXPO_PUBLIC_* at build time, so production bundles drop this branch and, with it,
@@ -117,9 +118,13 @@ export default function SummaryScreen() {
           changeFor={changes.changeFor}
           tag={tag}
           header={
-            <View style={{ paddingTop: spacing.sm + insets.top }}>
+              <View style={{ paddingTop: spacing.sm + insets.top }}>
+              {/* The month is the screen's title, as on Insights (002 design.md, Month control). */}
+              <View style={styles.monthRow}>
+                <MonthControl />
+              </View>
               <Appear on={['entrance']} slot={0}>
-                <Totals tag={tag} content={content} header={(tone) => <MonthHeader tone={tone} />} />
+                <Totals tag={tag} content={content} />
               </Appear>
               {notice.notice === 'open_failed' && (
                 <StateMessage
@@ -150,9 +155,9 @@ export default function SummaryScreen() {
               )}
             </View>
           }
-          // In every state, with Add (FR-002).
-          title={<TransactionsTitle onAdd={addTransaction} />}
-          // The 5 most recent; the rest are one tap away (FR-017).
+          // A small, quiet title with Add on its right, in every state (FR-002).
+          title={<CardTitle title="Transactions" action={<AddButton onAdd={addTransaction} />} />}
+          // The 3 most recent; the rest are one tap away (FR-017).
           limit={PREVIEW_ROWS}
           // Loading and error show only the card; an empty month gets its own line (FR-022).
           empty={
@@ -182,3 +187,6 @@ export default function SummaryScreen() {
   );
 }
 
+const styles = StyleSheet.create({
+  monthRow: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xs },
+});

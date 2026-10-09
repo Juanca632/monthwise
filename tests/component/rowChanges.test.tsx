@@ -117,7 +117,8 @@ it('shows a created row with no motion of its own: only the rows around it move'
   await changeAndReload({ kind: 'created', id: created.id });
 
   expect(changed()).toHaveLength(0);
-  expect(screen.getAllByLabelText(/^Expense, Food/)).toHaveLength(4);
+  // The summary previews the 3 most recent (FR-017): the created row and two of the others.
+  expect(screen.getAllByLabelText(/^Expense, Food/)).toHaveLength(3);
 });
 
 it('waits for focus to reload, so nothing competes with the sheet sliding down', async () => {

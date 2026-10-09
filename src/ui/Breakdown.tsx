@@ -6,6 +6,7 @@ import type { BreakdownItem } from '@/domain/summary';
 import { formatMoney } from '@/format/money';
 
 import { categoryLook } from './categoryLook';
+import { CardTitle } from './CardTitle';
 import { StateMessage } from './StateMessage';
 import { iconSize, radii, spacing, useTheme } from './theme';
 
@@ -19,12 +20,10 @@ const ICON_CIRCLE = 36;
  * share lead, the amount sits underneath (fine-tuning 2026-10-06: fewer numbers at a glance).
  */
 export function Breakdown({ items, tag }: Props) {
-  const { colors, type } = useTheme();
+  const { colors } = useTheme();
   return (
     <>
-      <Text style={[type.heading, styles.sectionTitle, { color: colors.text }]}>
-        Spending by category
-      </Text>
+      <CardTitle title="Spending by category" />
       {items.length === 0 ? (
         <View style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
           <StateMessage variant="inline" message="No expenses this month." />
@@ -33,6 +32,7 @@ export function Breakdown({ items, tag }: Props) {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          style={styles.scroller}
           contentContainerStyle={styles.tiles}
         >
           {items.map((item) => (
@@ -77,13 +77,10 @@ function BreakdownTile({ item, tag }: { item: BreakdownItem; tag: string }) {
 }
 
 const styles = StyleSheet.create({
-  // 32 dp of air above each section, so sections read apart (fine-tuning 2026-10-06).
-  sectionTitle: {
-    paddingTop: spacing.xxxl,
-    paddingBottom: spacing.sm,
-    paddingHorizontal: spacing.xl,
-  },
-  tiles: { paddingHorizontal: spacing.md, gap: spacing.sm, paddingBottom: spacing.xs },
+  // The scroll view clips what leaves its box, so it keeps room for the tiles' shadow below and
+  // gives it back with a negative margin, leaving the spacing to the next section unchanged.
+  tiles: { paddingHorizontal: spacing.md, gap: spacing.sm, paddingTop: spacing.xs, paddingBottom: spacing.lg },
+  scroller: { marginTop: -spacing.xs, marginBottom: -spacing.sm },
   tile: {
     // Grows with large text instead of cutting it (FR-031).
     minWidth: TILE_WIDTH,

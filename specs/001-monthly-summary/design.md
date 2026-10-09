@@ -505,7 +505,7 @@ There is no native header (`headerShown: false`); the balance card holds the mon
    rounded, a glass pill (`glassFillStrong`, white rim, inner highlight, soft `glassShadow`) with
    a 16 dp `plus` icon and "Add" (`button`) in `text`. The title row aligns the title and the button vertically. Nothing floats over the
    list any more, so there is no bottom fade.
-   - **Preview and See all** (FR-017): the summary shows the month's 5 most recent transactions,
+   - **Preview and See all** (FR-017): the summary shows the month's 3 most recent transactions (5 until 2026-10-09),
      grouped by day as in item 3. When the month has more, **See all** follows the last card: a
      text button (`labelStrong`, `accent`, minHeight 48, padding 0 × 16) with a 16 dp
      `chevron-right`, right-aligned with the cards, 8 dp below them.

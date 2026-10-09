@@ -136,7 +136,9 @@ export const palettes: Record<Scheme, Palette> = {
     bannerFill: '#EAF0FF',
     bottomFade: verticalGradient(withAlpha('#F2F3F7', 0), withAlpha('#F2F3F7', 0.6)),
     rowFlash: withAlpha('#2F5BEA', 0.22),
-    tileShadow: `0 2px 8px ${withAlpha('#0E1116', 0.06)}`,
+    // A touch stronger, as a soft halo more than a drop (fine-tuning 2026-10-09): at 6 % the cards
+    // melted into the grey background.
+    tileShadow: `0 2px 12px ${withAlpha('#0E1116', 0.07)}`,
     chartCurrent: ACCENT.light,
     chartArea: withAlpha(ACCENT.light, 0.22),
     chartPrevious: '#7D8696',
@@ -352,7 +354,8 @@ const MANROPE: Record<Weight, string> = {
 type TypeSpec = { size: number; weight: Weight; letterSpacing?: number; numeric?: boolean };
 
 const TYPE_SPECS = {
-  display: { size: 62, weight: 700, letterSpacing: -2, numeric: true },
+  // 40 since 2026-10-09 (was 62): the balance no longer drowns the rest of the summary.
+  display: { size: 40, weight: 700, letterSpacing: -1, numeric: true },
   amountInput: { size: 48, weight: 700, letterSpacing: -1, numeric: true },
   currencySuffix: { size: 32, weight: 600 },
   title: { size: 17, weight: 600 },

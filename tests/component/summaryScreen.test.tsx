@@ -151,8 +151,8 @@ it('shows zero totals and the empty line for a month with no transactions (FR-02
   expect(screen.getAllByText(eur('0,00'))).toHaveLength(3);
   expect(screen.getByText('No transactions this month yet.')).toBeTruthy();
   expect(screen.getByText('Tap Add to record an income or expense.')).toBeTruthy();
-  // The title with Add shows in every state (FR-002).
-  expect(screen.getByText('Transactions')).toBeTruthy();
+  // The small "Transactions" title with Add shows in every state (FR-002).
+  expect(screen.getByRole('header', { name: 'Transactions' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Add transaction' })).toBeTruthy();
   expect(addButton()).toBeTruthy();
 });
@@ -172,7 +172,6 @@ it('shows totals, a negative balance read as "minus", and the list newest first 
   const balance = screen.getByLabelText(`Balance, minus ${eur('150,00')}`);
   expect(within(balance).getByText(eur('-150,00'))).toBeTruthy();
 
-  expect(screen.getByText('Transactions')).toBeTruthy();
   // List rows only: they end with a date, unlike the "Income, …" stat pill.
   const items = screen
     .getAllByLabelText(/^(Expense|Income), .+ 2026/)
@@ -188,9 +187,9 @@ it('shows totals, a negative balance read as "minus", and the list newest first 
 });
 
 it('groups the list by day, newest first, with each day\'s net (FR-017, FR-031)', async () => {
+  // Four rows over three days; the 3-row preview cuts 5 October, whose header still nets both.
   await databaseWith([
-    income(200000, '2026-10-15', 'salary'),
-    expense(3000, '2026-10-15', 'food'),
+    income(197000, '2026-10-15', 'salary'),
     expense(1200, '2026-10-14', 'food'),
     income(500, '2026-10-05', 'other'),
     expense(500, '2026-10-05', 'food'),
@@ -249,22 +248,22 @@ describe('Add next to "Transactions" and See all (FR-002, FR-017)', () => {
     expect(screen.getByRole('button', { name: 'Add transaction' })).toBeTruthy();
   });
 
-  it('lists the 5 most recent with See all, and a cut day still nets the whole day', async () => {
+  it('lists the 3 most recent with See all, and a cut day still nets the whole day', async () => {
     await databaseWith(seven);
     renderSummary();
     await flush();
-    expect(screen.getAllByLabelText(/^Expense, Food, /)).toHaveLength(5);
-    // 13 October holds the 5th and 6th rows: only one shows, its header nets both (5,00 + 6,00).
-    expect(screen.getByLabelText(`Tuesday 13 October, net minus ${eur('11,00')}`)).toBeTruthy();
+    expect(screen.getAllByLabelText(/^Expense, Food, /)).toHaveLength(3);
+    // 14 October holds the 3rd and 4th rows: only one shows, its header nets both (3,00 + 4,00).
+    expect(screen.getByLabelText(`Yesterday, net minus ${eur('7,00')}`)).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'See all transactions' }));
     expect(mockPush).toHaveBeenCalledWith('/transactions');
   });
 
-  it('shows no See all with 5 or fewer', async () => {
-    await databaseWith(seven.slice(0, 5));
+  it('shows no See all with 3 or fewer', async () => {
+    await databaseWith(seven.slice(0, 3));
     renderSummary();
     await flush();
-    expect(screen.getAllByLabelText(/^Expense, Food, /)).toHaveLength(5);
+    expect(screen.getAllByLabelText(/^Expense, Food, /)).toHaveLength(3);
     expect(screen.queryByRole('button', { name: 'See all transactions' })).toBeNull();
   });
 });

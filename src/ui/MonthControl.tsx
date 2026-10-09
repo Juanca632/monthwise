@@ -7,58 +7,37 @@ import { useSelectedMonth } from '@/state/SelectedMonthContext';
 
 import { ShapePressable } from './glass';
 import { MonthPicker } from './MonthPicker';
-import { iconSize, minTouch, radii, spacing, useTheme, type CardTone } from './theme';
-
-/** The chevron on the balance card is smaller than the title's (design.md, Month control). */
-const CARD_CHEVRON = 16;
-
-type Props =
-  /** On the balance card: a tinted glass pill in the card's ink. */
-  | { variant: 'card'; tone: CardTone }
-  /** On Insights: the screen's title. */
-  | { variant: 'title' };
+import { iconSize, minTouch, radii, spacing, useTheme } from './theme';
 
 /**
  * The selected month as one button that opens the month picker (FR-026, contracts/ui-screens.md,
- * Month control). It works in every state, so a failing or slow month never traps the user.
+ * Month control): the title of the summary and of Insights. It works in every state, so a
+ * failing or slow month never traps the user.
  */
-export function MonthControl(props: Props) {
+export function MonthControl() {
   const { colors, type } = useTheme();
   const { selected, today, setSelected } = useSelectedMonth();
   const [open, setOpen] = useState(false);
   const title = monthTitle(selected);
 
-  const control =
-    props.variant === 'card' ? (
-      <ShapePressable
-        accessibilityRole="button"
-        accessibilityLabel={title}
-        accessibilityHint="Changes the month"
-        onPress={() => setOpen(true)}
-        overlay={props.tone.cardRim}
-        style={[styles.pill, { backgroundColor: props.tone.monthButton, borderColor: props.tone.cardRim }]}
-      >
-        <Text style={[type.monthTitle, styles.shrink, { color: props.tone.cardInk }]}>{title}</Text>
-        <Feather name="chevron-down" size={CARD_CHEVRON} color={props.tone.cardInk} />
-      </ShapePressable>
-    ) : (
-      <ShapePressable
-        accessibilityRole="button"
-        accessibilityLabel={title}
-        accessibilityHint="Changes the month"
-        onPress={() => setOpen(true)}
-        style={styles.title}
-      >
-        <Text style={[type.heading, styles.shrink, { color: colors.text }]}>{title}</Text>
-        <Feather name="chevron-down" size={iconSize.button} color={colors.textMuted} />
-      </ShapePressable>
-    );
+  const control = (
+    <ShapePressable
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityHint="Changes the month"
+      onPress={() => setOpen(true)}
+      style={styles.title}
+    >
+      <Text style={[type.heading, styles.shrink, { color: colors.text }]}>{title}</Text>
+      <Feather name="chevron-down" size={iconSize.button} color={colors.textMuted} />
+    </ShapePressable>
+  );
 
   return (
     <>
       {/* Behind the open picker the control is not a screen reader element: the picker's own
           month buttons carry the same names. */}
-      <View importantForAccessibility={open ? 'no-hide-descendants' : 'auto'} style={styles.wrap}>
+      <View importantForAccessibility={open ? 'no-hide-descendants' : 'auto'}>
         {control}
       </View>
       {open && (
@@ -77,18 +56,6 @@ export function MonthControl(props: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: 'center' },
-  pill: {
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    minHeight: minTouch,
-    paddingLeft: spacing.lg,
-    paddingRight: spacing.md,
-    borderRadius: radii.full,
-    borderWidth: 1,
-  },
   title: {
     alignSelf: 'flex-start',
     flexDirection: 'row',

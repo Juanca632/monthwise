@@ -23,7 +23,11 @@ commit (CLAUDE.md, "Session handoff").
      empty. Code review (Sonnet, 2026-10-09): no CRITICAL or MAJOR; two pickerYear edge tests
      added; accepted MINORs: with the phone clock moved back a month the selected month can be
      after today until "This month" (as 001), and a midnight month rollover plays the month slide.
-  6. Then block 8 (T053-T058: seed, timing, SC-001 end to end, Stryker, docs) and block 9 (phone
+  6. Fine-tuning (2026-10-09, developer on the phone): month picker opens with less see-through
+     (closing stays instant, the developer preferred it); summary redesigned like Revolut (see
+     design.md "Summary layout"); 001's preview is 3 rows (001 FR-017). Next: the same approach on
+     Insights.
+  7. Then block 8 (T053-T058: seed, timing, SC-001 end to end, Stryker, docs) and block 9 (phone
      pass, preview APK, PR).
 - Notes:
   - From 2026-10-09 Claude writes all the code (AGENTS.md); T024 was written by Claude.
