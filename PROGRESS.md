@@ -9,28 +9,11 @@ commit (CLAUDE.md, "Session handoff").
 - Feature: `002` Monthly charts, branch `002-monthly-charts` (pushed to `origin`).
 - Done: blocks 1-3 and block 4a (T001-T022, see `specs/002-monthly-charts/tasks.md`).
 - Next:
-  0. **First, before any code**: lighten the workflow (developer's decision, 2026-10-08, to apply
-     from feature 003; 002 keeps its current plan). Prepare the changes to
-     `.specify/memory/constitution.md`, `AGENTS.md` and `CLAUDE.md` and review them with the
-     developer before committing. Why: docs outweigh code (001 ~3,900 doc lines, 002 ~2,600 before
-     its UI; 36 of 85 commits docs-only) and the review rounds use up the token budget. Proposal:
-     - `tasks.md`: one or two lines per task (what, which test), linking to the contract instead
-       of restating signatures and test cases.
-     - Doc reviews once per feature, on spec + plan + tasks together, plus `/speckit-analyze`; no
-       `sdd-reviewer` after every step.
-     - Code reviewer only for blocks with money or data logic; UI blocks rely on the phone check.
-     - `theme.ts` is the source of truth for visual values; `design.md` keeps intent and mockups,
-       not duplicated numbers.
-     - A light track for small features: spec + tasks, no `research.md` or `data-model.md` unless
-       the data changes.
-     - The developer writes one piece per feature (a component or hook) and Claude reviews it, for
-       learning React Native.
-     - Less up-front planning (developer feels too much time goes to planning and decisions):
-       plan only what the code or data needs; visual and motion details are settled on the phone
-       in fine-tuning, not in the plan; Claude picks sensible defaults and asks only real
-       decisions (libraries, data model, money, cost); every session reads only the doc
-       sections its task needs.
-     - Keep: integer cents, money unit tests, the reference sets, the `spec-tester`, CI.
+  0. Done (2026-10-09): lighter workflow in `AGENTS.md` ("How we work"), `CLAUDE.md`, the
+     `sdd-reviewer` and `design-reviewer` agents, and the plan and tasks templates. No
+     constitution change was needed. Everything applies to the rest of 002; only its existing
+     docs are not rewritten. Block 4b is UI: no code reviewer. T024 (`ChartDetail.tsx`) is the
+     developer-written piece; T056 (design review of the implemented UI) is dropped.
   1. Run the block 4a reviewer (Sonnet, read-only) on the commit
      `feat: add the 002 pace logic, chart geometry, selection and pace texts (US1)`, tasks
      T017-T022, focused on the money logic (`src/domain/pace.ts`, `src/hooks/useMonthSummary.ts`).

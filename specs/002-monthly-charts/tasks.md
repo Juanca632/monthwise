@@ -303,11 +303,11 @@ drag a day → both amounts for that day.
   scroll. If the blocking
   relation delays scrolling noticeably, stop and bring it to the developer (alternatives: a
   `Gesture.Native()` scroll with `requireExternalGestureToFail`).
-- [ ] T024 [P] [US1] Implement `src/ui/ChartDetail.tsx`: the detail lines under a chart, one
-  `Text` per line (contracts/ui-screens.md), an optional action button slot (US3's **View
-  month**), appear and disappear motion per design.md with `useReduceMotion`. Tests in
-  `tests/component/chartDetail.test.tsx`: lines as separate texts, the action button's role and
-  48 dp size, no motion with reduce motion.
+- [ ] T024 [P] [US1] (developer writes; Claude reviews) Implement `src/ui/ChartDetail.tsx`: the
+  detail lines under a chart, one `Text` per line (contracts/ui-screens.md), an optional action
+  button slot (US3's **View month**), appear and disappear motion per design.md with
+  `useReduceMotion`. Tests in `tests/component/chartDetail.test.tsx`: lines as separate texts,
+  the action button's role and 48 dp size, no motion with reduce motion.
 - [ ] T025 [US1] Implement `src/ui/PaceCard.tsx` (design.md): loading (title `Spending pace` and
   an `ActivityIndicator` labelled `Loading`, not pressable); ready (title, compact `PaceChart`,
   sentence); one accessible `button` with label `Spending pace, <sentence>` and hint "Opens
@@ -535,8 +535,8 @@ year, pick a month; pick another on Insights and go back; tap a trend month's **
   fixtures through `createTransactionRepository`, applies their `edits` with `update`, reads with
   `listRange`, runs `computePace`, `dayDetail`, `compareCategories` and `computeTrend`, and asserts
   the T008 literals.
-- [ ] T056 Run the `design-reviewer` agent on the implemented UI against design.md (card,
-  Insights, picker; light and dark) and fix its CRITICAL and MAJOR findings (two rounds at most).
+- T056 Dropped (2026-10-09, lighter workflow in AGENTS.md): the implemented UI is checked on the
+  phone, not by the `design-reviewer`.
 - [ ] T057 Run Stryker (`npx stryker run`) over `src/domain/` and `src/data/`. Review every
   surviving mutant in the 002 files: add the missing test for each real gap, list the equivalent
   ones. Record before and after in `specs/002-monthly-charts/mutation-results.md`.
