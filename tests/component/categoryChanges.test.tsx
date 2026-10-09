@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import * as RN from 'react-native';
 
 import type { CategoryComparison } from '@/domain/categoryChanges';
@@ -74,13 +74,15 @@ it('current month: Compared by day 12, no column titles, one element per row wit
   expect(inside.queryByText('90,00 €', { includeHiddenElements: true })).toBeNull();
 });
 
-it('past month: the change line names the previous month; New and minus in the labels', () => {
+it('past month: the change line names the previous month; nothing in July has no pill', () => {
   renderCard(pastChanges, AUG);
   expect(screen.queryByText(/Compared by/)).toBeNull();
   expect(screen.getByText('+60,00 € vs July', { includeHiddenElements: true })).toBeTruthy();
-  expect(row('Leisure, August 40,00 €, July 0,00 €, plus 40,00 €, new')).toBeTruthy();
+  const leisure = within(row('Leisure, August 40,00 €, July 0,00 €, plus 40,00 €'));
+  expect(leisure.getByText('+40,00 € · nothing in July', { includeHiddenElements: true })).toBeTruthy();
+  expect(leisure.queryByText(/%/, { includeHiddenElements: true })).toBeNull();
   expect(row('Transport, August 50,00 €, July 80,00 €, minus 30,00 €, minus 38 percent')).toBeTruthy();
-  expect(screen.getByText('New', { includeHiddenElements: true })).toBeTruthy();
+  expect(screen.queryByText('New', { includeHiddenElements: true })).toBeNull();
 });
 
 it('no data last month: the sentence and this month only, no change line', () => {
@@ -99,7 +101,7 @@ it('no data from a named month for a past month', () => {
 
 it('rows are not tappable', () => {
   renderCard(pastChanges, AUG);
-  expect(screen.queryByRole('button')).toBeNull();
+  expect(screen.getByLabelText(/^Food, /).props.accessibilityRole).toBeUndefined();
 });
 
 it('at font scale 2 with 999.999.999,99 € rows nothing is cut: texts wrap', () => {
@@ -128,4 +130,35 @@ it('uses the dark palette in dark mode', () => {
     .UNSAFE_getAllByType(RN.View)
     .map((v) => RN.StyleSheet.flatten(v.props.style)?.backgroundColor);
   expect(backgrounds).toContain(palettes.dark.surface);
+});
+
+describe('Show all (FR-008)', () => {
+  const many: CategoryComparison = {
+    kind: 'changes',
+    comparisonDay: null,
+    rows: (['food', 'leisure', 'transport', 'bills', 'health'] as const).map((category, i) => ({
+      category,
+      currentCents: 10_000 - i * 1_000,
+      previousCents: 1_000,
+      changeCents: 9_000 - i * 1_000,
+      percent: { rounded: 900 - i * 100, sign: 1 as const },
+    })),
+  };
+  const shownRows = () => screen.getAllByLabelText(/^(Food|Leisure|Transport|Bills|Health), /);
+
+  it('shows the first 3 rows and Show all with the total, then every row and Show less', () => {
+    renderCard(many, AUG);
+    expect(shownRows()).toHaveLength(3);
+    fireEvent.press(screen.getByRole('button', { name: 'Show all (5)' }));
+    expect(shownRows()).toHaveLength(5);
+    const less = screen.getByRole('button', { name: 'Show less' });
+    expect(RN.StyleSheet.flatten(less.props.style).minHeight).toBeGreaterThanOrEqual(48);
+    fireEvent.press(less);
+    expect(shownRows()).toHaveLength(3);
+  });
+
+  it('has no Show all with 3 rows or fewer', () => {
+    renderCard(pastChanges, AUG);
+    expect(screen.queryByRole('button')).toBeNull();
+  });
 });

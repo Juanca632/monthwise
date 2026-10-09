@@ -48,7 +48,7 @@ New tokens, added to `theme.ts` by T015. Everything else uses 001's shipped toke
 | `errorSoft` | `error` at 12 % | `error` at 18 % | Percent pill of a category that went up |
 
 Saved marks use `chartCurrent` when the saved amount is zero or more and `error` when it is
-negative; incomes use `income`. Percent pills: up (spent more, including `New`) `error` on
+negative; incomes use `income`. Percent pills: up (spent more) `error` on
 `errorSoft`, down `income` on `incomeSoft`, zero `textMuted` on `insetFill`. The sign is always
 written, so the pill's color only repeats it.
 
@@ -175,6 +175,10 @@ easy to read and minimal"); no table and no column titles.
     (`bodyStrong`, `text`);
   - line 2, 2 dp below: the change line "+60,00 € vs last month" (`caption`, `textMuted`) and,
     right-aligned, the percent pill (padding 2 × 6, radius 8).
+  With nothing last month the change line says so and there is no pill.
+- **Show all (N)** / **Show less**: under the third row, a text button in `accent`
+  (`bodyStrong`), minHeight 48, centered, with a 1 dp `glassDivider` line above. The rows below
+  appear and leave with the layout transition of "Detail in" / "Detail out".
 - **Large text**: the two parts of each line wrap under each other; nothing is cut.
 - **No data last month**: line 1 only.
 - **No spending**: "No spending to compare yet" (`body`, `textMuted`), no rows.

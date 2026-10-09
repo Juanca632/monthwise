@@ -149,7 +149,8 @@ against a hand calculation. Depends on the Insights screen from User Story 1.
 2. **Given** Transport went from 80.00 to 50.00, **When** the user views the comparison, **Then**
    the Transport row shows "-€30.00" and "-38%" (-37.5% rounded half away from zero).
 3. **Given** Leisure had no expenses last month and 40.00 this month, **When** the user views the
-   comparison, **Then** the Leisure row shows "+€40.00" and "New" instead of a percent.
+   comparison, **Then** the Leisure row shows "+€40.00 · nothing in July" (the previous month's
+   name; "nothing last month" for the current month) and no percent.
 4. **Given** Health had 25.00 last month and nothing this month, **When** the user views the
    comparison, **Then** the Health row shows 0.00 this month, "-€25.00" and "-100%".
 5. **Given** rows with changes +60.00, +40.00, 0.00 and -30.00, **When** the user views the
@@ -339,12 +340,16 @@ the summary; scenario 6 depends on User Story 1 and scenario 7 on User Story 3.
   - "<previous month name>: €B", the previous month's spending by that day (its whole month when
     the day is past its last day), unless the previous month has no data;
   - when both amounts are shown, "<signed difference A - B> · <signed percent of B>", where the
-    percent is "New" when B is 0 and A is above 0, and "0%" when both are 0.
+    percent is "0%" when both are 0; when B is 0 and A is above 0 there is no percent, only
+    "<signed difference>" (the line above already shows B as 0; developer, 2026-10-09).
 - **FR-008**: The categories comparison MUST list every expense category with spending in the
   selected month or the previous month, each with: its name, this month's amount, the change in
   euros with a sign ("+" above 0, a minus below, none for 0) and the change as a percent of last
-  month's amount ("New" when last month's amount is 0). Last month's amount is not shown, to keep
-  the list short (developer, 2026-10-09); the row's spoken label still gives it. For the current month,
+  month's amount; when last month's amount is 0 the row says "nothing last month" (current
+  month) or "nothing in <previous month>" instead of a percent. Last month's amount is not shown,
+  to keep the list short (developer, 2026-10-09); the row's spoken label still gives it. The
+  section shows the first 3 rows; when there are more, "Show all (N)" shows the rest in place and
+  "Show less" hides them again; a month change shows the first 3 again (developer, 2026-10-09). For the current month,
   every amount in this section (rows, FR-010 and the "no expenses" check) counts both months by the
   comparison day, as the pace sentence does, and when changes are shown the section says
   "Compared by day N" (N as in the pace sentence; not shown in the FR-010 or "no expenses" cases);
@@ -458,7 +463,7 @@ All derived from the transactions of feature 001 when a view is shown; nothing n
   day, their difference, and whether the previous month has data.
 - **Category change**: for one expense category, its spending in the selected and previous month
   (by the comparison day for the current month, whole months otherwise), the change in euros and
-  the change as a percent (or "New").
+  the change as a percent (none when the previous amount is 0).
 - **Monthly totals**: for one month, total income, total expenses, saved, savings rate, and whether
   it has data.
 - **Trend**: the monthly totals of up to six months ending with the selected month, plus their

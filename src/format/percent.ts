@@ -10,9 +10,8 @@ const magnitude = (p: Percent): string =>
 const spokenMagnitude = (p: Percent): string =>
   p.rounded === 0 && p.sign !== 0 ? 'less than 1' : String(Math.abs(p.rounded));
 
-/** `+30%`, `-38%`, `+<1%`, `-<1%`, `0%`, `New`. */
-export function formatChangePercent(p: Percent | 'new'): string {
-  if (p === 'new') return 'New';
+/** `+30%`, `-38%`, `+<1%`, `-<1%`, `0%`. A change from 0 has no percent; callers say so. */
+export function formatChangePercent(p: Percent): string {
   const sign = p.sign > 0 ? '+' : p.sign < 0 ? '-' : '';
   return `${sign}${magnitude(p)}%`;
 }
@@ -23,9 +22,8 @@ export function formatRate(p: Percent | null): string {
   return `${p.sign < 0 ? '-' : ''}${magnitude(p)}%`;
 }
 
-/** "plus 30 percent", "minus less than 1 percent", "0 percent", "new". */
-export function spokenChangePercent(p: Percent | 'new'): string {
-  if (p === 'new') return 'new';
+/** "plus 30 percent", "minus less than 1 percent", "0 percent". */
+export function spokenChangePercent(p: Percent): string {
   const sign = p.sign > 0 ? 'plus ' : p.sign < 0 ? 'minus ' : '';
   return `${sign}${spokenMagnitude(p)} percent`;
 }

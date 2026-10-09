@@ -70,7 +70,7 @@ export default function InsightsScreen() {
           <>
             <PaceSection pace={pace} scrollRef={scrollRef} />
             <Section title="Categories vs last month">
-              <CategoryChanges comparison={categories} selected={selected} tag={tag} />
+              <CategoryChanges key={`${selected.year}-${selected.month}`} comparison={categories} selected={selected} tag={tag} />
             </Section>
             {/* Its content comes with US3 (T041). */}
             <Section title="Savings trend">{status === 'loading' && <LoadingCard />}</Section>

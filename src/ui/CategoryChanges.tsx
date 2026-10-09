@@ -1,5 +1,7 @@
 import { Feather } from '@expo/vector-icons';
+import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 import type { ExpenseCategory } from '@/domain/categories';
 import type { CategoryComparison } from '@/domain/categoryChanges';
@@ -7,12 +9,15 @@ import type { YearMonth } from '@/domain/month';
 import { categoriesSentence, categoryRowTexts, comparedByLabel, type CategoryRowText } from '@/format/insights';
 
 import { categoryLook } from './categoryLook';
-import { iconSize, radii, spacing, useTheme, type Palette } from './theme';
+import { durations, PressableScale, useReduceMotion } from './motion';
+import { iconSize, minTouch, radii, spacing, useTheme, type Palette } from './theme';
 
 /** As 001's category circles (Breakdown, the transaction list). */
 const ICON_CIRCLE = 36;
 const LOADING_HEIGHT = 140;
 const PILL_RADIUS = 8;
+/** Rows shown before "Show all" (FR-008). */
+const FIRST_ROWS = 3;
 
 type Props = {
   /** `null` while loading. */
@@ -28,6 +33,9 @@ type Props = {
  */
 export function CategoryChanges({ comparison, selected, tag }: Props) {
   const { colors, type } = useTheme();
+  const reduceMotion = useReduceMotion();
+  // Insights remounts this card on a month change (its key), so a new month shows 3 rows again.
+  const [expanded, setExpanded] = useState(false);
   const card = [
     styles.card,
     { backgroundColor: colors.surface },
@@ -46,6 +54,9 @@ export function CategoryChanges({ comparison, selected, tag }: Props) {
   const compared = comparedByLabel(comparison);
   const rows = categoryRowTexts(comparison, selected, tag);
   const categories = comparison.kind === 'noSpending' ? [] : comparison.rows.map((r) => r.category);
+  // The biggest changes first, the rest on demand (FR-008), so the screen stays short.
+  const shown = expanded ? rows : rows.slice(0, FIRST_ROWS);
+  const toggle = expanded ? 'Show less' : `Show all (${rows.length})`;
 
   return (
     <View style={card}>
@@ -55,9 +66,21 @@ export function CategoryChanges({ comparison, selected, tag }: Props) {
       {compared !== null && (
         <Text style={[type.legend, styles.note, { color: colors.textMuted }]}>{compared}</Text>
       )}
-      {rows.map((row, i) => (
-        <Row key={categories[i]} row={row} category={categories[i]} tone={toneOf(comparison, i)} first={i === 0} />
+      {shown.map((row, i) => (
+        <Animated.View key={categories[i]} entering={i >= FIRST_ROWS && !reduceMotion ? FadeIn.duration(durations.fast) : undefined}>
+          <Row row={row} category={categories[i]} tone={toneOf(comparison, i)} first={i === 0} />
+        </Animated.View>
       ))}
+      {rows.length > FIRST_ROWS && (
+        <PressableScale
+          accessibilityRole="button"
+          accessibilityLabel={toggle}
+          onPress={() => setExpanded((e) => !e)}
+          style={[styles.toggle, { borderTopColor: colors.glassDivider }]}
+        >
+          <Text style={[type.bodyStrong, { color: colors.accent }]}>{toggle}</Text>
+        </PressableScale>
+      )}
     </View>
   );
 }
@@ -109,9 +132,11 @@ function Row({
         {row.change !== undefined && (
           <View style={styles.line}>
             <Text style={[type.caption, styles.grow, { color: colors.textMuted }]}>{row.change}</Text>
-            <View style={[styles.pill, { backgroundColor: pill.fill }]}>
-              <Text style={[type.pill, { color: pill.ink }]}>{row.percent}</Text>
-            </View>
+            {row.percent !== undefined && (
+              <View style={[styles.pill, { backgroundColor: pill.fill }]}>
+                <Text style={[type.pill, { color: pill.ink }]}>{row.percent}</Text>
+              </View>
+            )}
           </View>
         )}
       </View>
@@ -141,4 +166,5 @@ const styles = StyleSheet.create({
   line: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.xs },
   grow: { flexGrow: 1, flexShrink: 1 },
   pill: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: PILL_RADIUS },
+  toggle: { minHeight: minTouch, alignItems: 'center', justifyContent: 'center', borderTopWidth: 1 },
 });

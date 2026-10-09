@@ -54,8 +54,30 @@ const expectNoColumnTitles = () => {
   expect(screen.queryByText('Change')).toBeNull();
 };
 
+/** Presses the list's expand button, named by the total number of rows. */
+const showAll = (total: number) => {
+  fireEvent.press(screen.getByRole('button', { name: `Show all (${total})` }));
+};
+
+/** Five categories in June, July and August with distinct changes, to exceed the 3 visible rows. */
+const fiveCategories = (): TransactionInput[] => {
+  // [category, June cents, July cents, August cents]; August changes: +6000, +4000, +1000, 0, -3000
+  const cats: [string, number, number, number][] = [
+    ['food', 10_000, 20_000, 26_000],
+    ['housing', 10_000, 10_000, 14_000],
+    ['leisure', 1_000, 1_000, 2_000],
+    ['bills', 10_000, 10_000, 10_000],
+    ['transport', 8_000, 8_000, 5_000],
+  ];
+  return cats.flatMap(([c, jun, jul, aug]) => [
+    expense('2026-06-05', jun, c),
+    expense('2026-07-05', jul, c),
+    expense('2026-08-05', aug, c),
+  ]);
+};
+
 /** Category names in the order the rows appear on screen. */
-const rowOrder = (period: 'August' | 'this month') =>
+const rowOrder = (period: 'August' | 'July' | 'this month') =>
   screen
     .queryAllByLabelText(new RegExp(`^[A-Za-z ]+, ${period} \\d`))
     .map((el) => String(el.props.accessibilityLabel).split(',')[0]);
@@ -86,13 +108,13 @@ describe('US2: categories vs last month', () => {
       expect(transport.getByText(t('-38%'))).toBeTruthy();
     });
 
-    it('US2-AS3: Leisure with no expenses last month shows "+40,00 € vs July" and "New" instead of a percent', async () => {
+    it('US2-AS3: Leisure with no expenses last month shows "+40,00 € · nothing in July" and no percent', async () => {
       await openAugust([expense('2026-07-05', 1_000), expense('2026-08-09', 4_000, 'leisure')]);
-      const leisure = within(row('Leisure, August 40,00 €, July 0,00 €, plus 40,00 €, new'));
+      const leisure = within(row('Leisure, August 40,00 €, July 0,00 €, plus 40,00 €'));
       expect(leisure.getByText(t('40,00 €'))).toBeTruthy();
       expect(leisure.queryByText(t('0,00 €'))).toBeNull(); // last month amount is not visible text
-      expect(leisure.getByText(t('+40,00 € vs July'))).toBeTruthy();
-      expect(leisure.getByText('New')).toBeTruthy();
+      expect(leisure.getByText(t('+40,00 € · nothing in July'))).toBeTruthy();
+      expect(leisure.queryByText(/New/i)).toBeNull();
       expect(leisure.queryByText(/%/)).toBeNull();
     });
 
@@ -124,6 +146,8 @@ describe('US2: categories vs last month', () => {
         expense('2026-07-10', 8_000, 'transport'),
         expense('2026-08-10', 5_000, 'transport'),
       ]);
+      expect(rowOrder('August')).toEqual(['Food', 'Housing', 'Leisure']); // only the first 3 until expanded
+      showAll(6);
       expect(rowOrder('August')).toEqual(['Food', 'Housing', 'Leisure', 'Bills', 'Health', 'Transport']);
       // A zero change has no sign.
       const bills = within(row('Bills, August 100,00 €, July 100,00 €, 0,00 €, 0 percent'));
@@ -228,7 +252,7 @@ describe('US2: categories vs last month', () => {
       expect(screen.queryByText('Transport')).toBeNull();
     });
 
-    it('FR-008: by the comparison day, a category new this month shows "New" and one gone shows -100%', async () => {
+    it('FR-008: by the comparison day, a category with nothing last month shows "nothing last month" and one gone shows -100%', async () => {
       await openOctober([
         expense('2026-10-05', 4_000, 'leisure'),
         expense('2026-09-05', 2_500, 'health'),
@@ -236,9 +260,9 @@ describe('US2: categories vs last month', () => {
         expense('2026-10-06', 1_000, 'food'),
       ]);
       expect(screen.getByText('Compared by day 12')).toBeTruthy();
-      expect(
-        within(row('Leisure, this month 40,00 €, last month 0,00 €, plus 40,00 €, new')).getByText('New'),
-      ).toBeTruthy();
+      const leisure = within(row('Leisure, this month 40,00 €, last month 0,00 €, plus 40,00 €'));
+      expect(leisure.getByText(t('+40,00 € · nothing last month'))).toBeTruthy();
+      expect(leisure.queryByText(/%/)).toBeNull();
       const health = within(
         row('Health, this month 0,00 €, last month 25,00 €, minus 25,00 €, minus 100 percent'),
       );
@@ -320,7 +344,7 @@ describe('US2: categories vs last month', () => {
 
       const id = await app.add(expense('2026-08-10', 4_000, 'leisure'));
       expect(rowOrder('August')).toEqual(['Food', 'Leisure']); // +60,00 then +40,00
-      expect(row('Leisure, August 40,00 €, July 0,00 €, plus 40,00 €, new')).toBeTruthy();
+      expect(row('Leisure, August 40,00 €, July 0,00 €, plus 40,00 €')).toBeTruthy();
 
       // Moving it to July turns it into a decrease (-40,00 €) and reorders the rows.
       await app.update(id, expense('2026-07-10', 4_000, 'leisure'));
@@ -359,6 +383,55 @@ describe('US2: categories vs last month', () => {
     it('FR-015: the section offers no way to add, edit or delete a transaction', async () => {
       await openAugust([expense('2026-07-05', 20_000), expense('2026-08-05', 26_000)]);
       expect(screen.queryByRole('button', { name: /^(Add|Edit|Delete)/i })).toBeNull();
+    });
+  });
+
+  describe('showing the first 3 rows (developer decision, 2026-10-09)', () => {
+    it('FR-008: with more than 3 rows only the first 3 are rendered and a "Show all (N)" button is shown', async () => {
+      await openAugust(fiveCategories());
+      expect(rowOrder('August')).toEqual(['Food', 'Housing', 'Leisure']);
+      expect(screen.queryByText('Bills')).toBeNull(); // hidden rows are not rendered
+      expect(screen.queryByText('Transport')).toBeNull();
+      expect(screen.getByRole('button', { name: 'Show all (5)' })).toBeTruthy();
+      expect(screen.getByText('Show all (5)')).toBeTruthy();
+    });
+
+    it('FR-008: pressing "Show all (N)" shows every row in place and the button reads "Show less"', async () => {
+      await openAugust(fiveCategories());
+      showAll(5);
+      expect(rowOrder('August')).toEqual(['Food', 'Housing', 'Leisure', 'Bills', 'Transport']);
+      expect(screen.getByRole('button', { name: 'Show less' })).toBeTruthy();
+      expect(screen.getByText('Show less')).toBeTruthy();
+      expect(screen.queryByRole('button', { name: /^Show all/ })).toBeNull();
+    });
+
+    it('FR-008: pressing "Show less" hides all but the first 3 again', async () => {
+      await openAugust(fiveCategories());
+      showAll(5);
+      fireEvent.press(screen.getByRole('button', { name: 'Show less' }));
+      expect(rowOrder('August')).toEqual(['Food', 'Housing', 'Leisure']);
+      expect(screen.getByRole('button', { name: 'Show all (5)' })).toBeTruthy();
+    });
+
+    it('FR-008: with 3 rows or fewer there is no button', async () => {
+      await openAugust([
+        expense('2026-07-05', 20_000, 'food'),
+        expense('2026-08-05', 26_000, 'food'),
+        expense('2026-08-06', 4_000, 'leisure'),
+        expense('2026-08-07', 3_000, 'bills'),
+      ]);
+      expect(rowOrder('August')).toHaveLength(3);
+      expect(screen.queryByRole('button', { name: /^Show (all|less)/ })).toBeNull();
+    });
+
+    it('FR-008: a month change shows the first 3 rows again', async () => {
+      await openAugust(fiveCategories());
+      showAll(5);
+      expect(rowOrder('August')).toHaveLength(5);
+      await app.selectMonth({ year: 2026, month: 7 });
+      expect(rowOrder('July')).toHaveLength(3);
+      expect(screen.getByRole('button', { name: 'Show all (5)' })).toBeTruthy();
+      expect(screen.queryByRole('button', { name: 'Show less' })).toBeNull();
     });
   });
 
@@ -422,7 +495,7 @@ describe('US2: categories vs last month', () => {
       // August against July, whole months. Hand-calculated changes:
       // Housing  620,00 vs 600,00 = +20,00  (+3%)
       // Food     212,45 vs 187,30 = +25,15  (+13%)  -> 13.4% rounds to 13
-      // Leisure   59,98 vs   0,00 = +59,98  (New)
+      // Leisure   59,98 vs   0,00 = +59,98  (nothing in July, no percent)
       // Bills    110,00 vs 110,00 =   0,00  (0%)
       // Transport 18,50 vs  64,20 = -45,70  (-71%)  -> 71.18% rounds to 71
       await openAugust([
@@ -440,10 +513,12 @@ describe('US2: categories vs last month', () => {
         income('2026-07-01', 200_000),
         income('2026-08-01', 200_000),
       ]);
+      expect(rowOrder('August')).toEqual(['Leisure', 'Food', 'Housing']);
+      showAll(5);
       expect(rowOrder('August')).toEqual(['Leisure', 'Food', 'Housing', 'Bills', 'Transport']);
       expect(row('Housing, August 620,00 €, July 600,00 €, plus 20,00 €, plus 3 percent')).toBeTruthy();
       expect(row('Food, August 212,45 €, July 187,30 €, plus 25,15 €, plus 13 percent')).toBeTruthy();
-      expect(row('Leisure, August 59,98 €, July 0,00 €, plus 59,98 €, new')).toBeTruthy();
+      expect(row('Leisure, August 59,98 €, July 0,00 €, plus 59,98 €')).toBeTruthy();
       expect(row('Bills, August 110,00 €, July 110,00 €, 0,00 €, 0 percent')).toBeTruthy();
       expect(row('Transport, August 18,50 €, July 64,20 €, minus 45,70 €, minus 71 percent')).toBeTruthy();
     });

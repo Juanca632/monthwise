@@ -60,10 +60,14 @@ function detailParts(detail: DayDetail, pace: Pace, tag: string): DetailPart[] {
   }
   if (detail.change !== null) {
     const { differenceCents, percent } = detail.change;
-    parts.push({
-      text: `${formatSignedDifference(differenceCents, tag)} · ${formatChangePercent(percent)}`,
-      spoken: `${spokenSignedDifference(differenceCents, tag)}, ${spokenChangePercent(percent)}`,
-    });
+    const text = formatSignedDifference(differenceCents, tag);
+    const spoken = spokenSignedDifference(differenceCents, tag);
+    // From 0 there is no percent; the line above already shows the previous month's 0 (FR-007).
+    parts.push(
+      percent === 'new'
+        ? { text, spoken }
+        : { text: `${text} · ${formatChangePercent(percent)}`, spoken: `${spoken}, ${spokenChangePercent(percent)}` },
+    );
   }
   return parts;
 }
@@ -118,8 +122,9 @@ const isCurrentComparison = (comparison: CategoryComparison): boolean =>
 export type CategoryRowText = {
   label: string;
   current: string;
-  /** `+60,00 € vs last month`; absent in the "no data" case, as the percent. */
+  /** `+60,00 € vs last month`, or `+40,00 € · nothing in July`; absent in the "no data" case. */
   change?: string;
+  /** Absent in the "no data" case and when last month was 0. */
   percent?: string;
   /** The row is one accessible element with this label. */
   accessibilityLabel: string;
@@ -153,15 +158,19 @@ export function categoryRowTexts(
     return {
       label,
       current: formatMoney(row.currentCents, tag),
-      // Last month's amount is only spoken (FR-008): the list stays one number per line.
-      change: `${formatSignedDifference(row.changeCents, tag)} vs ${against}`,
-      percent: formatChangePercent(row.percent),
+      // Last month's amount is only spoken (FR-008): the list stays one number per line. From 0
+      // there is no percent, so the line says why instead.
+      change:
+        row.percent === 'new'
+          ? `${formatSignedDifference(row.changeCents, tag)} · nothing ${against === 'last month' ? 'last month' : `in ${against}`}`
+          : `${formatSignedDifference(row.changeCents, tag)} vs ${against}`,
+      percent: row.percent === 'new' ? undefined : formatChangePercent(row.percent),
       accessibilityLabel: [
         label,
         `${spokenName(names.current)} ${spokenMoney(row.currentCents, tag)}`,
         `${spokenName(names.previous)} ${spokenMoney(row.previousCents, tag)}`,
         spokenSignedDifference(row.changeCents, tag),
-        spokenChangePercent(row.percent),
+        ...(row.percent === 'new' ? [] : [spokenChangePercent(row.percent)]),
       ].join(', '),
     };
   });

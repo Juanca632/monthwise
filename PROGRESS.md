@@ -22,6 +22,8 @@ commit (CLAUDE.md, "Session handoff").
   - gesture-handler 2.32's `fireGestureHandler` never calls `onTouches*`, so tests drive the pace
     pan's touch callbacks directly (`tests/helpers/paceGesture.ts`).
   - Insights' Savings trend section shows only its title until US3.
+  - Design feedback (2026-10-09): follow Revolut for every screen, minimal and easy to read
+    (design.md, Direction). Categories redesigned: compact list, first 3 + Show all, no "New".
   - The harness now renders at font scale 1.0 (React Native's Jest mock says 2); contract updated.
 
 ## Open decisions
@@ -37,8 +39,9 @@ commit (CLAUDE.md, "Session handoff").
 ## Phone checks pending
 
 - 001: APK verification T052-T053.
-- 002, block 5: the Categories vs last month card on Insights (current and past month, no data,
-  no spending); at large text the values stack under their titles; colors of the percent pills.
+- 002, block 5 (after the redesign): the categories card as a compact list (icon, name, amount;
+  change line and pill below), first 3 rows with Show all / Show less, "nothing last month"
+  instead of a percent, the pace day detail without "New"; large text wraps.
 
 ## Environment notes
 

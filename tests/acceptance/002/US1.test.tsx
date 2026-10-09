@@ -343,7 +343,7 @@ describe('US1: spending pace', () => {
       expect(screen.queryByText(/·/)).toBeNull();
     });
 
-    it('FR-007: percent is "New" when the previous amount is 0 and "0%" when both are 0', async () => {
+    it('FR-007: previous amount 0 shows only the signed amount (no percent text) and "0%" when both are 0', async () => {
       app = await renderApp({
         today: '2026-10-12',
         transactions: [expense('2026-10-05', 10_000), expense('2026-09-10', 5_000)],
@@ -351,7 +351,8 @@ describe('US1: spending pace', () => {
       await openInsights();
       await app.paceChart.tapAt(dayX(6)); // October 100.00, September 0.00
       expect(screen.getByText(t('September: 0,00 €'))).toBeTruthy();
-      expect(screen.getByText(t('+100,00 € · New'))).toBeTruthy();
+      expect(screen.getByText(t('+100,00 €'))).toBeTruthy();
+      expect(screen.queryByText(/New/i)).toBeNull();
       await app.paceChart.tapAt(dayX(2)); // both 0
       expect(screen.getByText(t('0,00 € · 0%'))).toBeTruthy();
     });
@@ -441,7 +442,8 @@ describe('US1: spending pace', () => {
       await app.paceChart.tapAt(dayX(2));
       expect(screen.getByText(t('March: 58,75 €'))).toBeTruthy();
       expect(screen.getByText(t('February: 0,00 €'))).toBeTruthy();
-      expect(screen.getByText(t('+58,75 € · New'))).toBeTruthy();
+      expect(screen.getByText(t('+58,75 €'))).toBeTruthy();
+      expect(screen.queryByText(/New/i)).toBeNull();
     });
 
     it('Edge: a past month shorter than the previous one shows only the previous amount on the extra day', async () => {

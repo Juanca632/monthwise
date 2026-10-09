@@ -16,7 +16,7 @@ come from 001 (FR-029, `formatMoney`): `85,00 €`, `1.234,00 €`.
 | **amount** | `formatMoney` of the absolute value | `85,00 €` |
 | **signed amount** | `+` above 0, minus below, none at 0 (as 001's day headers) | `+60,00 €`, `-30,00 €`, `0,00 €` |
 | **saved amount** | Minus only when negative | `300,00 €`, `-150,00 €` |
-| **change percent** | `+` above 0, minus below; `<1%` keeps its sign; `New` (FR-007, FR-017) | `+30%`, `-38%`, `+<1%`, `-<1%`, `0%`, `New` |
+| **change percent** | `+` above 0, minus below; `<1%` keeps its sign; none when the base is 0 (FR-007, FR-008) | `+30%`, `-38%`, `+<1%`, `-<1%`, `0%` |
 | **rate** | Minus only when negative; `No income` when income is 0 | `15%`, `-8%`, `<1%`, `-<1%`, `0%`, `No income` |
 | **month name** | English, no year | `September` |
 
@@ -24,7 +24,7 @@ come from 001 (FR-029, `formatMoney`): `85,00 €`, `1.234,00 €`.
 signed amount `+60,00 €` → "plus 60,00 €", `-30,00 €` → "minus 30,00 €", `0,00 €` → "0,00 €"; saved amount
 `-150,00 €` → "minus 150,00 €"; change percent `+30%` → "plus 30 percent", `-38%` → "minus 38
 percent", `+<1%` → "plus less than 1 percent", `-<1%` → "minus less than 1 percent", `0%` →
-"0 percent", `New` → "new"; rate `15%` → "15 percent", `-8%` → "minus 8 percent", `<1%` → "less
+"0 percent"; rate `15%` → "15 percent", `-8%` → "minus 8 percent", `<1%` → "less
 than 1 percent", `-<1%` → "minus less than 1 percent", `0%` → "0 percent", `No income` → "no
 income".
 
@@ -163,13 +163,18 @@ No column titles: each row says what it compares (developer, 2026-10-09, a compa
 
 - A row shows, each as its own Text: the category label (001's labels, e.g. `Food`), this
   month's amount (`260,00 €`), the change line `+60,00 € vs last month` (current month) or
-  `+60,00 € vs July` (past month: the previous month's name), and the change percent (`+30%`,
-  `New`). In the "no data" case only the label and this month's amount. Last month's amount is
-  not shown; the accessible label gives it.
+  `+60,00 € vs July` (past month: the previous month's name), and the change percent (`+30%`).
+  When last month's amount is 0 the change line is `+40,00 € · nothing last month` or
+  `+40,00 € · nothing in July`, with no percent. In the "no data" case only the label and this
+  month's amount. Last month's amount is not shown; the accessible label gives it.
+- The first 3 rows are shown. With more than 3, a button below them, role `button`, label and
+  text `Show all (7)` (the total number of rows), shows every row in place; it then reads
+  `Show less` and hides all but the first 3 again. A month change shows the first 3 again.
+  Hidden rows are not rendered.
 - Each row is one accessible element. Current month: `Food, this month 100,00 €, last month
   90,00 €, plus 10,00 €, plus 11 percent`. Past month (August against July): `Food, August
-  260,00 €, July 200,00 €, plus 60,00 €, plus 30 percent`; with `New`: `Leisure, August 40,00 €,
-  July 0,00 €, plus 40,00 €, new`. The "no data" case: `Food, this month 260,00 €` or `Food,
+  260,00 €, July 200,00 €, plus 60,00 €, plus 30 percent`; with nothing last month: `Leisure,
+  August 40,00 €, July 0,00 €, plus 40,00 €`. The "no data" case: `Food, this month 260,00 €` or `Food,
   August 260,00 €`.
 - Rows are not tappable.
 - At large text sizes the row's texts wrap; nothing moves to another layout.
@@ -211,7 +216,7 @@ No column titles: each row says what it compares (developer, 2026-10-09, a compa
 | Month picker | `Choose month`, `Previous year`, `Next year`, `This month`, `Close`; short month names `Jan` … `Dec` |
 | Insights | `Insights`, `Back`, `Spending pace`, `Categories vs last month`, `Savings trend`, `Try again`, `Couldn't load your data.` |
 | Pace detail | `Day N`, `<Month>: <amount>`, `<signed amount> · <change percent>` |
-| Categories | `<signed amount> vs last month`, `<signed amount> vs <Month>`, `Compared by day N`, `New`, `No spending to compare yet`, `No data from last month to compare`, `No data from <Month> to compare` |
+| Categories | `<signed amount> vs last month`, `<signed amount> vs <Month>`, `<signed amount> · nothing last month`, `<signed amount> · nothing in <Month>`, `Show all (N)`, `Show less`, `Compared by day N`, `No spending to compare yet`, `No data from last month to compare`, `No data from <Month> to compare` |
 | Trend | `Saved <saved amount> in N months · <rate>`, legend `Income`, `Expenses`, `Saved`, `No data`, `No data yet`, `Income: `, `Expenses: `, `Saved: `, `Savings rate: `, `View month` |
 | Card hint | "Opens Insights" |
 

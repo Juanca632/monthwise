@@ -124,16 +124,16 @@ describe('day detail (FR-007)', () => {
     expect(dayDetailLines(detail, pace(false), ES)).toEqual(['Day 3', `October: ${eur('5,00')}`]);
   });
 
-  it('"New" and "0%" changes; a zero difference has no sign', () => {
+  it('a change from 0 has no percent; "0%" when both are 0; a zero difference has no sign', () => {
     const fresh: DayDetail = {
       day: 2,
       selectedCents: 5_875,
       previousCents: 0,
       change: { differenceCents: 5_875, percent: 'new' },
     };
-    expect(dayDetailLines(fresh, pace(true), ES)[3]).toBe(`${eur('+58,75')} · New`);
+    expect(dayDetailLines(fresh, pace(true), ES)[3]).toBe(eur('+58,75'));
     expect(daySpokenValue(fresh, pace(true), ES)).toBe(
-      `October: ${eur('58,75')}, September: ${eur('0,00')}, plus ${eur('58,75')}, new`,
+      `October: ${eur('58,75')}, September: ${eur('0,00')}, plus ${eur('58,75')}`,
     );
 
     const none: DayDetail = {
@@ -198,14 +198,15 @@ describe('categories texts (Section 2)', () => {
     ]);
   });
 
-  it('past month rows: month names, New, and negatives spoken as minus', () => {
+  it('past month rows: month names, nothing in July, and negatives spoken as minus', () => {
     const [food, leisure, transport] = categoryRowTexts(pastChanges, AUG, ES);
     expect(food.accessibilityLabel).toBe(
       `Food, August ${eur('260,00')}, July ${eur('200,00')}, plus ${eur('60,00')}, plus 30 percent`,
     );
-    expect(leisure).toMatchObject({ change: `+${eur('40,00')} vs July`, percent: 'New' });
+    expect(leisure.change).toBe(`+${eur('40,00')} · nothing in July`);
+    expect(leisure.percent).toBeUndefined();
     expect(leisure.accessibilityLabel).toBe(
-      `Leisure, August ${eur('40,00')}, July ${eur('0,00')}, plus ${eur('40,00')}, new`,
+      `Leisure, August ${eur('40,00')}, July ${eur('0,00')}, plus ${eur('40,00')}`,
     );
     expect(transport).toMatchObject({ change: `-${eur('30,00')} vs July`, percent: '-38%' });
     expect(transport.accessibilityLabel).toBe(
@@ -229,4 +230,18 @@ describe('categories texts (Section 2)', () => {
     );
     expect(past[0].accessibilityLabel).toBe(`Food, August ${eur('260,00')}`);
   });
+});
+
+it('categories, current month: nothing last month', () => {
+  const [row] = categoryRowTexts(
+    {
+      kind: 'changes',
+      comparisonDay: 12,
+      rows: [{ category: 'leisure', currentCents: 4_000, previousCents: 0, changeCents: 4_000, percent: 'new' }],
+    },
+    OCT,
+    ES,
+  );
+  expect(row.change).toBe(`+${eur('40,00')} · nothing last month`);
+  expect(row.percent).toBeUndefined();
 });
