@@ -246,3 +246,23 @@ it('returns the categories with the pace, recomputed after a focus reload', asyn
   await settle(() => calls[1].resolve([expense('2026-10-02', 7_000), expense('2026-10-03', 5_000), expense('2026-09-04', 10_000)]));
   expect(result.current.insights.categories).toMatchObject({ rows: [{ currentCents: 12_000, changeCents: 2_000 }] });
 });
+
+it('returns the trend with the rest, from the read that starts at trendStart', async () => {
+  const { repository, calls } = controlledRepository();
+  mockDb = dbValue({ repository });
+  const { result } = renderInsights();
+  expect(result.current.insights.trend).toBeNull();
+  await endTransition();
+  expect(calls[0].from).toEqual({ year: 2026, month: 5 });
+  await settle(() =>
+    calls[0].resolve([
+      { type: 'income', amountCents: 200_000, date: '2026-09-01', category: 'salary' },
+      expense('2026-09-04', 170_000),
+    ]),
+  );
+  const trend = result.current.insights.trend!;
+  expect(trend.months.map((m) => m.month.month)).toEqual([5, 6, 7, 8, 9, 10]);
+  expect(trend).toMatchObject({ monthsWithData: 1, totalSavedCents: 30_000, rate: { rounded: 15, sign: 1 } });
+  expect(result.current.insights.pace).not.toBeNull();
+  expect(result.current.insights.categories).not.toBeNull();
+});

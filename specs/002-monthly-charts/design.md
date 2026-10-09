@@ -185,9 +185,7 @@ easy to read and minimal"); no table and no column titles.
 
 #### Section 3: Savings trend
 
-- **Headline** (`title`), then the **legend** (`legend`, `textMuted`, gap 4 × 16, hidden from
-  the screen reader): a 10 × 12 dp solid `income` bar "Income", a 10 × 12 dp outlined bar
-  "Expenses", a 10 × 14 dp stem-and-dot "Saved".
+- **Headline** (`title`); no legend (one bar per month needs none).
 - **The chart**, 8 dp below (Chart geometry, Trend), then the month detail when a month is
   selected: the month name (`labelStrong`), "Income: …", "Expenses: …", "Saved: …", "Savings
   rate: …" (`body`), or "No data"; then **View month**, 8 dp below: a pill on `surface` (it sits
@@ -276,15 +274,13 @@ padding 8 vertical and radius 12: a 160 dp plot, then the short month name (`leg
   bottom zero line is never clipped (166 dp in all).
 - **Width**: Monthwise targets screens 360 dp wide and up, where each column is at least 48 dp
   ((360 − 64) / 6 ≈ 49). Narrower screens are out of scope.
-- **Scale**: top = the largest income or expenses shown × 1.04; bottom = the most negative saved
-  amount × 1.25, or 0 when none is negative. The zero line (1 dp `chartZero`) sits where 0 falls
-  in that range and crosses all six columns; a month never has its own baseline.
-- **Marks**, around the column's center: income a 12 dp bar at −19 dp (solid `income`), expenses
-  a 12 dp bar at −5 dp (`expensesFill` with a 2 dp `chartPrevious` outline, no bottom edge), both
-  growing up from zero with 4 dp top corners; saved a 2 dp stem at +12 dp from zero to the saved
-  amount with a 10 dp dot at its end, `chartCurrent`, or `error` and **below the zero line** when
-  negative. Solid bar, outlined bar and stem-and-dot are three shapes, so they read without color.
-  Saved at exactly 0 is the dot on the zero line.
+- **Scale**: top = the largest saved amount × 1.04; bottom = the most negative saved amount ×
+  1.25, or 0 when none is negative. The zero line (1 dp `chartZero`) sits where 0 falls in that
+  range and crosses all six columns; a month never has its own baseline.
+- **Mark** (developer, 2026-10-09: saved only, like Revolut): one bar per month, centered, 16 dp
+  wide (`trendBar`), growing from the zero line with 4 dp corners at its far end: up in
+  `chartCurrent` when saved is 0 or more, down in `error` when negative. Saved at exactly 0 is a
+  2 dp `chartCurrent` line on the zero line. Up versus down repeats the color.
 - **No data**: no marks; "No data" (`legend`, `textMuted`) centered in the plot (never a zero).
 - **Selected month** (detail open): the column fills with `chartBand` and its name turns `accent`
   Bold. The **screen's month** (the one in the month control) has its name in `text` Bold; the

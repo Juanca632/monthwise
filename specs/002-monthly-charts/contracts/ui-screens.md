@@ -186,9 +186,8 @@ No column titles: each row says what it compares (developer, 2026-10-09, a compa
 | Every month shown has no data | `No data yet`; no chart, no headline |
 | Otherwise | Headline, then one column per month in calendar order with its short name (`May`) under it |
 
-- Legend under the headline: `Income`, `Expenses`, `Saved`, one Text each, naming the three
-  marks design.md draws per month. It is hidden from the screen reader: each month's value already
-  names them.
+- One bar per month for its saved amount, below zero when negative (developer, 2026-10-09); no
+  legend. Income and expenses are in each month's value and detail.
 - Headline: `Saved 1.800,00 € in 6 months · 15%`; `in 1 month` for one; the saved amount
   takes a minus when negative (`Saved -400,00 € in 1 month · No income`). Accessibility label:
   `Saved 1.800,00 € in 6 months, 15 percent` (spoken forms, `·` read as a comma).
@@ -217,7 +216,7 @@ No column titles: each row says what it compares (developer, 2026-10-09, a compa
 | Insights | `Insights`, `Back`, `Spending pace`, `Categories vs last month`, `Savings trend`, `Try again`, `Couldn't load your data.` |
 | Pace detail | `Day N`, `<Month>: <amount>`, `<signed amount> · <change percent>` |
 | Categories | `<signed amount> vs last month`, `<signed amount> vs <Month>`, `<signed amount> · nothing last month`, `<signed amount> · nothing in <Month>`, `Show all (N)`, `Show less`, `Compared by day N`, `No spending to compare yet`, `No data from last month to compare`, `No data from <Month> to compare` |
-| Trend | `Saved <saved amount> in N months · <rate>`, legend `Income`, `Expenses`, `Saved`, `No data`, `No data yet`, `Income: `, `Expenses: `, `Saved: `, `Savings rate: `, `View month` |
+| Trend | `Saved <saved amount> in N months · <rate>`, `No data`, `No data yet`, `Income: `, `Expenses: `, `Saved: `, `Savings rate: `, `View month` |
 | Card hint | "Opens Insights" |
 
 ## Accessibility and large text (FR-022, FR-023)

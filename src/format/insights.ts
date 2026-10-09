@@ -2,6 +2,7 @@ import { labelFor } from '@/domain/categories';
 import type { CategoryComparison } from '@/domain/categoryChanges';
 import { previous as previousMonthOf, type YearMonth } from '@/domain/month';
 import type { DayDetail, Pace, PaceSentence } from '@/domain/pace';
+import type { MonthTotals, Trend } from '@/domain/trend';
 import { monthName } from '@/format/date';
 import {
   formatMoney,
@@ -9,7 +10,7 @@ import {
   spokenMoney,
   spokenSignedDifference,
 } from '@/format/money';
-import { formatChangePercent, spokenChangePercent } from '@/format/percent';
+import { formatChangePercent, formatRate, spokenChangePercent, spokenRate } from '@/format/percent';
 
 // Insights texts exactly as contracts/ui-screens.md; amounts follow the region (`tag`), words
 // stay English (FR-029).
@@ -174,4 +175,47 @@ export function categoryRowTexts(
       ].join(', '),
     };
   });
+}
+
+// Savings trend (contracts/ui-screens.md, Section 3).
+
+const monthsWord = (n: number) => (n === 1 ? '1 month' : `${n} months`);
+
+/** `Saved 1.800,00 € in 6 months · 15%`; the saved amount keeps its minus (FR-012). */
+export function trendHeadline(trend: Trend, tag: string): string {
+  return `Saved ${formatMoney(trend.totalSavedCents, tag)} in ${monthsWord(trend.monthsWithData)} · ${formatRate(trend.rate)}`;
+}
+
+/** The headline as spoken: `Saved 1.800,00 € in 6 months, 15 percent`. */
+export function trendHeadlineLabel(trend: Trend, tag: string): string {
+  return `Saved ${spokenMoney(trend.totalSavedCents, tag)} in ${monthsWord(trend.monthsWithData)}, ${spokenRate(trend.rate)}`;
+}
+
+/** The column's short name: `May`, `Sep`. */
+export function shortMonthName(ym: YearMonth): string {
+  return monthName(ym).slice(0, 3);
+}
+
+/** The month detail: `September`, `Income: …`, `Expenses: …`, `Saved: …`, `Savings rate: …`, or `No data`. */
+export function trendDetailLines(totals: MonthTotals, tag: string): string[] {
+  const name = monthName(totals.month);
+  if (!totals.hasData) return [name, 'No data'];
+  return [
+    name,
+    `Income: ${formatMoney(totals.incomeCents, tag)}`,
+    `Expenses: ${formatMoney(totals.expenseCents, tag)}`,
+    `Saved: ${formatMoney(totals.savedCents, tag)}`,
+    `Savings rate: ${formatRate(totals.rate)}`,
+  ];
+}
+
+/** Each month button's value: `Income 2.000,00 €, expenses 1.700,00 €, saved 300,00 €, savings rate 15 percent`. */
+export function trendSpokenValue(totals: MonthTotals, tag: string): string {
+  if (!totals.hasData) return 'No data';
+  return [
+    `Income ${spokenMoney(totals.incomeCents, tag)}`,
+    `expenses ${spokenMoney(totals.expenseCents, tag)}`,
+    `saved ${spokenMoney(totals.savedCents, tag)}`,
+    `savings rate ${spokenRate(totals.rate)}`,
+  ].join(', ');
 }

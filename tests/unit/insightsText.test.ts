@@ -9,7 +9,13 @@ import {
   daySpokenValue,
   paceCardLabel,
   paceSentence,
+  shortMonthName,
+  trendDetailLines,
+  trendHeadline,
+  trendHeadlineLabel,
+  trendSpokenValue,
 } from '@/format/insights';
+import type { MonthTotals, Trend } from '@/domain/trend';
 
 // Literal strings from contracts/ui-screens.md (es-ES). Spanish puts a no-break space before €.
 const NBSP = '\u00A0';
@@ -244,4 +250,66 @@ it('categories, current month: nothing last month', () => {
   );
   expect(row.change).toBe(`+${eur('40,00')} · nothing last month`);
   expect(row.percent).toBeUndefined();
+});
+
+describe('trend texts (Section 3)', () => {
+  const trend = (totalSavedCents: number, monthsWithData: number, rate: Trend['rate']): Trend => ({
+    months: [],
+    monthsWithData,
+    totalSavedCents,
+    rate,
+  });
+  const sep: MonthTotals = {
+    month: SEP,
+    hasData: true,
+    incomeCents: 200_000,
+    expenseCents: 170_000,
+    savedCents: 30_000,
+    rate: { rounded: 15, sign: 1 },
+  };
+
+  it('headline: N months, 1 month, a minus, No income', () => {
+    expect(trendHeadline(trend(180_000, 6, { rounded: 15, sign: 1 }), ES)).toBe(`Saved ${eur('1.800,00')} in 6 months · 15%`);
+    expect(trendHeadline(trend(-40_000, 1, null), ES)).toBe(`Saved -${eur('400,00')} in 1 month · No income`);
+  });
+
+  it('headline label: spoken, the dot read as a comma', () => {
+    expect(trendHeadlineLabel(trend(180_000, 6, { rounded: 15, sign: 1 }), ES)).toBe(
+      `Saved ${eur('1.800,00')} in 6 months, 15 percent`,
+    );
+    expect(trendHeadlineLabel(trend(-40_000, 1, null), ES)).toBe(`Saved minus ${eur('400,00')} in 1 month, no income`);
+  });
+
+  it('short month names', () => {
+    expect(shortMonthName({ year: 2026, month: 5 })).toBe('May');
+    expect(shortMonthName(SEP)).toBe('Sep');
+  });
+
+  it('month detail lines and spoken value', () => {
+    expect(trendDetailLines(sep, ES)).toEqual([
+      'September',
+      `Income: ${eur('2.000,00')}`,
+      `Expenses: ${eur('1.700,00')}`,
+      `Saved: ${eur('300,00')}`,
+      'Savings rate: 15%',
+    ]);
+    expect(trendSpokenValue(sep, ES)).toBe(
+      `Income ${eur('2.000,00')}, expenses ${eur('1.700,00')}, saved ${eur('300,00')}, savings rate 15 percent`,
+    );
+  });
+
+  it('a negative month and a month without income', () => {
+    const aug: MonthTotals = { ...sep, month: { year: 2026, month: 8 }, expenseCents: 215_000, savedCents: -15_000, rate: { rounded: -8, sign: -1 } };
+    expect(trendDetailLines(aug, ES).slice(3)).toEqual([`Saved: -${eur('150,00')}`, 'Savings rate: -8%']);
+    expect(trendSpokenValue(aug, ES)).toContain(`saved minus ${eur('150,00')}, savings rate minus 8 percent`);
+    const jul: MonthTotals = { ...sep, month: JUL, incomeCents: 0, expenseCents: 40_000, savedCents: -40_000, rate: null };
+    expect(trendDetailLines(jul, ES)[4]).toBe('Savings rate: No income');
+    expect(trendSpokenValue(jul, ES)).toContain('savings rate no income');
+  });
+
+  it('a month without data', () => {
+    const jun: MonthTotals = { month: { year: 2026, month: 6 }, hasData: false, incomeCents: 0, expenseCents: 0, savedCents: 0, rate: null };
+    expect(trendDetailLines(jun, ES)).toEqual(['June', 'No data']);
+    expect(trendSpokenValue(jun, ES)).toBe('No data');
+  });
 });

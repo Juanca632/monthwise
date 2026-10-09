@@ -4,9 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDatabase } from '@/data/DatabaseProvider';
 import { StorageError } from '@/data/errors';
 import { rowsInMonth, type LedgerRow } from '@/domain/ledger';
-import { addMonths, compareMonths, MIN_MONTH, previous, type YearMonth } from '@/domain/month';
+import { previous, type YearMonth } from '@/domain/month';
 import { compareCategories, type CategoryComparison } from '@/domain/categoryChanges';
 import { computePace, type Pace } from '@/domain/pace';
+import { computeTrend, trendStart, type Trend } from '@/domain/trend';
 import { reportError } from '@/lib/reportError';
 import { dropPace, takePace } from '@/state/handedPace';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
@@ -21,14 +22,10 @@ export type Insights = {
   pace: Pace | null;
   /** `null` until the read answers. */
   categories: CategoryComparison | null;
+  /** `null` until the read answers. */
+  trend: Trend | null;
   retry(): void;
 };
-
-/** The first month of the savings trend. T039 replaces this with the domain's `trendStart`. */
-function trendStart(selected: YearMonth): YearMonth {
-  const start = addMonths(selected, -5);
-  return compareMonths(start, MIN_MONTH) < 0 ? MIN_MONTH : start;
-}
 
 const keyOf = (m: YearMonth) => `${m.year}-${m.month}`;
 const NO_ROWS: readonly LedgerRow[] = [];
@@ -123,5 +120,7 @@ export function useInsights(): Insights {
   );
   const pace = readPace ?? (status === 'loading' ? (takePace(selected)?.pace ?? null) : null);
 
-  return { status, rows, pace, categories, retry };
+  const trend = useMemo(() => (ready ? computeTrend(selected, rows) : null), [ready, selected, rows]);
+
+  return { status, rows, pace, categories, trend, retry };
 }

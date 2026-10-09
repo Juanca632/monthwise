@@ -361,8 +361,9 @@ the summary; scenario 6 depends on User Story 1 and scenario 7 on User Story 3.
   categories with their amounts only (ordered largest first, ties alphabetically), no change
   columns, and the same "No data from ... to compare" sentence as FR-003 rule 2.
 - **FR-011**: The six-month trend MUST show the selected month and the five months before it, in
-  calendar order, never before January 2000. For each month it shows income, expenses and saved; a
-  negative saved amount is shown below zero with a minus sign. Months with no data are marked "No
+  calendar order, never before January 2000. For each month it draws what was saved, one bar per
+  month (developer, 2026-10-09: income and expenses are in the month's detail, FR-013, so the chart
+  stays simple); a negative saved amount is drawn below zero, and its detail shows a minus sign. Months with no data are marked "No
   data". Each month is a tap target named by its month name (for example "September").
 - **FR-012**: The trend MUST show a headline "Saved €X in N months · P%" ("1 month" when N is 1),
   where X is the total saved over the months shown (negative with a minus sign), N the number of

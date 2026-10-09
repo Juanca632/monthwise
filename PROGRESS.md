@@ -14,7 +14,11 @@ commit (CLAUDE.md, "Session handoff").
   2. Block 5 (T031-T036, US2 categories) done, acceptance tests green. Code review (Sonnet,
      2026-10-09): no CRITICAL or MAJOR; two edge tests added; accepted MINOR: the category cast
      relies on the database CHECK.
-  3. Phone check of block 5, then block 6 (T037-T043, US3 savings trend).
+  3. Done (2026-10-09): block 5 phone check after the redesign, all fine.
+  4. Block 6 (T037-T043, US3 savings trend). The trend was simplified first (developer,
+     2026-10-09): one saved bar per month, no legend; spec FR-011, contract Section 3 and design.md
+     updated. Done: T037 (US3 acceptance tests, in `pending.js`), T038, T039, T040. Next: T041
+     (`TrendChart`), T042 (section, View month), T043. Then the code reviewer (money: trend.ts).
 - Notes:
   - From 2026-10-09 Claude writes all the code (AGENTS.md); T024 was written by Claude.
   - US1 acceptance gaps accepted on 2026-10-09: the month control checks moved to US4 (T044 says
@@ -39,9 +43,7 @@ commit (CLAUDE.md, "Session handoff").
 ## Phone checks pending
 
 - 001: APK verification T052-T053.
-- 002, block 5 (after the redesign): the categories card as a compact list (icon, name, amount;
-  change line and pill below), first 3 rows with Show all / Show less, "nothing last month"
-  instead of a percent, the pace day detail without "New"; large text wraps.
+- 002: none open (block 5 checked 2026-10-09).
 
 ## Environment notes
 

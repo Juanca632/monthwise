@@ -419,15 +419,15 @@ each row's amounts, change, percent and order match a hand calculation.
 **Independent Test**: six months of income and expenses (one negative, one empty) → every month's
 values, the headline and the tapped details match a hand calculation.
 
-- [ ] T037 [US3] Run the `spec-tester` agent (`model: "sonnet"`) for `US3`
+- [x] T037 [US3] Run the `spec-tester` agent (`model: "sonnet"`) for `US3`
   (`tests/acceptance/002/US3.test.tsx`, other selected months through `selectMonth`); add it to
   `pending.js`; handle its report as in T016.
-- [ ] T038 [P] [US3] Add the trend texts to `src/format/insights.ts`: headline (`Saved <saved
+- [x] T038 [P] [US3] Add the trend texts to `src/format/insights.ts`: headline (`Saved <saved
   amount> in N months · <rate>`, `1 month`), its spoken label, short month names, month detail
   lines (`September`, `Income: …`, `Expenses: …`, `Saved: …`, `Savings rate: …`, or `No data`), and
   each month button's spoken value (contracts/ui-screens.md Section 3). Unit tests in
   `tests/unit/insightsText.test.ts`. Depends on T039's types (write the type first).
-- [ ] T039 [P] [US3] Implement `trendStart` and `computeTrend` in `src/domain/trend.ts`
+- [x] T039 [P] [US3] Implement `trendStart` and `computeTrend` in `src/domain/trend.ts`
   (contracts/insights-domain.md, data-model.md "Trend"): months from `trendStart(selected)` (five
   before, never before January 2000) to `selected` in calendar order; per month `hasData`,
   income, expenses, saved, rate (`null` with no income); `monthsWithData`, `totalSavedCents`
@@ -436,7 +436,7 @@ values, the headline and the tapped details match a hand calculation.
   `trendStart`. Unit tests in `tests/unit/trend.test.ts`: US3 scenarios 1-9 with literal cents and
   percents, the FR-022 bound (six months of 99_999_999_999 cents each), all months without data,
   and the T008 literals.
-- [ ] T040 [US3] Return `trend: Trend | null` from `src/hooks/useInsights.ts`. Extend
+- [x] T040 [US3] Return `trend: Trend | null` from `src/hooks/useInsights.ts`. Extend
   `tests/component/useInsights.test.tsx` (trend ready with the rest, the range read starts at
   `trendStart`).
 - [ ] T041 [US3] Implement `src/ui/charts/TrendChart.tsx` (design.md): one column per month with
