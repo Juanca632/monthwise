@@ -315,9 +315,11 @@ function DayMarks({ width, days, colors }: { width: number; days: number; colors
   const { type } = useTheme();
   const LABEL_SLOT = 48;
   return (
-    <View style={styles.marks} importantForAccessibility="no-hide-descendants">
+    <View style={styles.marks}>
       {/* Sets the row's height to one label line at the current font scale. */}
-      <Text style={[type.legend, styles.spacer]}> </Text>
+      <Text style={[type.legend, styles.spacer]} importantForAccessibility="no">
+        {' '}
+      </Text>
       {width > 0 &&
         DAY_MARKS.map((day) => {
           const x = xOfDay(day, width, days);

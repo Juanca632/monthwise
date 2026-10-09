@@ -4,7 +4,7 @@
  * router stack, and owns every mock they need. Import it before any '@/...' module: the mocks
  * below are registered on import.
  */
-import { act, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { createContext, useEffect, useLayoutEffect, useState, type ComponentType } from 'react';
 import { AccessibilityInfo, Modal } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -22,6 +22,7 @@ import { ToastProvider } from '@/state/ToastContext';
 
 import { openTestDatabase, type TestDatabase } from './betterSqliteAdapter';
 import { ignoreListBatchingWarnings } from './listWarnings';
+import { dragPaceChartVertically, touchPaceChart } from './paceGesture';
 
 // ---------------------------------------------------------------------------------------------
 // Mocks. Jest hoists these above the imports; their factories only read the `mock*` objects
@@ -146,12 +147,26 @@ const notWiredYet = (member: string, task: string) => async () => {
   throw new Error(`${member} is not wired yet (${task})`);
 };
 
+/** The pace chart's touch width in tests: 10 dp per day (contracts/test-harness.md). */
+const PACE_CHART_WIDTH = 310;
+
+/** Jest has no layout, so the harness gives a rendered pace chart its width. */
+function layoutPaceChart() {
+  const chart = screen.queryByTestId('pace-chart');
+  if (!chart) return;
+  fireEvent(chart, 'layout', {
+    nativeEvent: { layout: { x: 0, y: 0, width: PACE_CHART_WIDTH, height: 180 } },
+  });
+}
+
 /** Flushes promise chains and the state updates they cause; the SQL adapter answers in microtasks. */
 async function settle() {
   for (let round = 0; round < 3; round++) {
     await act(async () => {
       for (let i = 0; i < 20; i++) await Promise.resolve();
     });
+    // Same width each time, so a chart that already has it does not re-render.
+    layoutPaceChart();
   }
 }
 
@@ -378,10 +393,20 @@ export async function renderApp(options: RenderAppOptions): Promise<AppHandle> {
     },
     settle,
     paceChart: {
-      touch: notWiredYet('paceChart.touch', 'T029'),
-      tapAt: notWiredYet('paceChart.tapAt', 'T029'),
-      dragVertically: notWiredYet('paceChart.dragVertically', 'T029'),
-      width: 310,
+      // gesture-handler's jest-utils cannot drive the pan's touch callbacks (paceGesture.ts).
+      async touch(xs) {
+        await touchPaceChart(xs.map((x) => ({ x })));
+        await settle();
+      },
+      async tapAt(x) {
+        await touchPaceChart([{ x }]);
+        await settle();
+      },
+      async dragVertically(x) {
+        await dragPaceChartVertically(x);
+        await settle();
+      },
+      width: PACE_CHART_WIDTH,
     },
     unmount: () => {
       close();

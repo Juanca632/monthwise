@@ -1,13 +1,13 @@
 // The harness installs its mocks on import, so it comes before any '@/...' module.
 import { renderApp } from '../helpers/app';
 
-import { act, screen } from '@testing-library/react-native';
+import { act, fireEvent, screen } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
 
 import type { TransactionInput } from '@/domain/validation';
 
-// The harness's own guarantees (contracts/test-harness.md) for what exists before US1: the pace
-// card and the month picker come later, with the members that drive them.
+// The harness's own guarantees (contracts/test-harness.md). The month picker comes with US4,
+// with the member that drives it.
 
 const eur = (amount: string) => `${amount} €`;
 const expense = (amountCents: number, date: string, note: string | null = null): TransactionInput => ({
@@ -106,12 +106,52 @@ describe('app harness', () => {
     subscription.remove();
   });
 
-  it('keeps the chart and picker members as stubs until their stories wire them', async () => {
+  it('keeps the picker member as a stub until US4 wires it', async () => {
     const app = await renderApp({ today: '2026-10-12' });
-    expect(app.paceChart.width).toBe(310);
-    await expect(app.paceChart.touch([75])).rejects.toThrow('not wired yet');
-    await expect(app.paceChart.tapAt(75)).rejects.toThrow('not wired yet');
-    await expect(app.paceChart.dragVertically(75)).rejects.toThrow('not wired yet');
     await expect(app.tapOutsidePicker()).rejects.toThrow('not wired yet');
+  });
+});
+
+describe('app harness, pace chart (US1)', () => {
+  // Day N's band center at the 310 dp harness width: 10 dp per day.
+  const dayX = (day: number) => (day - 0.5) * 10;
+  const anyDay = () => screen.queryByText(/^Day \d+$/);
+
+  async function openInsights() {
+    const app = await renderApp({
+      today: '2026-10-12',
+      transactions: [expense(10_000, '2026-10-05'), expense(5_000, '2026-09-05')],
+    });
+    fireEvent.press(screen.getByRole('button', { name: /^Spending pace, / }));
+    await app.settle();
+    return app;
+  }
+
+  it('the pace card opens Insights, and back returns to the summary', async () => {
+    const app = await openInsights();
+    expect(app.screen).toBe('insights');
+    expect(app.paceChart.width).toBe(310);
+    await app.back();
+    expect(app.screen).toBe('summary');
+  });
+
+  it('a touch at one position is a tap', async () => {
+    const app = await openInsights();
+    await app.paceChart.tapAt(dayX(8));
+    expect(screen.getByText('Day 8')).toBeTruthy();
+    await app.paceChart.touch([dayX(8)]);
+    expect(anyDay()).toBeNull();
+  });
+
+  it('a touch across two days is a drag', async () => {
+    const app = await openInsights();
+    await app.paceChart.touch([dayX(3), dayX(5)]);
+    expect(screen.getByText('Day 5')).toBeTruthy();
+  });
+
+  it('dragVertically changes nothing', async () => {
+    const app = await openInsights();
+    await app.paceChart.dragVertically(dayX(8));
+    expect(anyDay()).toBeNull();
   });
 });

@@ -350,7 +350,7 @@ drag a day → both amounts for that day.
   error and retry, the detail shown, replaced and hidden through the reducer, the selection reset
   after `selectMonth`, back to the summary shows the same month, no `Add`, `Edit` or `Delete`
   element on the screen, font scale 2, dark palette.
-- [ ] T029 [US1] Wire the harness's pace chart in `tests/helpers/app.tsx`: on each Insights render
+- [x] T029 [US1] Wire the harness's pace chart in `tests/helpers/app.tsx`: on each Insights render
   fire the `pace-chart` view's layout event with width 310; implement `paceChart.touch`, `tapAt`
   and `dragVertically` with `react-native-gesture-handler/jest-utils` (`getByGestureTestId(
   'pace-chart')`, `fireGestureHandler` with touch events at the given x and a constant y). First
