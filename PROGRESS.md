@@ -24,9 +24,13 @@ commit (CLAUDE.md, "Session handoff").
 
 ## Open decisions
 
-- Spec-tester gap (US1): the card's loading state (label `Loading`, not tappable) cannot be seen
-  through the test harness, because `renderApp` resolves after loading. Proposal: accept it, since
-  T025's component tests cover it. Waiting for the developer's OK.
+- None.
+
+## Decided
+
+- Spec-tester gap (US1), accepted 2026-10-09: the card's loading state (label `Loading`, not
+  tappable) cannot be seen through the test harness, because `renderApp` resolves after loading.
+  T025's component tests (`tests/component/paceCard.test.tsx`) cover it instead.
 
 ## Phone checks pending
 
