@@ -303,7 +303,7 @@ drag a day → both amounts for that day.
   scroll. If the blocking
   relation delays scrolling noticeably, stop and bring it to the developer (alternatives: a
   `Gesture.Native()` scroll with `requireExternalGestureToFail`).
-- [ ] T024 [P] [US1] (developer writes; Claude reviews) Implement `src/ui/ChartDetail.tsx`: the
+- [x] T024 [P] [US1] (written by Claude at the developer's request, 2026-10-09) Implement `src/ui/ChartDetail.tsx`: the
   detail lines under a chart, one `Text` per line (contracts/ui-screens.md), an optional action
   button slot (US3's **View month**), appear and disappear motion per design.md with
   `useReduceMotion`. Tests in `tests/component/chartDetail.test.tsx`: lines as separate texts,
