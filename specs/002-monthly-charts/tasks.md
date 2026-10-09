@@ -360,7 +360,7 @@ drag a day → both amounts for that day.
   `tests/component/appHarness.test.tsx`: card press → `screen === 'insights'`, `back()` →
   summary, a one-position touch is a tap, a two-day touch is a drag, `dragVertically` changes
   nothing.
-- [ ] T030 [US1] Remove `US1.test.tsx` from `pending.js` and run `npx jest
+- [x] T030 [US1] Remove `US1.test.tsx` from `pending.js` and run `npx jest
   tests/acceptance/002/US1.test.tsx` until green. A failure is either a bug (fix the code) or a
   spec/contract gap (stop, show the developer, fix the spec or contract first, then the test).
   Record any accepted gap fix in the commit message.
@@ -471,7 +471,9 @@ year, pick a month; pick another on Insights and go back; tap a trend month's **
 
 - [ ] T044 [US4] Run the `spec-tester` agent (`model: "sonnet"`) for `US4`
   (`tests/acceptance/002/US4.test.tsx`); tell it `tapOutsidePicker` is not wired until T051; add
-  it to `pending.js`; handle its report as in T016.
+  it to `pending.js`; handle its report as in T016. Tell it to cover what US1's tests left to
+  US4 (accepted 2026-10-09): the month control on Insights and on the summary (role `button`,
+  label `October 2026`, hint "Changes the month") after opening Insights from the card.
 - [ ] T045 [P] [US4] Implement `pickerYear(year, selected, today)` in `src/domain/month.ts`
   (data-model.md "Month picker"): twelve months January first, `selected` flag, `available` when
   not after the current month, `canGoPrevious` false on 2000, `canGoNext` false on today's year.

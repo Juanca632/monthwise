@@ -7,23 +7,19 @@ commit (CLAUDE.md, "Session handoff").
 ## Now
 
 - Feature: `002` Monthly charts, branch `002-monthly-charts` (pushed to `origin`).
-- Done: blocks 1-3, block 4a (T001-T022) and, of block 4b, T023 to T027 (see
-  `specs/002-monthly-charts/tasks.md`).
+- Done: blocks 1-3, 4a and 4b (T001-T030, see `specs/002-monthly-charts/tasks.md`). US1 is
+  complete in code; its acceptance tests are green and out of `pending.js`.
 - Next:
-  0. Done (2026-10-09): lighter workflow in `AGENTS.md` ("How we work"), `CLAUDE.md`, the
-     `sdd-reviewer` and `design-reviewer` agents, and the plan and tasks templates. No
-     constitution change was needed. Everything applies to the rest of 002; only its existing
-     docs are not rewritten. Block 4b is UI: no code reviewer. T024 (`ChartDetail.tsx`) is the
-     developer-written piece; T056 (design review of the implemented UI) is dropped.
-  1. Done (2026-10-09): block 4a reviewer (Sonnet). No CRITICAL or MAJOR findings. Fixed: the
-     `dayDetail` guard for days below 1. Accepted MINORs: the two hook reads are not one SQL
-     snapshot (a later focus refetch corrects it), no unmount guard (same as 001), a month after
-     today is treated as past (unreachable: the picker stops at today).
-  2. Block 4b, remaining: T028 (Insights pace section), T029 (harness `paceChart.*`,
-     reusing `tests/helpers/paceGesture.ts`), T030 (remove `US1.test.tsx` from
-     `tests/acceptance/002/pending.js` and make it green). UI block: no code reviewer.
-     Note: gesture-handler 2.32's `fireGestureHandler` never calls `onTouches*`, so tests drive the
-     pace pan's touch callbacks directly (`tests/helpers/paceGesture.ts`), as T029 allows.
+  1. Phone check of block 4b (developer, Expo Go): see "Phone checks pending" below. Fix what
+     comes up in fine-tuning mode (AGENTS.md).
+  2. Block 5 (T031-T036): Categories vs last month (US2), starting with the `spec-tester` (T031).
+- Notes:
+  - From 2026-10-09 Claude writes all the code (AGENTS.md); T024 was written by Claude.
+  - US1 acceptance gaps accepted on 2026-10-09: the month control checks moved to US4 (T044 says
+    so); the edge-case test's day-16 September amount corrected to 80,00 € (by day 16, FR-007).
+  - gesture-handler 2.32's `fireGestureHandler` never calls `onTouches*`, so tests drive the pace
+    pan's touch callbacks directly (`tests/helpers/paceGesture.ts`).
+  - Insights' Categories and Savings trend sections show only their titles until US2 and US3.
 
 ## Open decisions
 
@@ -38,7 +34,11 @@ commit (CLAUDE.md, "Session handoff").
 ## Phone checks pending
 
 - 001: APK verification T052-T053.
-- 002: block 4b checks listed in tasks.md (T023 gestures, TalkBack days).
+- 002, block 4b: the card on the summary (look, loading, tap opens Insights); Insights pace
+  section; on the chart: a tap selects and a second tap hides, a drag follows the finger, a
+  vertical swipe that starts on the chart scrolls with no visible delay, after a tap the screen
+  still scrolls, a horizontal drag does not scroll, no worklet error; TalkBack reads each day;
+  the reveal motion and haptics. If the scroll waits noticeably, see T023's alternative.
 
 ## Environment notes
 
