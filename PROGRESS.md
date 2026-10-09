@@ -17,7 +17,7 @@ commit (CLAUDE.md, "Session handoff").
   3. Done (2026-10-09): block 5 phone check after the redesign, all fine.
   4. Block 6 (T037-T043, US3 savings trend) done, acceptance tests green. The trend was
      simplified first (developer, 2026-10-09): one saved bar per month, no legend. Code review
-     (money: `src/domain/trend.ts`) runs before the phone check.
+     (Sonnet, 2026-10-09): no CRITICAL or MAJOR; a year-boundary test added.
   5. Then block 7 (T044-T052, US4 month picker). Its spec-tester (T044) must also cover the month
      control checks that US1 and US3 left to US4.
 - Notes:

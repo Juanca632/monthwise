@@ -120,6 +120,18 @@ describe('computeTrend: edges', () => {
     expect(computeTrend(OCT, [])).toMatchObject({ monthsWithData: 0, totalSavedCents: 0, rate: null });
   });
 
+  it('crosses a year boundary: February 2026 starts in September 2025', () => {
+    const trend = computeTrend({ year: 2026, month: 2 }, [income('2025-12-01', 1_000), income('2026-01-01', 2_000)]);
+    expect(trend.months.map((m) => [m.month.year, m.month.month, m.incomeCents])).toEqual([
+      [2025, 9, 0],
+      [2025, 10, 0],
+      [2025, 11, 0],
+      [2025, 12, 1_000],
+      [2026, 1, 2_000],
+      [2026, 2, 0],
+    ]);
+  });
+
   it('ignores rows outside the six months', () => {
     const trend = computeTrend(OCT, [income('2026-04-30', 1_000), income('2026-11-01', 1_000), income('2026-05-01', 500)]);
     expect(trend).toMatchObject({ monthsWithData: 1, totalSavedCents: 500 });

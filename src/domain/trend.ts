@@ -48,6 +48,7 @@ export function computeTrend(selected: YearMonth, rows: readonly LedgerRow[]): T
 
   for (const row of rows) {
     const ym = monthOf(row.date);
+    // Also keeps the index below inside `months`.
     if (compareMonths(ym, first) < 0 || compareMonths(ym, selected) > 0) continue;
     const totals = months[(ym.year - first.year) * 12 + (ym.month - first.month)];
     // "No data" means no rows of any type, as everywhere in 002.
