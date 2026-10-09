@@ -115,25 +115,17 @@ const isCurrentComparison = (comparison: CategoryComparison): boolean =>
     ? comparison.isCurrent
     : comparison.kind === 'changes' && comparison.comparisonDay !== null;
 
-/** The column titles: `This month`, `Last month`, `Change`; one title when there is no data. */
-export function categoryColumnTitles(comparison: CategoryComparison, selected: YearMonth): string[] {
-  if (comparison.kind === 'noSpending') return [];
-  const names = monthNames(selected, isCurrentComparison(comparison));
-  return comparison.kind === 'noPreviousData' ? [names.current] : [names.current, names.previous, 'Change'];
-}
-
 export type CategoryRowText = {
   label: string;
   current: string;
-  /** Absent in the "no data" case, as the change cells. */
-  previous?: string;
+  /** `+60,00 € vs last month`; absent in the "no data" case, as the percent. */
   change?: string;
   percent?: string;
   /** The row is one accessible element with this label. */
   accessibilityLabel: string;
 };
 
-/** One row's cells and its spoken label, e.g. `Food, this month 100,00 €, last month 90,00 €, plus 10,00 €, plus 11 percent`. */
+/** One row's texts and its spoken label, e.g. `Food, this month 100,00 €, last month 90,00 €, plus 10,00 €, plus 11 percent`. */
 export function categoryRowTexts(
   comparison: CategoryComparison,
   selected: YearMonth,
@@ -155,13 +147,14 @@ export function categoryRowTexts(
     });
   }
 
+  const against = isCurrentComparison(comparison) ? 'last month' : monthName(previousMonthOf(selected));
   return comparison.rows.map((row) => {
     const label = labelFor('expense', row.category);
     return {
       label,
       current: formatMoney(row.currentCents, tag),
-      previous: formatMoney(row.previousCents, tag),
-      change: formatSignedDifference(row.changeCents, tag),
+      // Last month's amount is only spoken (FR-008): the list stays one number per line.
+      change: `${formatSignedDifference(row.changeCents, tag)} vs ${against}`,
       percent: formatChangePercent(row.percent),
       accessibilityLabel: [
         label,

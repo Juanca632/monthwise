@@ -49,47 +49,49 @@ it('loading: a Loading indicator', () => {
   expect(screen.getByLabelText('Loading')).toBeTruthy();
 });
 
-it('no spending: the sentence, no rows, no titles, no Compared by label', () => {
+it('no spending: the sentence, no rows, no Compared by label', () => {
   renderCard({ kind: 'noSpending' });
   expect(screen.getByText('No spending to compare yet')).toBeTruthy();
   expect(screen.queryByText(/Compared by/)).toBeNull();
-  expect(screen.queryByText('This month', { includeHiddenElements: true })).toBeNull();
+  expect(screen.queryByText(/ vs /, { includeHiddenElements: true })).toBeNull();
 });
 
-it('current month with changes: titles, Compared by day 12, and one element per row', () => {
+it('current month: Compared by day 12, no column titles, one element per row with its change', () => {
   renderCard(currentChanges);
-  // Side by side: the titles are a row of their own, not inside the category's row.
-  expect(within(row(/^Food, /)).queryByText('This month', { includeHiddenElements: true })).toBeNull();
-  for (const title of ['This month', 'Last month', 'Change']) {
-    expect(screen.getByText(title, { includeHiddenElements: true })).toBeTruthy();
-  }
   expect(screen.getByText('Compared by day 12')).toBeTruthy();
+  for (const title of ['This month', 'Last month', 'Change']) {
+    expect(screen.queryByText(title, { includeHiddenElements: true })).toBeNull();
+  }
   const food = row('Food, this month 100,00 €, last month 90,00 €, plus 10,00 €, plus 11 percent');
   expect(food.props.accessible).toBe(true);
   expect(food.props.accessibilityRole).toBeUndefined();
+  const inside = within(food);
+  expect(inside.getByText('Food', { includeHiddenElements: true })).toBeTruthy();
+  expect(inside.getByText('100,00 €', { includeHiddenElements: true })).toBeTruthy();
+  expect(inside.getByText('+10,00 € vs last month', { includeHiddenElements: true })).toBeTruthy();
+  expect(inside.getByText('+11%', { includeHiddenElements: true })).toBeTruthy();
+  // Last month's amount is only spoken (FR-008).
+  expect(inside.queryByText('90,00 €', { includeHiddenElements: true })).toBeNull();
 });
 
-it('past month: month names as titles, no Compared by label, New and minus in the labels', () => {
+it('past month: the change line names the previous month; New and minus in the labels', () => {
   renderCard(pastChanges, AUG);
-  for (const title of ['August', 'July', 'Change']) {
-    expect(screen.getByText(title, { includeHiddenElements: true })).toBeTruthy();
-  }
   expect(screen.queryByText(/Compared by/)).toBeNull();
+  expect(screen.getByText('+60,00 € vs July', { includeHiddenElements: true })).toBeTruthy();
   expect(row('Leisure, August 40,00 €, July 0,00 €, plus 40,00 €, new')).toBeTruthy();
   expect(row('Transport, August 50,00 €, July 80,00 €, minus 30,00 €, minus 38 percent')).toBeTruthy();
   expect(screen.getByText('New', { includeHiddenElements: true })).toBeTruthy();
 });
 
-it('no data last month: the sentence, one title, this month only, no Compared by label', () => {
+it('no data last month: the sentence and this month only, no change line', () => {
   renderCard({ kind: 'noPreviousData', previousMonth: SEP, isCurrent: true, rows: [{ category: 'food', amountCents: 26_000 }] });
   expect(screen.getByText('No data from last month to compare')).toBeTruthy();
-  expect(screen.getByText('This month', { includeHiddenElements: true })).toBeTruthy();
-  expect(screen.queryByText('Last month', { includeHiddenElements: true })).toBeNull();
   expect(screen.queryByText(/Compared by/)).toBeNull();
+  expect(screen.queryByText(/ vs /, { includeHiddenElements: true })).toBeNull();
   expect(row('Food, this month 260,00 €')).toBeTruthy();
 });
 
-it('no data from a named month for a past month, its title the month name', () => {
+it('no data from a named month for a past month', () => {
   renderCard({ kind: 'noPreviousData', previousMonth: JUL, isCurrent: false, rows: [{ category: 'food', amountCents: 26_000 }] }, AUG);
   expect(screen.getByText('No data from July to compare')).toBeTruthy();
   expect(row('Food, August 260,00 €')).toBeTruthy();
@@ -100,7 +102,7 @@ it('rows are not tappable', () => {
   expect(screen.queryByRole('button')).toBeNull();
 });
 
-it('at font scale 2 with 999.999.999,99 € rows: values stack under their titles, nothing cut', () => {
+it('at font scale 2 with 999.999.999,99 € rows nothing is cut: texts wrap', () => {
   mockFontScale = 2;
   renderCard({
     kind: 'changes',
@@ -115,23 +117,8 @@ it('at font scale 2 with 999.999.999,99 € rows: values stack under their title
       },
     ],
   });
-  // Stacked: each row carries its own titles; the label does not change.
-  const food = row(/^Food, this month 999\.999\.999,99/);
-  expect(within(food).getByText('This month', { includeHiddenElements: true })).toBeTruthy();
-  expect(screen.getAllByText('This month', { includeHiddenElements: true })).toHaveLength(1);
+  expect(row(/^Food, this month 999\.999\.999,99/)).toBeTruthy();
   for (const t of screen.UNSAFE_getAllByType(RN.Text)) expect(t.props.numberOfLines).toBeUndefined();
-});
-
-it('long amounts stack even at the default font scale', () => {
-  renderCard({
-    kind: 'changes',
-    comparisonDay: null,
-    rows: [{ category: 'food', currentCents: 1_234_567, previousCents: 100, changeCents: 1_234_467, percent: { rounded: 1, sign: 1 } }],
-  }, AUG);
-  // `12.345,67 €` is 11 characters: the title row is not drawn, each value has its own title.
-  const food = row(/^Food, August 12\.345,67/);
-  expect(within(food).getByText('August', { includeHiddenElements: true })).toBeTruthy();
-  expect(screen.getAllByText('August', { includeHiddenElements: true })).toHaveLength(1);
 });
 
 it('uses the dark palette in dark mode', () => {

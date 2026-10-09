@@ -156,22 +156,23 @@ The screen reads its data again when it gets focus, when the month changes and o
 | Case | Shows |
 | --- | --- |
 | Neither month has expenses | `No spending to compare yet`, no rows |
-| Previous month has no data | `No data from last month to compare` (current month) or `No data from July to compare` (past month); one column title (`This month`, or the selected month's name for a past month, e.g. `August`); one row per category with that month's amount, largest first |
-| Otherwise | Column titles `This month`, `Last month`, `Change` for the current month, plus `Compared by day 12`; for a past month the month names, `August`, `July`, `Change`, and no "Compared by" label; one row per category |
+| Previous month has no data | `No data from last month to compare` (current month) or `No data from July to compare` (past month); one row per category with that month's amount, largest first |
+| Otherwise | For the current month `Compared by day 12` above the rows (none for a past month); one row per category |
+
+No column titles: each row says what it compares (developer, 2026-10-09, a compact list).
 
 - A row shows, each as its own Text: the category label (001's labels, e.g. `Food`), this
-  month's amount (`260,00 €`), last month's amount (`200,00 €`), the signed amount (`+60,00 €`)
-  and the change percent (`+30%`, `New`). In the "no data" case only the label and this month's
-  amount.
+  month's amount (`260,00 €`), the change line `+60,00 € vs last month` (current month) or
+  `+60,00 € vs July` (past month: the previous month's name), and the change percent (`+30%`,
+  `New`). In the "no data" case only the label and this month's amount. Last month's amount is
+  not shown; the accessible label gives it.
 - Each row is one accessible element. Current month: `Food, this month 100,00 €, last month
   90,00 €, plus 10,00 €, plus 11 percent`. Past month (August against July): `Food, August
   260,00 €, July 200,00 €, plus 60,00 €, plus 30 percent`; with `New`: `Leisure, August 40,00 €,
   July 0,00 €, plus 40,00 €, new`. The "no data" case: `Food, this month 260,00 €` or `Food,
   August 260,00 €`.
 - Rows are not tappable.
-- At large text sizes, or when an amount is too long for the columns (design.md, Categories),
-  the column titles move into each row, one above each value, with the same texts; the separate
-  title row is not drawn. The row's accessible label does not change.
+- At large text sizes the row's texts wrap; nothing moves to another layout.
 
 ### Section 3: Savings trend (FR-011 to FR-013)
 
@@ -210,7 +211,7 @@ The screen reads its data again when it gets focus, when the month changes and o
 | Month picker | `Choose month`, `Previous year`, `Next year`, `This month`, `Close`; short month names `Jan` … `Dec` |
 | Insights | `Insights`, `Back`, `Spending pace`, `Categories vs last month`, `Savings trend`, `Try again`, `Couldn't load your data.` |
 | Pace detail | `Day N`, `<Month>: <amount>`, `<signed amount> · <change percent>` |
-| Categories | `This month`, `Last month`, `Change` (month names for a past month), `Compared by day N`, `New`, `No spending to compare yet`, `No data from last month to compare`, `No data from <Month> to compare` |
+| Categories | `<signed amount> vs last month`, `<signed amount> vs <Month>`, `Compared by day N`, `New`, `No spending to compare yet`, `No data from last month to compare`, `No data from <Month> to compare` |
 | Trend | `Saved <saved amount> in N months · <rate>`, legend `Income`, `Expenses`, `Saved`, `No data`, `No data yet`, `Income: `, `Expenses: `, `Saved: `, `Savings rate: `, `View month` |
 | Card hint | "Opens Insights" |
 

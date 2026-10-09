@@ -47,6 +47,13 @@ async function openOctober(transactions: TransactionInput[]) {
 /** The accessible row of a category, found by its full accessibility label. */
 const row = (label: string) => screen.getByLabelText(t(label));
 
+/** The compact list has no column titles (developer, 2026-10-09). */
+const expectNoColumnTitles = () => {
+  expect(screen.queryByText('This month')).toBeNull();
+  expect(screen.queryByText('Last month')).toBeNull();
+  expect(screen.queryByText('Change')).toBeNull();
+};
+
 /** Category names in the order the rows appear on screen. */
 const rowOrder = (period: 'August' | 'this month') =>
   screen
@@ -55,7 +62,7 @@ const rowOrder = (period: 'August' | 'this month') =>
 
 describe('US2: categories vs last month', () => {
   describe('acceptance scenarios (past month, whole months)', () => {
-    it('US2-AS1: Food 200.00 -> 260.00 shows 260,00 €, 200,00 €, +60,00 € and +30%', async () => {
+    it('US2-AS1: Food 200.00 -> 260.00 shows 260,00 €, "+60,00 € vs July" and +30%, not last month amount', async () => {
       await openAugust([
         expense('2026-07-05', 20_000),
         expense('2026-08-02', 10_000),
@@ -64,35 +71,37 @@ describe('US2: categories vs last month', () => {
       const food = within(row('Food, August 260,00 €, July 200,00 €, plus 60,00 €, plus 30 percent'));
       expect(food.getByText('Food')).toBeTruthy();
       expect(food.getByText(t('260,00 €'))).toBeTruthy();
-      expect(food.getByText(t('200,00 €'))).toBeTruthy();
-      expect(food.getByText(t('+60,00 €'))).toBeTruthy();
+      expect(food.queryByText(t('200,00 €'))).toBeNull(); // only in the accessibility label
+      expect(food.getByText(t('+60,00 € vs July'))).toBeTruthy();
       expect(food.getByText(t('+30%'))).toBeTruthy();
+      expectNoColumnTitles();
     });
 
-    it('US2-AS2: Transport 80.00 -> 50.00 shows -30,00 € and -38% (-37.5% rounds away from zero)', async () => {
+    it('US2-AS2: Transport 80.00 -> 50.00 shows "-30,00 € vs July" and -38% (-37.5% rounds away from zero)', async () => {
       await openAugust([expense('2026-07-05', 8_000, 'transport'), expense('2026-08-05', 5_000, 'transport')]);
       const transport = within(
         row('Transport, August 50,00 €, July 80,00 €, minus 30,00 €, minus 38 percent'),
       );
-      expect(transport.getByText(t('-30,00 €'))).toBeTruthy();
+      expect(transport.getByText(t('-30,00 € vs July'))).toBeTruthy();
       expect(transport.getByText(t('-38%'))).toBeTruthy();
     });
 
-    it('US2-AS3: Leisure with no expenses last month shows +40,00 € and "New" instead of a percent', async () => {
+    it('US2-AS3: Leisure with no expenses last month shows "+40,00 € vs July" and "New" instead of a percent', async () => {
       await openAugust([expense('2026-07-05', 1_000), expense('2026-08-09', 4_000, 'leisure')]);
       const leisure = within(row('Leisure, August 40,00 €, July 0,00 €, plus 40,00 €, new'));
-      expect(leisure.getByText(t('0,00 €'))).toBeTruthy();
-      expect(leisure.getByText(t('+40,00 €'))).toBeTruthy();
+      expect(leisure.getByText(t('40,00 €'))).toBeTruthy();
+      expect(leisure.queryByText(t('0,00 €'))).toBeNull(); // last month amount is not visible text
+      expect(leisure.getByText(t('+40,00 € vs July'))).toBeTruthy();
       expect(leisure.getByText('New')).toBeTruthy();
       expect(leisure.queryByText(/%/)).toBeNull();
     });
 
-    it('US2-AS4: Health 25.00 last month and nothing this month shows 0,00 €, -25,00 € and -100%', async () => {
+    it('US2-AS4: Health 25.00 last month and nothing this month shows 0,00 €, "-25,00 € vs July" and -100%', async () => {
       await openAugust([expense('2026-07-05', 2_500, 'health'), expense('2026-08-05', 1_000)]);
       const health = within(row('Health, August 0,00 €, July 25,00 €, minus 25,00 €, minus 100 percent'));
       expect(health.getByText(t('0,00 €'))).toBeTruthy();
-      expect(health.getByText(t('25,00 €'))).toBeTruthy();
-      expect(health.getByText(t('-25,00 €'))).toBeTruthy();
+      expect(health.queryByText(t('25,00 €'))).toBeNull();
+      expect(health.getByText(t('-25,00 € vs July'))).toBeTruthy();
       expect(health.getByText(t('-100%'))).toBeTruthy();
     });
 
@@ -118,7 +127,8 @@ describe('US2: categories vs last month', () => {
       expect(rowOrder('August')).toEqual(['Food', 'Housing', 'Leisure', 'Bills', 'Health', 'Transport']);
       // A zero change has no sign.
       const bills = within(row('Bills, August 100,00 €, July 100,00 €, 0,00 €, 0 percent'));
-      expect(bills.getByText(t('0,00 €'))).toBeTruthy();
+      expect(bills.getByText(t('100,00 €'))).toBeTruthy();
+      expect(bills.getByText(t('0,00 € vs July'))).toBeTruthy();
       expect(bills.getByText(t('0%'))).toBeTruthy();
     });
 
@@ -148,22 +158,25 @@ describe('US2: categories vs last month', () => {
       expect(rowOrder('this month')).toEqual(['Food', 'Bills', 'Transport']);
       const food = within(row('Food, this month 100,00 €'));
       expect(food.getByText(t('100,00 €'))).toBeTruthy();
-      // One column title, no change columns, no "Compared by" label.
-      expect(screen.getByText('This month')).toBeTruthy();
-      expect(screen.queryByText('Last month')).toBeNull();
-      expect(screen.queryByText('Change')).toBeNull();
+      // Label and amount only: no change line, no percent, no titles, no "Compared by" label.
+      expect(food.getByText('Food')).toBeTruthy();
+      expect(food.queryByText(/ vs /)).toBeNull();
+      expect(food.queryByText(/%/)).toBeNull();
+      expectNoColumnTitles();
       expect(screen.queryByText(/^Compared by day/)).toBeNull();
       expect(screen.queryByText(/^[+\-−]\d/)).toBeNull();
       expect(screen.queryByText('New')).toBeNull();
     });
 
-    it('US2-AS7: past month without previous data names that month and uses it as the column title', async () => {
+    it('US2-AS7: past month without previous data names that month in the sentence, with amounts only', async () => {
       await openAugust([expense('2026-08-02', 26_000, 'food'), expense('2026-08-03', 4_000, 'leisure')]);
       expect(screen.getAllByText(t('No data from July to compare'))).toHaveLength(2);
       expect(rowOrder('August')).toEqual(['Food', 'Leisure']);
-      expect(within(row('Food, August 260,00 €')).getByText(t('260,00 €'))).toBeTruthy();
-      expect(screen.queryByText('Change')).toBeNull();
-      expect(screen.queryByText('This month')).toBeNull();
+      const food = within(row('Food, August 260,00 €'));
+      expect(food.getByText(t('260,00 €'))).toBeTruthy();
+      expect(food.queryByText(/ vs /)).toBeNull();
+      expect(food.queryByText(/%/)).toBeNull();
+      expectNoColumnTitles();
       expect(screen.queryByText(/^Compared by day/)).toBeNull();
     });
 
@@ -173,7 +186,7 @@ describe('US2: categories vs last month', () => {
       // Once in the pace section and once in the categories section.
       expect(screen.getAllByText(t('No spending to compare yet'))).toHaveLength(2);
       expect(screen.queryAllByLabelText(/, August \d/)).toHaveLength(0);
-      expect(screen.queryByText('Change')).toBeNull();
+      expectNoColumnTitles();
     });
 
     it('US2-AS8: also when the previous month has no data at all', async () => {
@@ -183,7 +196,7 @@ describe('US2: categories vs last month', () => {
       expect(screen.queryAllByLabelText(/, August \d/)).toHaveLength(0);
     });
 
-    it('US2-AS9: current month is compared by day 12: 100,00 € against 90,00 € shows +10,00 €, +11% and "Compared by day 12"', async () => {
+    it('US2-AS9: current month is compared by day 12: 100,00 € against 90,00 € shows "+10,00 € vs last month", +11% and "Compared by day 12"', async () => {
       await openOctober([
         expense('2026-10-03', 6_000, 'food'),
         expense('2026-10-12', 4_000, 'food'), // October by day 12: 100.00
@@ -192,15 +205,14 @@ describe('US2: categories vs last month', () => {
         expense('2026-09-20', 17_000, 'food'), // September in all: 260.00
       ]);
       expect(screen.getByText('Compared by day 12')).toBeTruthy();
-      expect(screen.getByText('This month')).toBeTruthy();
-      expect(screen.getByText('Last month')).toBeTruthy();
-      expect(screen.getByText('Change')).toBeTruthy();
+      expectNoColumnTitles();
       const food = within(
         row('Food, this month 100,00 €, last month 90,00 €, plus 10,00 €, plus 11 percent'),
       );
+      expect(food.getByText('Food')).toBeTruthy();
       expect(food.getByText(t('100,00 €'))).toBeTruthy();
-      expect(food.getByText(t('90,00 €'))).toBeTruthy();
-      expect(food.getByText(t('+10,00 €'))).toBeTruthy();
+      expect(food.queryByText(t('90,00 €'))).toBeNull(); // only in the accessibility label
+      expect(food.getByText(t('+10,00 € vs last month'))).toBeTruthy();
       expect(food.getByText(t('+11%'))).toBeTruthy();
     });
   });
@@ -227,11 +239,11 @@ describe('US2: categories vs last month', () => {
       expect(
         within(row('Leisure, this month 40,00 €, last month 0,00 €, plus 40,00 €, new')).getByText('New'),
       ).toBeTruthy();
-      expect(
-        within(
-          row('Health, this month 0,00 €, last month 25,00 €, minus 25,00 €, minus 100 percent'),
-        ).getByText(t('-100%')),
-      ).toBeTruthy();
+      const health = within(
+        row('Health, this month 0,00 €, last month 25,00 €, minus 25,00 €, minus 100 percent'),
+      );
+      expect(health.getByText(t('-100%'))).toBeTruthy();
+      expect(health.getByText(t('-25,00 € vs last month'))).toBeTruthy();
       expect(rowOrder('this month')).toEqual(['Leisure', 'Food', 'Health']);
     });
 
@@ -274,12 +286,12 @@ describe('US2: categories vs last month', () => {
         row('Food, August 1.000,50 €, July 1.000,00 €, plus 0,50 €, plus less than 1 percent'),
       );
       expect(food.getByText(t('+<1%'))).toBeTruthy();
-      expect(food.getByText(t('+0,50 €'))).toBeTruthy();
+      expect(food.getByText(t('+0,50 € vs July'))).toBeTruthy();
       const bills = within(
         row('Bills, August 1.000,00 €, July 1.000,50 €, minus 0,50 €, minus less than 1 percent'),
       );
       expect(bills.getByText(t('-<1%'))).toBeTruthy();
-      expect(bills.getByText(t('-0,50 €'))).toBeTruthy();
+      expect(bills.getByText(t('-0,50 € vs July'))).toBeTruthy();
     });
 
     it('FR-017: percents round half away from zero (12.5% shows +13%) and thousands use the region format', async () => {
@@ -297,8 +309,8 @@ describe('US2: categories vs last month', () => {
       const shopping = within(
         row('Shopping, August 1.000,00 €, July 1.234,56 €, minus 234,56 €, minus 19 percent'),
       );
-      expect(shopping.getByText(t('1.234,56 €'))).toBeTruthy();
-      expect(shopping.getByText(t('-234,56 €'))).toBeTruthy();
+      expect(shopping.getByText(t('1.000,00 €'))).toBeTruthy();
+      expect(shopping.getByText(t('-234,56 € vs July'))).toBeTruthy();
       expect(shopping.getByText(t('-19%'))).toBeTruthy();
     });
 
@@ -386,7 +398,9 @@ describe('US2: categories vs last month', () => {
       await openInsights();
       expect(screen.queryByText(/^Compared by day/)).toBeNull();
       expect(
-        row('Food, September 90,00 €, August 40,00 €, plus 50,00 €, plus 125 percent'),
+        within(
+          row('Food, September 90,00 €, August 40,00 €, plus 50,00 €, plus 125 percent'),
+        ).getByText(t('+50,00 € vs August')),
       ).toBeTruthy();
     });
 

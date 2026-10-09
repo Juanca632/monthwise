@@ -19,7 +19,9 @@ with fine-tuning on the phone still to come (AGENTS.md, Fine-tuning mode).
 
 ## Direction
 
-The charts follow 001's calm look: solid `surface` cards on the plain background, one accent,
+Like 001, the reference is the clarity of modern banking apps such as Revolut (developer,
+2026-10-09: it applies to every 002 screen): few words, short lists, one number per line that
+matters, details on demand rather than all at once. The charts follow 001's calm look: solid `surface` cards on the plain background, one accent,
 and color only where it means something. Each chart answers one question at a glance, and its
 sentence or headline says the answer in words above it, so the chart confirms rather than
 explains. The **current month is always the strong mark** (accent, solid, thick) and anything
@@ -162,22 +164,20 @@ is selected:
 
 #### Section 2: Categories vs last month
 
-A table that fits 360 dp phones with two lines per row:
+A compact list in the style of 001's transaction rows (developer, 2026-10-09: "like Revolut,
+easy to read and minimal"); no table and no column titles.
 
-- "Compared by day 12" (`legend`, `textMuted`), 12 above the titles, when the contract shows it.
-- **Column titles** (`legend`, `textMuted`), 8 above the first row: three columns in the ratio
-  1 : 1 : 1.3 with gap 8, indented 16 dp to line up with the values.
-- **Each row**: padding 12 vertical, a 1 dp `glassDivider` line on top. Line 1: an 8 dp dot in
-  the category's color (`categoryColors`, decorative) and, 8 dp after it, the label
-  (`bodyStrong`). Line 2, 4 dp below and indented 16: this month (`body`, `text`), last month
-  (`body`, `textMuted`) and the change: the signed amount (`bodyStrong`) and the percent pill
-  (padding 2 × 6, radius 8), 6 apart, wrapping the pill under the amount when it does not fit.
-- **Long amounts**: the three-column table holds amounts of up to 10 characters (`1.284,60 €`)
-  at a 360 dp width. When any amount text in the section (signs included) is longer than 10 characters
-  (`12.345,67 €` and up), or when `isLargeText`, the section uses the stacked layout of Large
-  text. Amounts are never cut: a value that still does not fit wraps.
-- **No data last month** (contract): one column title and only this month's amount per row.
-- **No spending**: "No spending to compare yet" (`body`, `textMuted`), no titles or rows.
+- "Compared by day 12" (`legend`, `textMuted`) above the rows, when the contract shows it.
+- **Each row**: padding 12 vertical, a 1 dp `glassDivider` line between rows (none above the
+  first). Left, the category's 36 dp icon circle as in 001 (its icon in the category color on its
+  tint, decorative); 12 dp after it, two lines:
+  - line 1: the label (`bodyStrong`, `text`) and, right-aligned, this month's amount
+    (`bodyStrong`, `text`);
+  - line 2, 2 dp below: the change line "+60,00 € vs last month" (`caption`, `textMuted`) and,
+    right-aligned, the percent pill (padding 2 × 6, radius 8).
+- **Large text**: the two parts of each line wrap under each other; nothing is cut.
+- **No data last month**: line 1 only.
+- **No spending**: "No spending to compare yet" (`body`, `textMuted`), no rows.
 
 #### Section 3: Savings trend
 
@@ -295,10 +295,6 @@ In addition (the `LargeText` mockup is at 200 %):
   they do not fit side by side.
 - Chart drawings keep their size: the card chart 64 dp, the pace chart 180 dp (168 dp plot),
   the trend plot 160 dp. Only their text grows (day numbers, month names, "No data").
-- **Categories when `isLargeText`**: the column-title row is not drawn; each row shows its label,
-  then, indented 16, each value under its own column title (`legend`, `textMuted`), one per line:
-  "This month" / amount, "Last month" / amount, "Change" / signed amount and pill (contract). The
-  row's accessible label does not change.
 - **Trend columns** stay six across; a month name never wraps (three letters). "No data" may wrap
   to two lines inside the column.
 - **Picker**: the grid stays 3 columns; cells grow in height.

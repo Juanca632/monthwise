@@ -3,7 +3,6 @@ import type { DayDetail, Pace, PaceSentence } from '@/domain/pace';
 import type { CategoryComparison } from '@/domain/categoryChanges';
 import {
   categoriesSentence,
-  categoryColumnTitles,
   categoryRowTexts,
   comparedByLabel,
   dayDetailLines,
@@ -187,25 +186,12 @@ describe('categories texts (Section 2)', () => {
     expect(comparedByLabel({ kind: 'noPreviousData', previousMonth: SEP, isCurrent: true, rows: [] })).toBeNull();
   });
 
-  it('column titles: this month, last month, change; month names for a past month; one when no data', () => {
-    expect(categoryColumnTitles(currentChanges, OCT)).toEqual(['This month', 'Last month', 'Change']);
-    expect(categoryColumnTitles(pastChanges, AUG)).toEqual(['August', 'July', 'Change']);
-    expect(
-      categoryColumnTitles({ kind: 'noPreviousData', previousMonth: SEP, isCurrent: true, rows: [] }, OCT),
-    ).toEqual(['This month']);
-    expect(
-      categoryColumnTitles({ kind: 'noPreviousData', previousMonth: JUL, isCurrent: false, rows: [] }, AUG),
-    ).toEqual(['August']);
-    expect(categoryColumnTitles({ kind: 'noSpending' }, OCT)).toEqual([]);
-  });
-
-  it('current month rows: cells and the spoken label', () => {
+  it('current month rows: amount, change line vs last month, and the spoken label', () => {
     expect(categoryRowTexts(currentChanges, OCT, ES)).toEqual([
       {
         label: 'Food',
         current: eur('100,00'),
-        previous: eur('90,00'),
-        change: `+${eur('10,00')}`,
+        change: `+${eur('10,00')} vs last month`,
         percent: '+11%',
         accessibilityLabel: `Food, this month ${eur('100,00')}, last month ${eur('90,00')}, plus ${eur('10,00')}, plus 11 percent`,
       },
@@ -217,11 +203,11 @@ describe('categories texts (Section 2)', () => {
     expect(food.accessibilityLabel).toBe(
       `Food, August ${eur('260,00')}, July ${eur('200,00')}, plus ${eur('60,00')}, plus 30 percent`,
     );
-    expect(leisure).toMatchObject({ change: `+${eur('40,00')}`, percent: 'New' });
+    expect(leisure).toMatchObject({ change: `+${eur('40,00')} vs July`, percent: 'New' });
     expect(leisure.accessibilityLabel).toBe(
       `Leisure, August ${eur('40,00')}, July ${eur('0,00')}, plus ${eur('40,00')}, new`,
     );
-    expect(transport).toMatchObject({ change: `-${eur('30,00')}`, percent: '-38%' });
+    expect(transport).toMatchObject({ change: `-${eur('30,00')} vs July`, percent: '-38%' });
     expect(transport.accessibilityLabel).toBe(
       `Transport, August ${eur('50,00')}, July ${eur('80,00')}, minus ${eur('30,00')}, minus 38 percent`,
     );
