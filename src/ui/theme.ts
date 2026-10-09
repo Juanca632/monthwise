@@ -67,7 +67,6 @@ export type Palette = {
   chartArea: string;
   /** The previous month's dashed line and marker; the expenses bar's outline. */
   chartPrevious: string;
-  expensesFill: string;
   chartGrid: string;
   chartAxis: string;
   /** The trend's zero line: it carries meaning (saved below zero), so it keeps 3:1. */
@@ -141,7 +140,6 @@ export const palettes: Record<Scheme, Palette> = {
     chartCurrent: ACCENT.light,
     chartArea: withAlpha(ACCENT.light, 0.22),
     chartPrevious: '#7D8696',
-    expensesFill: withAlpha('#7D8696', 0.16),
     chartGrid: withAlpha('#0E1116', 0.07),
     chartAxis: withAlpha('#0E1116', 0.28),
     chartZero: withAlpha('#0E1116', 0.5),
@@ -197,7 +195,6 @@ export const palettes: Record<Scheme, Palette> = {
     chartCurrent: ACCENT.dark,
     chartArea: withAlpha(ACCENT.dark, 0.22),
     chartPrevious: '#7D8696',
-    expensesFill: withAlpha('#7D8696', 0.24),
     chartGrid: withAlpha('#FFFFFF', 0.07),
     chartAxis: withAlpha('#FFFFFF', 0.28),
     chartZero: withAlpha('#FFFFFF', 0.5),
@@ -374,6 +371,8 @@ const TYPE_SPECS = {
   caption: { size: 13, weight: 400, numeric: true },
   // Chart legends, day and month labels (002); Medium stays readable on the chart tints.
   legend: { size: 13, weight: 500, numeric: true },
+  /** The trend's open month and the screen's month (design.md, Trend). */
+  legendStrong: { size: 13, weight: 700, numeric: true },
   statLabel: { size: 14, weight: 500 },
   pill: { size: 12, weight: 600, numeric: true },
 } satisfies Record<string, TypeSpec>;
@@ -448,16 +447,12 @@ export const chart = {
   previousRing: 2.5,
   bandRadius: 3,
   tickLength: 4,
-  barWidth: 12,
+  /** The trend's one saved bar per month (developer, 2026-10-09) and its far-end corners. */
+  trendBar: 16,
   barRadius: 4,
-  expensesOutline: 2,
-  /** Each trend mark's x from the column's center. */
-  barOffsets: { income: -19, expenses: -5, saved: 12 },
-  stemWidth: 2,
-  savedDot: 10,
+  /** A month that saved exactly 0: a line on the zero line. */
+  zeroBar: 2,
   lineSwatch: { width: 18, height: 6 },
-  barSwatch: { width: 10, height: 12 },
-  savedSwatch: { width: 10, height: 14 },
   /** The scales' headroom: pace lines, trend top, trend bottom (below zero). */
   yHeadroom: 1.08,
   trendTopHeadroom: 1.04,

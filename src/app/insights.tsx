@@ -7,8 +7,9 @@ import Animated, { LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { dayDetail, type Pace } from '@/domain/pace';
+import type { Trend } from '@/domain/trend';
 import { monthTitle } from '@/format/date';
-import { dayDetailLines, paceSentence } from '@/format/insights';
+import { dayDetailLines, paceSentence, trendDetailLines, trendHeadline, trendHeadlineLabel } from '@/format/insights';
 import { useInsights } from '@/hooks/useInsights';
 import { useRegion } from '@/hooks/useRegion';
 import { haptics } from '@/lib/haptics';
@@ -16,6 +17,7 @@ import { useSelectedMonth } from '@/state/SelectedMonthContext';
 import { CategoryChanges } from '@/ui/CategoryChanges';
 import { ChartDetail } from '@/ui/ChartDetail';
 import { PaceChart } from '@/ui/charts/PaceChart';
+import { TrendChart } from '@/ui/charts/TrendChart';
 import { chartSelection, initialChartSelection, type ChartSelectionEvent } from '@/ui/charts/selection';
 import { ShapePressable } from '@/ui/glass';
 import { durations, PressableScale, useReduceMotion } from '@/ui/motion';
@@ -34,7 +36,7 @@ export default function InsightsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { selected } = useSelectedMonth();
-  const { status, pace, categories, retry } = useInsights();
+  const { status, pace, categories, trend, retry } = useInsights();
   const { tag } = useRegion();
   // Shared with the pace chart's pan, so a vertical swipe that starts on the chart still scrolls.
   const scrollRef = useRef(null);
@@ -72,8 +74,9 @@ export default function InsightsScreen() {
             <Section title="Categories vs last month">
               <CategoryChanges key={`${selected.year}-${selected.month}`} comparison={categories} selected={selected} tag={tag} />
             </Section>
-            {/* Its content comes with US3 (T041). */}
-            <Section title="Savings trend">{status === 'loading' && <LoadingCard />}</Section>
+            <Section title="Savings trend">
+              {trend === null ? <LoadingCard /> : <TrendSection trend={trend} />}
+            </Section>
           </>
         )}
       </ScrollView>
@@ -128,6 +131,81 @@ function PaceSection({ pace, scrollRef }: { pace: Pace | null; scrollRef: RefObj
         </View>
       )}
     </Section>
+  );
+}
+
+function TrendSection({ trend }: { trend: Trend }) {
+  const { colors, type } = useTheme();
+  const { tag } = useRegion();
+  const { selected, setSelected } = useSelectedMonth();
+  const [selection, dispatch] = useReducer(chartSelection, initialChartSelection);
+
+  // A month change, from View month or elsewhere, hides the open detail (FR-030, FR-031).
+  const shownMonth = useRef(selected);
+  useEffect(() => {
+    if (shownMonth.current === selected) return;
+    shownMonth.current = selected;
+    dispatch({ type: 'reset' });
+  }, [selected]);
+
+  const [firstMonth] = useState(selected);
+
+  if (trend.monthsWithData === 0) {
+    return (
+      <View style={[styles.card, cardLook(colors)]}>
+        <Text style={[type.body, { color: colors.textMuted }]}>No data yet</Text>
+      </View>
+    );
+  }
+
+  const index = selection.selected;
+  const open = index !== null ? trend.months[index] : null;
+  const isScreenMonth = open !== null && open.month.year === selected.year && open.month.month === selected.month;
+
+  const onActivate = (i: number) => {
+    // One haptic when a month is selected or hidden (design.md, Haptics).
+    haptics.select();
+    dispatch({ type: 'activate', day: i });
+  };
+
+  const viewMonth = () => {
+    if (!open) return;
+    haptics.monthChange();
+    setSelected(open.month);
+  };
+
+  return (
+    <View style={[styles.card, styles.paceCard, cardLook(colors)]}>
+      <Text accessibilityLabel={trendHeadlineLabel(trend, tag)} style={[type.title, { color: colors.text }]}>
+        {trendHeadline(trend, tag)}
+      </Text>
+      <TrendChart
+        trend={trend}
+        tag={tag}
+        screenMonth={selected}
+        selectedIndex={index}
+        onActivate={onActivate}
+        reveal={selected === firstMonth}
+      />
+      {open !== null && (
+        <ChartDetail
+          lines={trendDetailLines(open, tag)}
+          action={
+            isScreenMonth ? undefined : (
+              <ShapePressable
+                accessibilityRole="button"
+                accessibilityLabel="View month"
+                onPress={viewMonth}
+                style={[styles.viewMonth, { backgroundColor: colors.surface }]}
+              >
+                <Text style={[type.bodyStrong, { color: colors.accent }]}>View month</Text>
+                <Feather name="chevron-right" size={iconSize.circle} color={colors.accent} />
+              </ShapePressable>
+            )
+          }
+        />
+      )}
+    </View>
   );
 }
 
@@ -202,6 +280,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     alignItems: 'center',
     gap: spacing.md,
+  },
+  viewMonth: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xxs,
+    minHeight: minTouch,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.sm,
+    marginTop: spacing.xxs,
+    borderRadius: radii.full,
   },
   retry: {
     minHeight: minTouch,

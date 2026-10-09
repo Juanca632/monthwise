@@ -37,8 +37,7 @@ New tokens, added to `theme.ts` by T015. Everything else uses 001's shipped toke
 | --- | --- | --- | --- |
 | `chartCurrent` | `accent` (an alias, `chartCurrent: accent`) | `accent` | The selected month's line, its markers, positive saved marks |
 | `chartArea` | `accent` at 22 % → 0 % (top to bottom) | same | Fill under the selected month's line |
-| `chartPrevious` | `#7D8696` | `#7D8696` | The previous month's dashed line and marker; the expenses bar's outline |
-| `expensesFill` | `#7D8696` at 16 % | `#7D8696` at 24 % | Inside the expenses bar and its legend swatch |
+| `chartPrevious` | `#7D8696` | `#7D8696` | The previous month's dashed line and marker |
 | `chartGrid` | `#0E1116` at 7 % | `#FFFFFF` at 7 % | The two faint guide lines of the pace chart; the card chart's baseline |
 | `chartAxis` | `#0E1116` at 28 % | `#FFFFFF` at 28 % | The pace chart's baseline and day ticks |
 | `chartZero` | `#0E1116` at 50 % | `#FFFFFF` at 50 % | The trend's zero line, which carries meaning (saved below zero) |
@@ -371,14 +370,12 @@ The contract holds the labels, roles and states. Visually:
 ## Implementation notes (T015)
 
 `src/ui/theme.ts` gains, per palette: `chartCurrent`, `chartArea` (its top color),
-`chartPrevious`, `expensesFill`, `chartGrid`, `chartAxis`, `chartBand`, `chartGuide`, `insetFill`,
+`chartPrevious`, `chartGrid`, `chartAxis`, `chartBand`, `chartGuide`, `insetFill`,
 `errorSoft` and `chartZero` (`chartCurrent` as an alias of `accent`); the `legend` type token
 (`numeric`); and `chart` sizes: `cardHeight` 64, `cardInset` 4 (card plot y 4 to 60), `paceHeight`
 180, `paceTop` 12, `pacePlot` 168, `trendPlot` 160, `trendBottomInset` 6, `currentWidth` 3, `previousWidth` 2, `previousDash` `[6, 4]`,
 `markerCurrent` 6, `markerPrevious` 5, `endDot` 4.5, `ringCurrent` 2.5, `ringEnd` 2,
-`previousRing` 2.5, `bandRadius` 3, `tickLength` 4, `barWidth` 12, `barRadius` 4,
-`expensesOutline` 2, `barOffsets` `{ income: -19, expenses: -5, saved: 12 }`, `stemWidth` 2,
-`savedDot` 10, `lineSwatch` 18 × 6, `barSwatch` 10 × 12, `savedSwatch` 10 × 14, `yHeadroom` 1.08, `trendTopHeadroom` 1.04, `trendBottomHeadroom` 1.25.
+`previousRing` 2.5, `bandRadius` 3, `tickLength` 4, `trendBar` 16, `barRadius` 4, `zeroBar` 2, `lineSwatch` 18 × 6, `yHeadroom` 1.08, `trendTopHeadroom` 1.04, `trendBottomHeadroom` 1.25.
 Drawing fractions that are not sizes (the grid lines at 1/3 and 2/3 of the plot, 1 dp
 hairlines, the area fill's 0 % bottom stop) are named constants in `ui/charts/geometry.ts`.
 `tests/unit/contrast.test.ts` gets every pair of the Contrast table.

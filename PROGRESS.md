@@ -15,17 +15,20 @@ commit (CLAUDE.md, "Session handoff").
      2026-10-09): no CRITICAL or MAJOR; two edge tests added; accepted MINOR: the category cast
      relies on the database CHECK.
   3. Done (2026-10-09): block 5 phone check after the redesign, all fine.
-  4. Block 6 (T037-T043, US3 savings trend). The trend was simplified first (developer,
-     2026-10-09): one saved bar per month, no legend; spec FR-011, contract Section 3 and design.md
-     updated. Done: T037 (US3 acceptance tests, in `pending.js`), T038, T039, T040. Next: T041
-     (`TrendChart`), T042 (section, View month), T043. Then the code reviewer (money: trend.ts).
+  4. Block 6 (T037-T043, US3 savings trend) done, acceptance tests green. The trend was
+     simplified first (developer, 2026-10-09): one saved bar per month, no legend. Code review
+     (money: `src/domain/trend.ts`) runs before the phone check.
+  5. Then block 7 (T044-T052, US4 month picker). Its spec-tester (T044) must also cover the month
+     control checks that US1 and US3 left to US4.
 - Notes:
   - From 2026-10-09 Claude writes all the code (AGENTS.md); T024 was written by Claude.
+  - US3 acceptance gaps accepted on 2026-10-09: month control checks moved to US4, as US1's; US1's
+    "no ·" checks scoped to the day detail (the trend headline has its own "·"); a US3 test that
+    expected trend columns together with "No data yet" now expects no chart (contract, Section 3).
   - US1 acceptance gaps accepted on 2026-10-09: the month control checks moved to US4 (T044 says
     so); the edge-case test's day-16 September amount corrected to 80,00 € (by day 16, FR-007).
   - gesture-handler 2.32's `fireGestureHandler` never calls `onTouches*`, so tests drive the pace
     pan's touch callbacks directly (`tests/helpers/paceGesture.ts`).
-  - Insights' Savings trend section shows only its title until US3.
   - Design feedback (2026-10-09): follow Revolut for every screen, minimal and easy to read
     (design.md, Direction). Categories redesigned: compact list, first 3 + Show all, no "New".
   - The harness now renders at font scale 1.0 (React Native's Jest mock says 2); contract updated.
@@ -43,7 +46,8 @@ commit (CLAUDE.md, "Session handoff").
 ## Phone checks pending
 
 - 001: APK verification T052-T053.
-- 002: none open (block 5 checked 2026-10-09).
+- 002, block 6: the Savings trend card (headline, one bar per month, up in blue, down in red,
+  "No data" months), tapping a month (detail, View month), the bars growing on first open.
 
 ## Environment notes
 

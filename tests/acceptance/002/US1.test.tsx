@@ -181,7 +181,8 @@ describe('US1: spending pace', () => {
       expect(screen.getByText(t('Day 20'))).toBeTruthy();
       expect(screen.getByText(t('September: 450,00 €'))).toBeTruthy();
       expect(screen.queryByText(/^October:/)).toBeNull();
-      expect(screen.queryByText(/·/)).toBeNull();
+      // No change line in the day detail; the trend headline's own "·" is not part of it.
+      expect(screen.queryByText(/^[+\-−]?\d[\d.,\s\u00A0\u202F]*€ ·/)).toBeNull();
     });
 
     it('US1-AS11: dragging across the chart and lifting nearest day 8 shows the Day 8 detail', async () => {
@@ -340,7 +341,8 @@ describe('US1: spending pace', () => {
       expect(screen.getByText(t('Day 5'))).toBeTruthy();
       expect(screen.getByText(t('October: 100,00 €'))).toBeTruthy();
       expect(screen.queryByText(/^September:/)).toBeNull();
-      expect(screen.queryByText(/·/)).toBeNull();
+      // No change line in the day detail; the trend headline's own "·" is not part of it.
+      expect(screen.queryByText(/^[+\-−]?\d[\d.,\s\u00A0\u202F]*€ ·/)).toBeNull();
     });
 
     it('FR-007: previous amount 0 shows only the signed amount (no percent text) and "0%" when both are 0', async () => {

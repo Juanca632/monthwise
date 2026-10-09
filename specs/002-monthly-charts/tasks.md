@@ -439,7 +439,7 @@ values, the headline and the tapped details match a hand calculation.
 - [x] T040 [US3] Return `trend: Trend | null` from `src/hooks/useInsights.ts`. Extend
   `tests/component/useInsights.test.tsx` (trend ready with the rest, the range read starts at
   `trendStart`).
-- [ ] T041 [US3] Implement `src/ui/charts/TrendChart.tsx` (design.md): one column per month with
+- [x] T041 [US3] Implement `src/ui/charts/TrendChart.tsx` (design.md): one column per month with
   its short name, income, expenses and saved drawn in design.md's form with `barScale` and the
   T015 tokens, saved below zero when negative, a `No data` column instead of bars; each column a
   `Pressable` button (label the month name, `accessibilityValue.text` the spoken value, `selected`
@@ -447,7 +447,7 @@ values, the headline and the tapped details match a hand calculation.
   per design.md with `useReduceMotion`. Tests in `tests/component/trendChart.test.tsx`: six
   buttons with labels and values, a negative month drawn below the baseline, the `No data` column,
   ≥ 48 dp, no motion with reduce motion, dark palette.
-- [ ] T042 [US3] Add the trend section to `src/app/insights.tsx`: title `Savings trend` (role
+- [x] T042 [US3] Add the trend section to `src/app/insights.tsx`: title `Savings trend` (role
   `header`), its loading state, `No data yet` when `monthsWithData` is 0, otherwise the headline,
   `TrendChart` and `ChartDetail` for the selected month with **View month** (not on the selected
   month). **View month** calls `setSelected(month)`; both chart selections reset on any month
@@ -456,7 +456,7 @@ values, the headline and the tapped details match a hand calculation.
   no-data month detail, **View month** shows that month in every section with no detail open and
   is absent on the selected month, back to the summary shows that month (FR-029), font scale 2
   with a 5.999.999.999,94 € headline.
-- [ ] T043 [US3] Remove `US3.test.tsx` from `pending.js` and run it until green (rules as T030).
+- [x] T043 [US3] Remove `US3.test.tsx` from `pending.js` and run it until green (rules as T030).
 
 **Checkpoint**: US1-US3 work; Insights is complete.
 

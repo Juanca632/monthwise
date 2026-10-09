@@ -390,7 +390,8 @@ describe('US3: savings trend', () => {
       await app.settle();
 
       expect(app.screen).toBe('insights');
-      expect(screen.getByRole('button', { name: 'September 2026' })).toBeTruthy();
+      // The month control (button) is US4's (T044); here the month shows as the header's text.
+      expect(screen.getByText('September 2026')).toBeTruthy();
       // Pace section: September spent 1.700,00 against August's 2.150,00.
       expect(screen.getByText(t('450,00 € less than August'))).toBeTruthy();
       // Trend section: April to September, no detail open.
@@ -410,7 +411,8 @@ describe('US3: savings trend', () => {
       fireEvent.press(screen.getByRole('button', { name: 'Back' }));
       await app.settle();
       expect(app.screen).toBe('summary');
-      expect(screen.getByRole('button', { name: 'August 2026' })).toBeTruthy();
+      // The month control (button) is US4's (T044); here the month shows as the header's text.
+      expect(screen.getByText('August 2026')).toBeTruthy();
     });
 
     it('FR-030: "View month" works for a month with no data, and the trend then ends with it', async () => {
@@ -418,9 +420,11 @@ describe('US3: savings trend', () => {
       tapMonth('July');
       fireEvent.press(screen.getByRole('button', { name: 'View month' }));
       await app.settle();
-      expect(screen.getByRole('button', { name: 'July 2026' })).toBeTruthy();
-      expect(trendMonths()).toEqual(['February', 'March', 'April', 'May', 'June', 'July']);
+      // The month control (button) is US4's (T044); here the month shows as the header's text.
+      expect(screen.getByText('July 2026')).toBeTruthy();
+      // February to July have no data: "No data yet" and no chart (contract, Section 3).
       expect(screen.getByText('No data yet')).toBeTruthy();
+      expect(trendMonths()).toEqual([]);
       expect(detailOpen()).toBe(false);
     });
 
