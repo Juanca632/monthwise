@@ -14,7 +14,6 @@ description: "Task list template for feature implementation"
   - Conventions shared by every task go once, in the section below.
   - Every behavior change has a test task or a test named in its task; money is unit-tested.
   - Each user story phase starts with its spec-tester task and ends with its acceptance tests green.
-  - Mark one task "(developer writes)": a small component or hook.
   - Replace every placeholder; delete phases that are not needed.
 -->
 

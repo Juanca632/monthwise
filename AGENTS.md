@@ -76,8 +76,8 @@ sign of over-planning: cut before adding.
   match the code: a failing one is either a bug or a spec/contract gap, and gaps go to the
   developer (fix the spec or contract first, then the test). `/speckit-tasks` adds one task per
   story for it.
-- From feature `002`, the developer writes one piece per feature (a small component or hook)
-  and Claude reviews it; `tasks.md` marks that task.
+- Claude writes all the code; the developer does not write code (decided 2026-10-09). Claude
+  explains each new piece briefly, as CLAUDE.md asks.
 - **Fine-tuning mode**: after a phone test, small UI tweaks that stay within spec.md and plan.md
   (look, spacing, text, motion feel) are made in code only, with their related tests, and the
   developer checks them on the phone. Once the developer approves a batch, update `design.md`
