@@ -161,6 +161,12 @@ describe('dayDetail: FR-007', () => {
     });
   });
 
+  it('a day before day 1 has no selected amount and no change', () => {
+    const pace = computePace(OCT, [expense('2026-10-02', 7_000)], [], TODAY);
+    expect(dayDetail(pace, 0).selectedCents).toBeNull();
+    expect(dayDetail(pace, 0).change).toBeNull();
+  });
+
   it('US1-AS10: a day after today shows only the previous month', () => {
     const pace = computePace(
       OCT,

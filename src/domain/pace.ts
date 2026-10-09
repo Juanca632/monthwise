@@ -141,7 +141,7 @@ export function computePace(
 export function dayDetail(pace: Pace, day: number): DayDetail {
   const line = pace.selected.cumulativeCents;
   // Null after the line end; the line never runs past the month's last day.
-  const selectedCents = day <= line.length ? line[day - 1] : null;
+  const selectedCents = day >= 1 && day <= line.length ? line[day - 1] : null;
   // Past the previous month's last day its whole month counts.
   const previousCents = pace.previous === null ? null : spentBy(pace.previous, day);
 

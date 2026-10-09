@@ -14,10 +14,10 @@ commit (CLAUDE.md, "Session handoff").
      constitution change was needed. Everything applies to the rest of 002; only its existing
      docs are not rewritten. Block 4b is UI: no code reviewer. T024 (`ChartDetail.tsx`) is the
      developer-written piece; T056 (design review of the implemented UI) is dropped.
-  1. Run the block 4a reviewer (Sonnet, read-only) on the commit
-     `feat: add the 002 pace logic, chart geometry, selection and pace texts (US1)`, tasks
-     T017-T022, focused on the money logic (`src/domain/pace.ts`, `src/hooks/useMonthSummary.ts`).
-     It was stopped before reporting. Fix CRITICAL/MAJOR findings, then commit.
+  1. Done (2026-10-09): block 4a reviewer (Sonnet). No CRITICAL or MAJOR findings. Fixed: the
+     `dayDetail` guard for days below 1. Accepted MINORs: the two hook reads are not one SQL
+     snapshot (a later focus refetch corrects it), no unmount guard (same as 001), a month after
+     today is treated as past (unreachable: the picker stops at today).
   2. Block 4b (T023-T030): pace chart, card on the summary, Insights pace section, harness
      `paceChart.*`, then remove `US1.test.tsx` from `tests/acceptance/002/pending.js` and make it
      green (35 of 36 fail today, as expected: no UI yet).
