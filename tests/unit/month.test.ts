@@ -137,6 +137,18 @@ describe('pickerYear (FR-027)', () => {
     expect(flags(p, 'selected').indexOf(true)).toBe(2);
   });
 
+  it('today in January: only January of the current year is available', () => {
+    const p = pickerYear(2027, ym(2027, 1), '2027-01-05');
+    expect(flags(p, 'available')).toEqual([true, ...Array(11).fill(false)]);
+    expect(p).toMatchObject({ canGoPrevious: true, canGoNext: false });
+  });
+
+  it('today in 2000: neither direction is open', () => {
+    const p = pickerYear(2000, ym(2000, 1), '2000-03-10');
+    expect(p).toMatchObject({ canGoPrevious: false, canGoNext: false });
+    expect(flags(p, 'available')).toEqual([true, true, true, ...Array(9).fill(false)]);
+  });
+
   it('a selected month in another year marks nothing in the shown year', () => {
     expect(flags(pickerYear(2025, ym(2026, 10), '2026-10-12'), 'selected').some(Boolean)).toBe(false);
   });

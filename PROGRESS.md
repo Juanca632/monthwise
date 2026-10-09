@@ -20,7 +20,9 @@ commit (CLAUDE.md, "Session handoff").
      (Sonnet, 2026-10-09): no CRITICAL or MAJOR; a year-boundary test added.
   5. Block 7 (T044-T052, US4 month picker) done: 001's arrows replaced by the month control and
      picker on the summary and Insights; all four stories' acceptance tests green, `pending.js`
-     empty. Code review of `pickerYear` (src/domain/month.ts) runs before the phone check.
+     empty. Code review (Sonnet, 2026-10-09): no CRITICAL or MAJOR; two pickerYear edge tests
+     added; accepted MINORs: with the phone clock moved back a month the selected month can be
+     after today until "This month" (as 001), and a midnight month rollover plays the month slide.
   6. Then block 8 (T053-T058: seed, timing, SC-001 end to end, Stryker, docs) and block 9 (phone
      pass, preview APK, PR).
 - Notes:
