@@ -11,8 +11,9 @@ commit (CLAUDE.md, "Session handoff").
   complete in code; its acceptance tests are green and out of `pending.js`.
 - Next:
   1. Done (2026-10-09): block 4b phone check, all fine.
-  2. Block 5 (T031-T036, US2 categories) done in code, acceptance tests green. Its code reviewer
-     (money logic: `src/domain/categoryChanges.ts`, `useInsights`) runs before the phone check.
+  2. Block 5 (T031-T036, US2 categories) done, acceptance tests green. Code review (Sonnet,
+     2026-10-09): no CRITICAL or MAJOR; two edge tests added; accepted MINOR: the category cast
+     relies on the database CHECK.
   3. Phone check of block 5, then block 6 (T037-T043, US3 savings trend).
 - Notes:
   - From 2026-10-09 Claude writes all the code (AGENTS.md); T024 was written by Claude.

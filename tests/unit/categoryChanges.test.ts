@@ -176,6 +176,20 @@ describe('compareCategories: edge cases', () => {
     expect(result).toMatchObject({ kind: 'changes', comparisonDay: 30, rows: [{ previousCents: 2_000 }] });
   });
 
+  it('previous month with data only after the comparison day: its side is 0 and rows are New', () => {
+    const result = compareCategories(OCT, [expense('2026-10-05', 1_000)], [expense('2026-09-20', 8_000)], TODAY);
+    expect(result).toEqual({
+      kind: 'changes',
+      comparisonDay: 12,
+      rows: [{ category: 'food', currentCents: 1_000, previousCents: 0, changeCents: 1_000, percent: 'new' }],
+    });
+  });
+
+  it('January 2000 compares against an empty December 1999: no previous data', () => {
+    const result = compareCategories({ year: 2000, month: 1 }, [expense('2000-01-05', 1_000)], [], '2000-01-10');
+    expect(result).toMatchObject({ kind: 'noPreviousData', previousMonth: { year: 1999, month: 12 }, isCurrent: true });
+  });
+
   it('a past month counts its whole month, whatever the dates', () => {
     const result = past([expense('2026-09-30', 1_000)], [expense('2026-08-31', 1_000)]);
     expect(result).toMatchObject({ kind: 'changes', comparisonDay: null, rows: [{ changeCents: 0 }] });
