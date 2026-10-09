@@ -126,10 +126,11 @@ it('at font scale 2 with 999.999.999,99 € rows nothing is cut: texts wrap', ()
 it('uses the dark palette in dark mode', () => {
   jest.spyOn(RN, 'useColorScheme').mockReturnValue('dark');
   renderCard(currentChanges);
+  // The card is the Insights section's; here the pills and texts follow the dark palette.
   const backgrounds = screen
     .UNSAFE_getAllByType(RN.View)
     .map((v) => RN.StyleSheet.flatten(v.props.style)?.backgroundColor);
-  expect(backgrounds).toContain(palettes.dark.surface);
+  expect(backgrounds).toContain(palettes.dark.errorSoft);
 });
 
 describe('Show all (FR-008)', () => {

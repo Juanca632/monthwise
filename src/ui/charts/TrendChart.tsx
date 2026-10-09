@@ -60,11 +60,9 @@ export function TrendChart({ trend, tag, screenMonth, selectedIndex, onActivate,
               onPress={() => onActivate(i)}
               style={[styles.column, selected && { backgroundColor: colors.chartBand }]}
             >
-              <View style={styles.plot}>
-                {!m.hasData && (
-                  <Text style={[type.legend, styles.noData, { color: colors.textMuted }]}>No data</Text>
-                )}
-              </View>
+              {/* A month with no data stays empty (fine-tuning 2026-10-09): no bar, no text. Its
+                  value says "No data"; a month that saved 0 draws a line, so they never look alike. */}
+              <View style={styles.plot} />
               <Text
                 style={[
                   selected || isScreenMonth ? type.legendStrong : type.legend,
@@ -163,7 +161,6 @@ const styles = StyleSheet.create({
     borderRadius: COLUMN_RADIUS,
   },
   plot: { height: PLOT_BOX, alignSelf: 'stretch', justifyContent: 'center' },
-  noData: { textAlign: 'center' },
   bars: { position: 'absolute', left: 0, height: PLOT_BOX },
   zero: { position: 'absolute', left: 0, right: 0, height: HAIRLINE },
   bar: { position: 'absolute', width: chart.trendBar },

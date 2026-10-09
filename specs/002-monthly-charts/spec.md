@@ -202,14 +202,14 @@ User Story 1.
 5. **Given** July had expenses 400.00 and no income, **When** the user taps "July", **Then** it
    shows "Saved: -€400.00" and "Savings rate: No income".
 6. **Given** a month in the range has no data, **When** the user views the trend, **Then** that
-   month is marked "No data" rather than drawn as zero, and tapping it shows its name, "No data"
-   and "View month" (unless it is the selected month).
+   month draws no bar (an empty column, never a zero), its screen reader value is "No data", and
+   tapping it shows its name, "No data" and "View month" (unless it is the selected month).
 7. **Given** the selected month is February 2000 and both January and February 2000 have data,
    **When** the user views the trend, **Then** it shows only January and February 2000, and the
    headline says "in 2 months"; with January 2000 selected it says "in 1 month".
 8. **Given** the selected month is October and only September (income 1,000.00, expenses 900.00)
    and October (income 2,000.00, expenses 1,800.00) have data, **When** the user views the trend,
-   **Then** it shows May to October with May to August marked "No data", and the headline reads
+   **Then** it shows May to October with May to August drawn empty ("No data"), and the headline reads
    "Saved €300.00 in 2 months · 10%".
 9. **Given** the selected month is October and only October has data, with expenses 400.00 and no
    income, **When** the user views the trend, **Then** the headline reads "Saved -€400.00 in 1
@@ -363,8 +363,9 @@ the summary; scenario 6 depends on User Story 1 and scenario 7 on User Story 3.
 - **FR-011**: The six-month trend MUST show the selected month and the five months before it, in
   calendar order, never before January 2000. For each month it draws what was saved, one bar per
   month (developer, 2026-10-09: income and expenses are in the month's detail, FR-013, so the chart
-  stays simple); a negative saved amount is drawn below zero, and its detail shows a minus sign. Months with no data are marked "No
-  data". Each month is a tap target named by its month name (for example "September").
+  stays simple); a negative saved amount is drawn below zero, and its detail shows a minus sign. Months with no data draw no bar (an empty column, so never a zero; developer,
+  2026-10-09: a repeated "No data" text was noise); their screen reader value and their detail
+  (FR-013) say "No data". Each month is a tap target named by its month name (for example "September").
 - **FR-012**: The trend MUST show a headline "Saved €X in N months · P%" ("1 month" when N is 1),
   where X is the total saved over the months shown (negative with a minus sign), N the number of
   months shown that have data (months with no data are still shown but not counted), and P the

@@ -80,7 +80,7 @@ ratio; the trend's zero line carries meaning, so it has its own `chartZero` at 3
 
 | Token | Size (dp) | Weight | Use |
 | --- | --- | --- | --- |
-| `legend` | 13 | Medium, tabular figures (`numeric`) | Chart legends, day labels, trend month labels, "No data" in a column, "Compared by day N", column titles |
+| `legend` | 13 | Medium, tabular figures (`numeric`) | Chart legends, day labels, trend month labels, "Compared by day N", column titles |
 
 | Element | Token | Color |
 | --- | --- | --- |
@@ -154,12 +154,18 @@ On `background`, a vertical scroll that ends with `28 + insets.bottom` of paddin
 - **Header**: top padding `8 + insets.top`, side padding 16. The 48 dp **Back** button (001's
   `/transactions` back button: `chevron-left` in `text` on `surface`, borderless ripple), 12 dp,
   then a column with the "Insights" label and the month control.
-- **Sections**: each title in `heading` with padding 16 top, 8 bottom and 24 at the sides, then
+- **Sections** (fine-tuning 2026-10-09, as the summary): each section is one card, 16 dp below
+  the one above, with its small, quiet title inside at the top (`labelStrong`, `textMuted`,
+  `ui/CardTitle.tsx`, role `header`), then its content 8 apart. The answers are in color, not
+  size: the pace sentence's "85,00 € more" / "65,00 € less" in `error` / `income`, the trend
+  headline's "Saved 650,00 €" in `income` (or `error` when negative). Formerly: each title in
+  `heading` with padding 16 top, 8 bottom and 24 at the sides, then
   its card: `surface`, radius 20, padding 16, side margins 16, `tileShadow` in light.
 - **Detail boxes** (day and month): `insetFill`, radius 16, `paddingVertical` 12,
   `paddingHorizontal` 16, lines 4 apart, 4 dp
   below the chart. One Text per line (contract).
-- **Loading**: each section title, then a card 140 dp tall with a centered `ActivityIndicator`.
+- **Loading**: each section's card with its title and a centered `ActivityIndicator` in a
+  112 dp area under it.
   The pace section shows the pace handed over by the summary when it has it (contract).
 - **Error**: the header, then a card 24 dp below it (padding 32 × 24, centered, gap 16) with
   "Couldn't load your data." (`body`) and **Try again** (001's error-screen button: `fieldFill`,
@@ -294,7 +300,8 @@ padding 8 vertical and radius 12: a 160 dp plot, then the short month name (`leg
   wide (`trendBar`), growing from the zero line with 4 dp corners at its far end: up in
   `chartCurrent` when saved is 0 or more, down in `error` when negative. Saved at exactly 0 is a
   2 dp `chartCurrent` line on the zero line. Up versus down repeats the color.
-- **No data**: no marks; "No data" (`legend`, `textMuted`) centered in the plot (never a zero).
+- **No data**: no marks and no text, an empty column (fine-tuning 2026-10-09); a month that
+  saved exactly 0 still draws its 2 dp line, so the two never look alike.
 - **Selected month** (detail open): the column fills with `chartBand` and its name turns `accent`
   Bold. The **screen's month** (the one in the month control) has its name in `text` Bold; the
   other names are `textMuted` Medium.
@@ -307,9 +314,8 @@ In addition (the `LargeText` mockup is at 200 %):
 - Sentences, legends, the headline and detail lines wrap. Legend items stack one per line when
   they do not fit side by side.
 - Chart drawings keep their size: the card chart 64 dp, the pace chart 180 dp (168 dp plot),
-  the trend plot 160 dp. Only their text grows (day numbers, month names, "No data").
-- **Trend columns** stay six across; a month name never wraps (three letters). "No data" may wrap
-  to two lines inside the column.
+  the trend plot 160 dp. Only their text grows (day numbers, month names).
+- **Trend columns** stay six across; a month name never wraps (three letters).
 - **Picker**: the grid stays 3 columns; cells grow in height.
 - **Month control**: the month wraps under itself if needed; the chevron stays after the last
   word.

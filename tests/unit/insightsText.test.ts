@@ -14,6 +14,7 @@ import {
   trendDetailLines,
   trendHeadline,
   trendHeadlineLabel,
+  trendHeadlineParts,
   trendSpokenValue,
 } from '@/format/insights';
 import type { MonthTotals, Trend } from '@/domain/trend';
@@ -331,4 +332,9 @@ describe('paceSentenceParts (fine-tuning 2026-10-09)', () => {
     });
     expect(paceSentenceParts({ kind: 'noSpending' }, ES).tone).toBeNull();
   });
+});
+
+it('trendHeadlineParts splits the answer off the headline', () => {
+  const t = { months: [], monthsWithData: 6, totalSavedCents: -40_000, rate: null };
+  expect(trendHeadlineParts(t, ES)).toEqual({ lead: `Saved -${eur('400,00')}`, rest: ' in 6 months · No income' });
 });

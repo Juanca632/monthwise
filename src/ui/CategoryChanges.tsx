@@ -10,7 +10,7 @@ import { categoriesSentence, categoryRowTexts, comparedByLabel, type CategoryRow
 
 import { categoryLook } from './categoryLook';
 import { durations, PressableScale, useReduceMotion } from './motion';
-import { iconSize, minTouch, radii, spacing, useTheme, type Palette } from './theme';
+import { iconSize, minTouch, spacing, useTheme, type Palette } from './theme';
 
 /** As 001's category circles (Breakdown, the transaction list). */
 const ICON_CIRCLE = 36;
@@ -34,17 +34,12 @@ type Props = {
 export function CategoryChanges({ comparison, selected, tag }: Props) {
   const { colors, type } = useTheme();
   const reduceMotion = useReduceMotion();
+  // The card and its title are the Insights section's (fine-tuning 2026-10-09); this is the content.
   // Insights remounts this card on a month change (its key), so a new month shows 3 rows again.
   const [expanded, setExpanded] = useState(false);
-  const card = [
-    styles.card,
-    { backgroundColor: colors.surface },
-    colors.tileShadow !== '' && { boxShadow: colors.tileShadow },
-  ];
-
   if (comparison === null) {
     return (
-      <View style={[card, styles.loading]}>
+      <View style={styles.loading}>
         <ActivityIndicator accessibilityLabel="Loading" color={colors.accent} />
       </View>
     );
@@ -59,7 +54,7 @@ export function CategoryChanges({ comparison, selected, tag }: Props) {
   const toggle = expanded ? 'Show less' : `Show all (${rows.length})`;
 
   return (
-    <View style={card}>
+    <View>
       {sentence !== null && (
         <Text style={[type.body, styles.note, { color: colors.textMuted }]}>{sentence}</Text>
       )}
@@ -145,12 +140,6 @@ function Row({
 }
 
 const styles = StyleSheet.create({
-  card: {
-    marginHorizontal: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radii.card,
-  },
   loading: { height: LOADING_HEIGHT, alignItems: 'center', justifyContent: 'center' },
   note: { paddingVertical: spacing.xs },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.sm },

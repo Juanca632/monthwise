@@ -8,14 +8,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { dayDetail, type Pace } from '@/domain/pace';
 import type { Trend } from '@/domain/trend';
-import { dayDetailLines, trendDetailLines, trendHeadline, trendHeadlineLabel } from '@/format/insights';
+import { dayDetailLines, trendDetailLines } from '@/format/insights';
 import { useInsights } from '@/hooks/useInsights';
 import { useRegion } from '@/hooks/useRegion';
 import { haptics } from '@/lib/haptics';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
 import { CategoryChanges } from '@/ui/CategoryChanges';
 import { MonthControl } from '@/ui/MonthControl';
-import { PaceSentence } from '@/ui/PaceSentence';
+import { CardTitle } from '@/ui/CardTitle';
+import { PaceSentence, TrendHeadline } from '@/ui/PaceSentence';
 import { ChartDetail } from '@/ui/ChartDetail';
 import { PaceChart } from '@/ui/charts/PaceChart';
 import { TrendChart } from '@/ui/charts/TrendChart';
@@ -24,8 +25,8 @@ import { ShapePressable } from '@/ui/glass';
 import { durations, PressableScale, useReduceMotion } from '@/ui/motion';
 import { iconSize, minTouch, radii, spacing, useTheme } from '@/ui/theme';
 
-/** A loading section's card (design.md, Insights screen, Loading). */
-const LOADING_CARD_HEIGHT = 140;
+/** A loading section's area under its title (design.md, Insights screen, Loading). */
+const LOADING_HEIGHT = 112;
 
 /**
  * Insights for the selected month (contracts/ui-screens.md, Insights screen). Read-only: nothing
@@ -75,7 +76,7 @@ export default function InsightsScreen() {
               <CategoryChanges key={`${selected.year}-${selected.month}`} comparison={categories} selected={selected} tag={tag} />
             </Section>
             <Section title="Savings trend">
-              {trend === null ? <LoadingCard /> : <TrendSection trend={trend} />}
+              {trend === null ? <Loading /> : <TrendSection trend={trend} />}
             </Section>
           </>
         )}
@@ -85,7 +86,6 @@ export default function InsightsScreen() {
 }
 
 function PaceSection({ pace, scrollRef }: { pace: Pace | null; scrollRef: RefObject<null> }) {
-  const { colors } = useTheme();
   const { tag } = useRegion();
   const { selected } = useSelectedMonth();
   const [selection, dispatch] = useReducer(chartSelection, initialChartSelection);
@@ -114,9 +114,9 @@ function PaceSection({ pace, scrollRef }: { pace: Pace | null; scrollRef: RefObj
   return (
     <Section title="Spending pace">
       {pace === null ? (
-        <LoadingCard />
+        <Loading />
       ) : (
-        <View style={[styles.card, styles.paceCard, cardLook(colors)]}>
+        <>
           <PaceSentence sentence={pace.sentence} tag={tag} />
           <PaceChart
             variant="full"
@@ -128,7 +128,7 @@ function PaceSection({ pace, scrollRef }: { pace: Pace | null; scrollRef: RefObj
             reveal={reveal}
           />
           {day !== null && <ChartDetail lines={dayDetailLines(dayDetail(pace, day), pace, tag)} />}
-        </View>
+        </>
       )}
     </Section>
   );
@@ -152,9 +152,7 @@ function TrendSection({ trend }: { trend: Trend }) {
 
   if (trend.monthsWithData === 0) {
     return (
-      <View style={[styles.card, cardLook(colors)]}>
-        <Text style={[type.body, { color: colors.textMuted }]}>No data yet</Text>
-      </View>
+      <Text style={[type.body, { color: colors.textMuted }]}>No data yet</Text>
     );
   }
 
@@ -175,10 +173,8 @@ function TrendSection({ trend }: { trend: Trend }) {
   };
 
   return (
-    <View style={[styles.card, styles.paceCard, cardLook(colors)]}>
-      <Text accessibilityLabel={trendHeadlineLabel(trend, tag)} style={[type.title, { color: colors.text }]}>
-        {trendHeadline(trend, tag)}
-      </Text>
+    <>
+      <TrendHeadline trend={trend} tag={tag} />
       <TrendChart
         trend={trend}
         tag={tag}
@@ -205,28 +201,33 @@ function TrendSection({ trend }: { trend: Trend }) {
           }
         />
       )}
-    </View>
+    </>
   );
 }
 
+/**
+ * One section as one card with its small, quiet title inside, as on the summary (fine-tuning
+ * 2026-10-09, like Revolut): the content, not a large heading, says what the card is about.
+ */
 function Section({ title, children }: { title: string; children?: ReactNode }) {
-  const { colors, type } = useTheme();
+  const { colors } = useTheme();
   const reduceMotion = useReduceMotion();
   return (
     // The sections below a detail box move with it (design.md, Motion, "Detail in").
-    <Animated.View layout={reduceMotion ? undefined : LinearTransition.duration(durations.fast)}>
-      <Text accessibilityRole="header" style={[type.heading, styles.sectionTitle, { color: colors.text }]}>
-        {title}
-      </Text>
+    <Animated.View
+      layout={reduceMotion ? undefined : LinearTransition.duration(durations.fast)}
+      style={[styles.card, styles.section, cardLook(colors)]}
+    >
+      <CardTitle title={title} inside />
       {children}
     </Animated.View>
   );
 }
 
-function LoadingCard() {
+function Loading() {
   const { colors } = useTheme();
   return (
-    <View style={[styles.card, styles.loading, cardLook(colors)]}>
+    <View style={styles.loading}>
       <ActivityIndicator accessibilityLabel="Loading" color={colors.accent} />
     </View>
   );
@@ -270,10 +271,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   titles: { flex: 1 },
-  sectionTitle: { paddingTop: spacing.md, paddingBottom: spacing.xs, paddingHorizontal: spacing.xl },
   card: { marginHorizontal: spacing.md, padding: spacing.md, borderRadius: radii.card },
-  paceCard: { gap: spacing.xs },
-  loading: { height: LOADING_CARD_HEIGHT, alignItems: 'center', justifyContent: 'center' },
+  // Cards 16 apart, as on the summary; the title, sentence and chart 8 apart inside.
+  section: { marginTop: spacing.md, gap: spacing.xs },
+  loading: { height: LOADING_HEIGHT, alignItems: 'center', justifyContent: 'center' },
   error: {
     marginTop: spacing.xl,
     paddingVertical: spacing.xxxl,

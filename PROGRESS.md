@@ -25,8 +25,11 @@ commit (CLAUDE.md, "Session handoff").
      after today until "This month" (as 001), and a midnight month rollover plays the month slide.
   6. Fine-tuning (2026-10-09, developer on the phone): month picker opens with less see-through
      (closing stays instant, the developer preferred it); summary redesigned like Revolut (see
-     design.md "Summary layout"); 001's preview is 3 rows (001 FR-017). Next: the same approach on
-     Insights.
+     design.md "Summary layout"); 001's preview is 3 rows (001 FR-017); Insights in the same
+     approach (cards with small quiet titles, answers in color); trend months without data are
+     empty columns (spec FR-011, US3-AS6/AS8, tests updated by the spec-tester).
+     NOT finished: the developer will keep fine-tuning in the next session (start by asking what
+     else they want to change; reference: Revolut, minimal, clear, color with meaning).
   7. Then block 8 (T053-T058: seed, timing, SC-001 end to end, Stryker, docs) and block 9 (phone
      pass, preview APK, PR).
 - Notes:
@@ -55,6 +58,7 @@ commit (CLAUDE.md, "Session handoff").
 ## Phone checks pending
 
 - 001: APK verification T052-T053.
+- 002, fine-tuning: checked live by the developer through 2026-10-09; recheck after more tweaks.
 - 002, block 7: the month control on the balance card and on Insights, the picker (year arrows,
   unavailable months, This month, Close, back, tap outside), the month change motion.
 - 002, block 6: the Savings trend card (headline, one bar per month, up in blue, down in red,

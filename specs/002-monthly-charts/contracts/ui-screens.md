@@ -196,7 +196,9 @@ No column titles: each row says what it compares (developer, 2026-10-09, a compa
   when its detail is shown), at least 48 dp wide. Its accessibility value is `Income 2.000,00 €,
   expenses 1.700,00 €, saved 300,00 €, savings rate 15 percent` (spoken forms; `savings rate no
   income` when income is 0), or `No data`.
-- A month with no data is drawn with the visible text `No data` instead of bars (never as zero).
+- A month with no data draws no bar and no text: an empty column with its short name (never a
+  zero; a month that saved exactly 0 draws a thin line on the zero line). Its value and its
+  detail say `No data` (developer, 2026-10-09).
 - **Month detail** (one Text per line, under the chart), shown on tap:
   - `September`
   - `Income: 2.000,00 €`, `Expenses: 1.700,00 €`, `Saved: 300,00 €` (saved amount),

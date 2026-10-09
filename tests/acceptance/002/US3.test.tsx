@@ -78,6 +78,8 @@ const trendMonths = () =>
 
 const monthButton = (name: string) => screen.getByRole('button', { name });
 const tapMonth = (name: string) => fireEvent.press(monthButton(name));
+const accessibleValue = (name: string) =>
+  monthButton(name).props.accessibilityValue?.text as string | undefined;
 
 /** Month detail lines are the only texts starting with these prefixes. */
 const detailOpen = () => screen.queryAllByText(/^Income: /).length > 0;
@@ -138,14 +140,15 @@ describe('US3: savings trend', () => {
       expect(screen.getByText('Savings rate: No income')).toBeTruthy();
     });
 
-    it('US3-AS6: a month with no data is marked "No data", and tapping it shows its name, "No data" and "View month"', async () => {
+    it('US3-AS6: a month with no data is an empty column (value "No data", no visible text), and tapping it shows its name, "No data" and "View month"', async () => {
       // June has no transactions at all.
       await openOctober(rows(BASE.filter(([ym]) => ym !== '2026-06')));
-      expect(screen.getAllByText('No data')).toHaveLength(1);
+      expect(screen.queryByText('No data')).toBeNull();
+      expect(accessibleValue('June')).toBe('No data');
       expect(screen.queryByText(/^Income: /)).toBeNull();
       tapMonth('June');
       expect(screen.getByText('June')).toBeTruthy();
-      expect(screen.getAllByText('No data')).toHaveLength(2); // the chart mark and the detail
+      expect(screen.getAllByText('No data')).toHaveLength(1); // only the detail line
       expect(screen.queryByText(/^(Income|Expenses|Saved|Savings rate): /)).toBeNull();
       expect(screen.getByRole('button', { name: 'View month' })).toBeTruthy();
     });
@@ -154,7 +157,7 @@ describe('US3: savings trend', () => {
       // October (selected) has no data; September has.
       await openOctober(rows([['2026-09', 100_000, 90_000]]));
       tapMonth('October');
-      expect(screen.getAllByText('No data').length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByText('No data')).toHaveLength(1); // only the detail line
       expect(screen.queryByRole('button', { name: 'View month' })).toBeNull();
     });
 
@@ -187,7 +190,7 @@ describe('US3: savings trend', () => {
       expect(screen.getByText(t('Saved 400,00 € in 1 month · 40%'))).toBeTruthy();
     });
 
-    it('US3-AS8: only September and October with data show May to August as "No data" and "Saved 300,00 € in 2 months · 10%"', async () => {
+    it('US3-AS8: only September and October with data show May to August as empty columns (value "No data") and "Saved 300,00 € in 2 months · 10%"', async () => {
       await openOctober(
         rows([
           ['2026-09', 100_000, 90_000],
@@ -195,7 +198,10 @@ describe('US3: savings trend', () => {
         ]),
       );
       expect(trendMonths()).toEqual(['May', 'June', 'July', 'August', 'September', 'October']);
-      expect(screen.getAllByText('No data')).toHaveLength(4);
+      expect(screen.queryByText('No data')).toBeNull();
+      for (const m of ['May', 'June', 'July', 'August']) expect(accessibleValue(m)).toBe('No data');
+      expect(accessibleValue('September')).not.toBe('No data');
+      expect(accessibleValue('October')).not.toBe('No data');
       expect(screen.getByText(t('Saved 300,00 € in 2 months · 10%'))).toBeTruthy();
     });
 
@@ -459,7 +465,9 @@ describe('US3: savings trend', () => {
       await app.selectMonth({ year: 2000, month: 3 });
       await openInsights();
       expect(trendMonths()).toEqual(['January', 'February', 'March']);
-      expect(screen.getAllByText('No data')).toHaveLength(2);
+      expect(screen.queryByText('No data')).toBeNull();
+      expect(accessibleValue('January')).toBe('No data');
+      expect(accessibleValue('February')).toBe('No data');
       expect(screen.getByText(t('Saved 500,00 € in 1 month · 50%'))).toBeTruthy();
     });
 
@@ -469,7 +477,8 @@ describe('US3: savings trend', () => {
       await app.setToday('2026-11-01');
       // The selected month was the current one, so it moves to November: June to November.
       expect(trendMonths()).toEqual(['June', 'July', 'August', 'September', 'October', 'November']);
-      expect(screen.getAllByText('No data')).toHaveLength(1); // November has no data yet
+      expect(screen.queryByText('No data')).toBeNull();
+      expect(accessibleValue('November')).toBe('No data'); // November has no data yet
     });
   });
 });

@@ -122,7 +122,8 @@ it('a month without data shows its name, No data and View month', () => {
   renderTrend(computeTrend(OCT, [row('income', '2026-10-01', 1_000)]));
   tap('June');
   expect(screen.getAllByText('June').length).toBeGreaterThan(0);
-  expect(screen.getAllByText('No data').length).toBeGreaterThan(1);
+  // Only the detail says it; the empty column shows no text (fine-tuning 2026-10-09).
+  expect(screen.getAllByText('No data')).toHaveLength(1);
   expect(screen.getByRole('button', { name: 'View month' })).toBeTruthy();
 });
 

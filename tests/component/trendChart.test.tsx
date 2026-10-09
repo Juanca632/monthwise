@@ -92,9 +92,10 @@ it('draws a month that saved exactly 0 as a line on the zero line', () => {
   expect(october.height).toBe(2);
 });
 
-it('writes No data in a month without data, never a zero', () => {
+it('leaves a month without data empty: no bar and no text, its value says No data', () => {
   renderChart();
-  expect(screen.getByText('No data')).toBeTruthy();
+  expect(screen.queryByText('No data')).toBeNull();
+  expect(screen.getByRole('button', { name: 'June' }).props.accessibilityValue.text).toBe('No data');
 });
 
 it('every column is at least 48 dp wide', () => {

@@ -202,6 +202,12 @@ export function trendHeadline(trend: Trend, tag: string): string {
   return `Saved ${formatMoney(trend.totalSavedCents, tag)} in ${monthsWord(trend.monthsWithData)} · ${formatRate(trend.rate)}`;
 }
 
+/** `trendHeadline` split after its answer, `Saved 650,00 €`, so the screen can color it. */
+export function trendHeadlineParts(trend: Trend, tag: string): { lead: string; rest: string } {
+  const lead = `Saved ${formatMoney(trend.totalSavedCents, tag)}`;
+  return { lead, rest: trendHeadline(trend, tag).slice(lead.length) };
+}
+
 /** The headline as spoken: `Saved 1.800,00 € in 6 months, 15 percent`. */
 export function trendHeadlineLabel(trend: Trend, tag: string): string {
   return `Saved ${spokenMoney(trend.totalSavedCents, tag)} in ${monthsWord(trend.monthsWithData)}, ${spokenRate(trend.rate)}`;
