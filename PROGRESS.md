@@ -62,6 +62,7 @@ commit (CLAUDE.md, "Session handoff").
 
 ## Environment notes
 
+- `.nvmrc` pins Node 22 (`nvm use` picks it up on each machine).
 - `gh` may be logged in as `camilo632` while git pushes over SSH as `Juanca632`; `gh pr create`
   then fails with "must be a collaborator". Check `gh auth status` before any `gh` command; if it is
   the wrong account, ask the developer to run `gh auth switch` (never switch it yourself), or give
