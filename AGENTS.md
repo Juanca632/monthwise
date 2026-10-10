@@ -7,7 +7,8 @@ UI in English, currency EUR.
 ## Status
 
 Feature `001` (record transactions, monthly summary) is implemented and tested; its APK
-verification (tasks T052–T053) is pending. Feature `002` (monthly charts) is in progress; see
+verification (tasks T052–T053) is pending. Feature `002` (monthly charts) is implemented and
+tested; its phone pass, preview APK checks and PR (tasks T059–T062) are pending, see
 `PROGRESS.md`. Stack: Expo SDK 57 (React Native 0.86, TypeScript), Expo Router for screens,
 `expo-sqlite` for on-device storage, Jest with React Native Testing Library for tests, and EAS
 Build for APKs. The app stores everything on the phone and makes no network calls.
@@ -145,6 +146,9 @@ imports nothing from React, Expo or SQLite.
 
 - Every behavior change ships with tests; money calculations are unit-tested.
 - Tests never hit the network.
+- Acceptance tests live in `tests/acceptance/NNN/` (written by the `spec-tester`, see above) and
+  render the whole app through the harness in `tests/helpers/app.tsx`; `npm run test:acceptance`
+  runs only them.
 - `npm test` (Jest), `npm run lint` (ESLint) and `npm run typecheck` (TypeScript). CI runs all
   three, plus `npm audit --audit-level=critical`, only on pull requests into `develop` and `main`.
 

@@ -87,10 +87,17 @@ describe('devLog', () => {
     expect(writes).toEqual(['log:[monthwise] timing db-open 12']);
   });
 
+  it('writes the insights-ready timing in preview, as ms only', () => {
+    const { devLog } = load('preview');
+    devLog.logTiming('insights-ready', 412.6);
+    expect(writes).toEqual(['log:[monthwise] timing insights-ready 413']);
+  });
+
   it('writes nothing in production', () => {
     const { devLog } = load('production');
     devLog.devLog('timing db-open 12');
     devLog.logTiming('db-open', 12);
+    devLog.logTiming('insights-ready', 412);
     expect(writes).toEqual([]);
   });
 

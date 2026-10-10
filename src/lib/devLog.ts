@@ -13,6 +13,9 @@ export function devLog(line: string): void {
   originalLog(`[monthwise] ${line}`);
 }
 
-export function logTiming(name: string, ms: number): void {
+/** The allow-listed timings: SC-004's startup lines (001) and SC-002's Insights line (002). */
+export type TimingName = 'bundle-ready' | 'fonts-ready' | 'db-open' | 'first-query' | 'insights-ready';
+
+export function logTiming(name: TimingName, ms: number): void {
   devLog(`timing ${name} ${Math.round(ms)}`);
 }

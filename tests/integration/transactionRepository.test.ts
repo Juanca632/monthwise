@@ -175,6 +175,19 @@ it.each([
   db = openTestDatabase(temp.file);
 });
 
+// A row the database cannot read back right after writing it is a storage failure, named after the
+// write that needed it.
+it.each([
+  ['create', (r: TransactionRepository) => r.create(input(), 1)],
+  ['update', (r: TransactionRepository) => r.update(1, input())],
+])('reports a %s whose row cannot be read back with its own code', async (code, run) => {
+  await repo.create(input(), 1);
+  const unreadable = createTransactionRepository({ ...db, getFirstAsync: () => Promise.resolve(null) });
+  const error = await run(unreadable).catch((e: unknown) => e);
+  expect(error).toBeInstanceOf(StorageError);
+  expect((error as StorageError).code).toBe(code);
+});
+
 it('names NotFoundError without any row data', () => {
   const error = new NotFoundError();
   expect(error.name).toBe('NotFoundError');

@@ -19,7 +19,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DatabaseProvider } from '@/data/DatabaseProvider';
-import { logTiming } from '@/lib/devLog';
+import { logTiming, type TimingName } from '@/lib/devLog';
 import { msSinceStartup } from '@/lib/sinceStartup';
 import { SelectedMonthProvider } from '@/state/SelectedMonthContext';
 import { SheetTransitionProvider } from '@/state/SheetTransitionContext';
@@ -43,7 +43,7 @@ const FONTS = {
 };
 
 /** SC-004 startup lines; skipped when the platform does not report the runtime start. */
-function logSinceStartup(name: string) {
+function logSinceStartup(name: TimingName) {
   const ms = msSinceStartup();
   if (ms !== null) logTiming(name, ms);
 }

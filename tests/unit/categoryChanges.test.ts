@@ -194,6 +194,17 @@ describe('compareCategories: edge cases', () => {
     const result = past([expense('2026-09-30', 1_000)], [expense('2026-08-31', 1_000)]);
     expect(result).toMatchObject({ kind: 'changes', comparisonDay: null, rows: [{ changeCents: 0 }] });
   });
+
+  it('no expenses this month against expenses last month lists each one at -100%, not noSpending', () => {
+    const result = past([income('2026-09-01', 100_000)], [expense('2026-08-03', 2_500)]);
+    expect(result).toEqual({
+      kind: 'changes',
+      comparisonDay: null,
+      rows: [
+        { category: 'food', currentCents: 0, previousCents: 2_500, changeCents: -2_500, percent: { rounded: -100, sign: -1 } },
+      ],
+    });
+  });
 });
 
 describe('compareCategories: SC-001 reference set (T008 literals)', () => {

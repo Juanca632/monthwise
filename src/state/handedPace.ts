@@ -18,7 +18,10 @@ export function takePace(month: YearMonth): { pace: Pace; pressedAt: number } | 
   return m.year === month.year && m.month === month.month ? handed : null;
 }
 
-/** Called on a month change on Insights and when it closes, so an old pace is never reused. */
+/**
+ * Called on a month change on Insights, so an old pace is never reused. Not on close: the card is
+ * the only way into Insights and hands a fresh pace each time.
+ */
 export function dropPace(): void {
   handed = null;
 }

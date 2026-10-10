@@ -98,7 +98,7 @@ specs/002-monthly-charts/
 
 ### Source Code (repository root)
 
-New files are marked `+`, changed files `~`. Everything else stays as in 001's plan.
+New files are marked `+`, changed files `~`, removed files `-`. Everything else stays as in 001's plan.
 
 ```text
 src/
@@ -128,15 +128,18 @@ src/
 │   ├── SelectedMonthContext.tsx ~ drops the arrow helpers (canGoPrevious/Next, goPrevious/Next)
 │   └── handedPace.ts            + the pace the summary hands to Insights (like openedTransaction)
 ├── ui/
-│   ├── MonthHeader.tsx          ~ month control instead of arrows
+│   ├── MonthHeader.tsx          - removed in fine-tuning: the month control sits on the balance card
+│   ├── Totals.tsx               ~ balance card with the month control (design.md, Summary layout)
 │   ├── MonthControl.tsx         + the "October 2026" button that opens the picker
+│   ├── CardTitle.tsx            + the small quiet card titles (fine-tuning)
+│   ├── PaceSentence.tsx         + pace sentence and trend headline, answers in color (fine-tuning)
 │   ├── MonthPicker.tsx          + year grid dialog (research R7)
 │   ├── PaceCard.tsx             + the summary card
 │   ├── CategoryChanges.tsx      + section 2 table
 │   ├── ChartDetail.tsx          + detail lines under a chart (day or month)
 │   └── charts/
 │       ├── PaceChart.tsx        + lines, axis, gestures, screen reader day elements
-│       ├── TrendChart.tsx       + month columns, bars below zero, "No data" columns
+│       ├── TrendChart.tsx       + one saved bar per month (below zero when negative), empty columns for months without data
 │       ├── geometry.ts          + dayAtX, scales, path points (pure)
 │       └── selection.ts         + chartSelection reducer: tap vs drag, FR-014 (pure)
 ├── dev/
@@ -187,10 +190,11 @@ without rendering.
 
 ## Open Items Before Implementation
 
-- `design.md` for 002 (mockups for the card, Insights in its states, the picker; light and dark).
-  The domain, data, harness and acceptance-test tasks do not depend on it. It also decides
-  whether a month chosen in the picker keeps 001's slide-in from the side (earlier month from the
-  left) or uses another month-change motion.
+None. `design.md` was approved before the UI tasks; a month chosen in the picker keeps 001's
+slide from the side of the change (design.md, Motion). Changes made during implementation and
+phone fine-tuning (2026-10-09): one saved bar per month in the trend, empty columns for months
+without data (spec FR-011), the Revolut-like summary and Insights cards (design.md, Direction and
+Summary layout), and `MonthHeader.tsx` folded into the balance card.
 
 ## Complexity Tracking
 

@@ -305,6 +305,24 @@ describe('computePace: spec Edge Cases', () => {
   });
 });
 
+describe('computePace: mutation-testing gaps (T057)', () => {
+  it('a past month draws its whole month even when its last row is before today\'s day', () => {
+    const pace = computePace(SEP, [expense('2026-09-03', 1_000)], [expense('2026-08-03', 1_000)], TODAY);
+    expect(pace.selected.cumulativeCents).toHaveLength(30);
+    expect(pace.selected.cumulativeCents[29]).toBe(1_000);
+  });
+
+  it('no spending this month against spending last month is less, not noSpending', () => {
+    const pace = computePace(SEP, [income('2026-09-01', 100_000)], [expense('2026-08-10', 2_500)], TODAY);
+    expect(pace.sentence).toEqual({
+      kind: 'less',
+      differenceCents: 2_500,
+      comparisonDay: null,
+      previousMonth: AUG,
+    });
+  });
+});
+
 describe('computePace: SC-001 reference set (T008 literals)', () => {
   type Input = (typeof insightsReference2026.inputs)[number];
   const ledger = (inputs: readonly Input[], edits: readonly InsightsEdit[]): LedgerRow[] => {

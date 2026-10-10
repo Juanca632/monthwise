@@ -7,11 +7,14 @@ import Animated, { LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { dayDetail, type Pace } from '@/domain/pace';
+import { compareMonths, type YearMonth } from '@/domain/month';
 import type { Trend } from '@/domain/trend';
 import { dayDetailLines, trendDetailLines } from '@/format/insights';
 import { useInsights } from '@/hooks/useInsights';
 import { useRegion } from '@/hooks/useRegion';
+import { logTiming } from '@/lib/devLog';
 import { haptics } from '@/lib/haptics';
+import { takePace } from '@/state/handedPace';
 import { useSelectedMonth } from '@/state/SelectedMonthContext';
 import { CategoryChanges } from '@/ui/CategoryChanges';
 import { MonthControl } from '@/ui/MonthControl';
@@ -42,6 +45,7 @@ export default function InsightsScreen() {
   const { tag } = useRegion();
   // Shared with the pace chart's pan, so a vertical swipe that starts on the chart still scrolls.
   const scrollRef = useRef(null);
+  useInsightsReadyTiming(selected, status === 'ready' && pace !== null && categories !== null && trend !== null);
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -83,6 +87,23 @@ export default function InsightsScreen() {
       </ScrollView>
     </View>
   );
+}
+
+/**
+ * SC-002's `insights-ready` line (research R10): ms from the card press to the first commit with
+ * all three sections drawn, once per open. Skipped when the screen was not opened from the card,
+ * or the month changed first (the time would include the person's own taps).
+ */
+function useInsightsReadyTiming(selected: YearMonth, ready: boolean) {
+  const [opened] = useState(() => ({ month: selected, pressedAt: takePace(selected)?.pressedAt ?? null }));
+  const done = useRef(false);
+  useEffect(() => {
+    if (done.current || !ready) return;
+    done.current = true;
+    if (opened.pressedAt !== null && compareMonths(selected, opened.month) === 0) {
+      logTiming('insights-ready', performance.now() - opened.pressedAt);
+    }
+  }, [ready, selected, opened]);
 }
 
 function PaceSection({ pace, scrollRef }: { pace: Pace | null; scrollRef: RefObject<null> }) {

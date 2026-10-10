@@ -523,26 +523,26 @@ year, pick a month; pick another on Insights and go back; tap a trend month's **
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T053 [P] Add "Seed 7 months" to the preview dev tools (research R10): `seedSevenMonths(db,
+- [x] T053 [P] Add "Seed 7 months" to the preview dev tools (research R10): `seedSevenMonths(db,
   today, random)` in `src/dev/seed.ts` inserts 1,000 random valid transactions in each of the
   current month (up to today) and the six previous months, in one SQL transaction; a button in
   `src/dev/DevTools.tsx` next to the existing seed. Tests in `tests/unit/seed.test.ts` (counts per
   month, valid rows, rollback on failure) and `tests/component/devTools.test.tsx`.
-- [ ] T054 Add the `insights-ready` timing (research R10): allow-list it in `src/lib/devLog.ts`;
+- [x] T054 Add the `insights-ready` timing (research R10): allow-list it in `src/lib/devLog.ts`;
   in `src/app/insights.tsx`, log `performance.now() - pressedAt` (from `takePace`) once per open,
   at the first render where all three sections are ready; ms only, preview only. Tests in
   `tests/unit/logging.test.ts` (written in preview, silent in production) and
   `tests/component/insights.test.tsx` (logged once).
-- [ ] T055 SC-001 end to end: `tests/integration/insightsReference.test.ts` stores the T008
+- [x] T055 SC-001 end to end: `tests/integration/insightsReference.test.ts` stores the T008
   fixtures through `createTransactionRepository`, applies their `edits` with `update`, reads with
   `listRange`, runs `computePace`, `dayDetail`, `compareCategories` and `computeTrend`, and asserts
   the T008 literals.
 - T056 Dropped (2026-10-09, lighter workflow in AGENTS.md): the implemented UI is checked on the
   phone, not by the `design-reviewer`.
-- [ ] T057 Run Stryker (`npx stryker run`) over `src/domain/` and `src/data/`. Review every
+- [x] T057 Run Stryker (`npx stryker run`) over `src/domain/` and `src/data/`. Review every
   surviving mutant in the 002 files: add the missing test for each real gap, list the equivalent
   ones. Record before and after in `specs/002-monthly-charts/mutation-results.md`.
-- [ ] T058 Update docs: `AGENTS.md` (Status: 002 implemented; testing mentions
+- [x] T058 Update docs: `AGENTS.md` (Status: 002 implemented; testing mentions
   `tests/acceptance/`, `npm run test:acceptance` and `tests/helpers/app.tsx`), and
   `plan.md`/`research.md` for anything that changed during implementation (constitution
   principle I).

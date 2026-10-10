@@ -8,7 +8,7 @@ import { getToday } from '@/hooks/useToday';
 import { reportError } from '@/lib/reportError';
 import { minTouch, radii, spacing, useTheme } from '@/ui/theme';
 
-import { seedCurrentMonth } from './seed';
+import { seedCurrentMonth, seedSevenMonths } from './seed';
 import { isSimulatingStorageError, setSimulateStorageError } from './storageErrorFlag';
 
 type Props = {
@@ -16,22 +16,23 @@ type Props = {
   onChanged(): void;
 };
 
-/** The seed button and the storage-error switch, at the bottom of the summary. */
+/** The seed buttons and the storage-error switch, at the bottom of the summary. */
 export function DevTools({ onChanged }: Props) {
   const { colors, type } = useTheme();
   const { db } = useDatabase();
-  const [seeding, setSeeding] = useState(false);
+  const [seeding, setSeeding] = useState<'month' | 'seven' | null>(null);
   const [simulating, setSimulating] = useState(isSimulatingStorageError);
-  const disabled = !db || seeding;
+  // One seed at a time: both write in one SQL transaction.
+  const disabled = !db || seeding !== null;
 
-  const seed = () => {
+  const seed = (which: 'month' | 'seven') => {
     if (!db || seeding) return;
-    setSeeding(true);
+    setSeeding(which);
     // Today at tap time, like the forms, so midnight is never missed.
-    seedCurrentMonth(db, getToday())
+    (which === 'month' ? seedCurrentMonth : seedSevenMonths)(db, getToday())
       .catch(() => reportError('seed'))
       .finally(() => {
-        setSeeding(false);
+        setSeeding(null);
         onChanged();
       });
   };
@@ -45,19 +46,18 @@ export function DevTools({ onChanged }: Props) {
 
   return (
     <View style={styles.box}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Seed 1,000 transactions"
-        accessibilityState={{ disabled, busy: seeding }}
+      <SeedButton
+        label="Seed 1,000 transactions"
+        busy={seeding === 'month'}
         disabled={disabled}
-        onPress={seed}
-        android_ripple={{ color: colors.ripple }}
-        style={[styles.button, { backgroundColor: colors.surfaceMuted }]}
-      >
-        <Text style={[type.button, { color: colors.text }]}>
-          {seeding ? 'Seeding…' : 'Seed 1,000 transactions'}
-        </Text>
-      </Pressable>
+        onPress={() => seed('month')}
+      />
+      <SeedButton
+        label="Seed 7 months"
+        busy={seeding === 'seven'}
+        disabled={disabled}
+        onPress={() => seed('seven')}
+      />
       <View style={styles.row}>
         <Text style={[type.body, styles.flex, { color: colors.text }]}>Simulate storage error</Text>
         <Switch
@@ -67,6 +67,25 @@ export function DevTools({ onChanged }: Props) {
         />
       </View>
     </View>
+  );
+}
+
+type SeedButtonProps = { label: string; busy: boolean; disabled: boolean; onPress(): void };
+
+function SeedButton({ label, busy, disabled, onPress }: SeedButtonProps) {
+  const { colors, type } = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled, busy }}
+      disabled={disabled}
+      onPress={onPress}
+      android_ripple={{ color: colors.ripple }}
+      style={[styles.button, { backgroundColor: colors.surfaceMuted }]}
+    >
+      <Text style={[type.button, { color: colors.text }]}>{busy ? 'Seeding…' : label}</Text>
+    </Pressable>
   );
 }
 

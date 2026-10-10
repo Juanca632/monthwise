@@ -1,9 +1,13 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import * as RN from 'react-native';
 
+import { compareCategories } from '@/domain/categoryChanges';
 import type { LedgerRow } from '@/domain/ledger';
 import { computePace, type Pace } from '@/domain/pace';
+import { computeTrend } from '@/domain/trend';
 import type { Insights } from '@/hooks/useInsights';
+import { logTiming } from '@/lib/devLog';
+import { dropPace, handOffPace } from '@/state/handedPace';
 import { SelectedMonthProvider, useSelectedMonth, type SelectedMonthValue } from '@/state/SelectedMonthContext';
 import { palettes } from '@/ui/theme';
 
@@ -18,6 +22,7 @@ jest.mock('expo-localization', () => ({
 }));
 // Like the other component suites: the real expo-font needs expo-asset, which Jest cannot resolve.
 jest.mock('expo-font', () => ({ isLoaded: () => true, loadAsync: jest.fn() }));
+jest.mock('@/lib/devLog', () => ({ devLog: jest.fn(), logTiming: jest.fn() }));
 jest.mock('react-native-safe-area-context', () =>
   require('react-native-safe-area-context/jest/mock').default,
 );
@@ -57,14 +62,17 @@ function MonthSpy() {
   return null;
 }
 
+// A fresh element each call: rerendering the same element object lets React skip the update.
+const tree = () => (
+  <SelectedMonthProvider>
+    <MonthSpy />
+    <InsightsScreen />
+  </SelectedMonthProvider>
+);
+
 function renderInsights(insights: Partial<Insights> = {}) {
   mockInsights = { status: 'ready', rows: [], pace: PACE, categories: null, trend: null, retry: jest.fn(), ...insights };
-  const view = render(
-    <SelectedMonthProvider>
-      <MonthSpy />
-      <InsightsScreen />
-    </SelectedMonthProvider>,
-  );
+  const view = render(tree());
   const chart = screen.queryByTestId('pace-chart');
   if (chart) {
     fireEvent(chart, 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 310, height: 180 } } });
@@ -74,6 +82,8 @@ function renderInsights(insights: Partial<Insights> = {}) {
 
 beforeEach(() => {
   mockBack.mockClear();
+  jest.mocked(logTiming).mockClear();
+  dropPace();
   mockFontScale = 1;
   jest.restoreAllMocks();
 });
@@ -124,6 +134,61 @@ describe('Insights states', () => {
     renderInsights();
     expect(screen.queryByRole('button', { name: /^(Add|Edit|Delete)/i })).toBeNull();
     expect(screen.queryByText(/^(Add|Edit|Delete)$/i)).toBeNull();
+  });
+});
+
+describe('insights-ready timing (SC-002, research R10)', () => {
+  const ALL_READY: Partial<Insights> = {
+    categories: compareCategories(OCT, [], [], '2026-10-12'),
+    trend: computeTrend(OCT, []),
+  };
+  const LOADING: Partial<Insights> = { status: 'loading' };
+  const nowMs = 10_000;
+
+  /** Opens Insights from the card: the press 400 ms before the first ready commit. */
+  function openFromCard(insights: Partial<Insights>) {
+    jest.spyOn(performance, 'now').mockReturnValue(nowMs);
+    handOffPace(PACE, nowMs - 400);
+    return renderInsights(insights);
+  }
+
+  function becomeReady(view: ReturnType<typeof render>) {
+    mockInsights = { ...mockInsights, status: 'ready', ...ALL_READY };
+    view.rerender(tree());
+  }
+
+  it('logs the ms from the card press once all three sections are ready, once per open', () => {
+    const view = openFromCard(LOADING);
+    expect(logTiming).not.toHaveBeenCalled();
+
+    becomeReady(view);
+    expect(logTiming).toHaveBeenCalledTimes(1);
+    expect(logTiming).toHaveBeenCalledWith('insights-ready', 400);
+
+    // A retry goes back to loading and then ready again: still the same open.
+    mockInsights = { ...mockInsights, ...LOADING };
+    view.rerender(tree());
+    becomeReady(view);
+    expect(logTiming).toHaveBeenCalledTimes(1);
+  });
+
+  it('waits while any section is still loading', () => {
+    openFromCard({ ...ALL_READY, trend: null });
+    expect(logTiming).not.toHaveBeenCalled();
+  });
+
+  it('logs nothing without a press from the card', () => {
+    renderInsights(ALL_READY);
+    expect(logTiming).not.toHaveBeenCalled();
+  });
+
+  it('logs nothing when the month changed before the sections were ready', () => {
+    const view = openFromCard(LOADING);
+    fireEvent.press(screen.getByRole('button', { name: 'October 2026' }));
+    act(() => fireEvent.press(screen.getByRole('button', { name: 'August 2026' })));
+
+    becomeReady(view);
+    expect(logTiming).not.toHaveBeenCalled();
   });
 });
 

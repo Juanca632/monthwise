@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { openAndMigrate } from '@/data/migrations';
 import { isSimulatingStorageError, setSimulateStorageError } from '@/dev/storageErrorFlag';
@@ -39,6 +39,31 @@ describe('DevTools', () => {
     expect(await count()).toBe(1000);
     expect(onChanged).toHaveBeenCalledTimes(1);
     expect(screen.getByText('Seed 1,000 transactions')).toBeTruthy();
+  });
+
+  it('seeds 1,000 transactions in each of seven months and reloads the summary (SC-002)', async () => {
+    const onChanged = jest.fn();
+    render(<DevTools onChanged={onChanged} />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Seed 7 months' }));
+    });
+
+    expect(await count()).toBe(7000);
+    expect(onChanged).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('Seed 7 months')).toBeTruthy();
+  });
+
+  it('runs one seed at a time: both buttons are disabled while one seeds', async () => {
+    render(<DevTools onChanged={jest.fn()} />);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Seed 7 months' }));
+
+    expect(screen.getByText('Seeding…')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Seed 7 months' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Seed 1,000 transactions' })).toBeDisabled();
+    // Let the seed finish before the database closes.
+    await waitFor(() => expect(screen.getByText('Seed 7 months')).toBeTruthy(), { timeout: 10_000 });
   });
 
   it('is disabled until the database is open', () => {
